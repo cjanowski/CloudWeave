@@ -223,7 +223,7 @@ export class MetricsStorageService implements IMetricsStorageService {
       let oldestDataPoint = new Date();
       let newestDataPoint = new Date(0);
 
-      for (const [metricName, data] of this.metrics) {
+      for (const [, data] of this.metrics) {
         totalDataPoints += data.length;
         
         if (data.length > 0) {
@@ -445,7 +445,7 @@ export class MetricsStorageService implements IMetricsStorageService {
     return {
       metric: metricDefinition,
       dataPoints,
-      aggregation: query.aggregation,
+      aggregation: query.aggregation || 'avg',
       timeRange: query.timeRange,
       resolution: query.resolution || '1m',
     };
@@ -474,7 +474,7 @@ export class MetricsStorageService implements IMetricsStorageService {
       aggregated.push({
         timestamp: new Date(bucketTime),
         value: aggregatedValue,
-        labels: points[0].labels, // Use labels from first point
+        labels: points[0].labels || {}, // Use labels from first point
       });
     }
 

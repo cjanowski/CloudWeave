@@ -12,10 +12,14 @@ export * from './interfaces';
 // Core services
 export { MetricsCollectionService } from './MetricsCollectionService';
 export { MetricsStorageService } from './MetricsStorageService';
+export { AlertingService } from './AlertingService';
+export { AlertNotificationService } from './AlertNotificationService';
 
 // Convenience functions for creating and configuring services
 import { MetricsCollectionService } from './MetricsCollectionService';
 import { MetricsStorageService } from './MetricsStorageService';
+import { AlertingService } from './AlertingService';
+import { AlertNotificationService } from './AlertNotificationService';
 import { MetricCollector, MonitoringConfiguration } from './types';
 
 /**
@@ -24,6 +28,8 @@ import { MetricCollector, MonitoringConfiguration } from './types';
 export async function createMonitoringService(): Promise<{
   collectionService: MetricsCollectionService;
   storageService: MetricsStorageService;
+  alertingService: AlertingService;
+  notificationService: AlertNotificationService;
 }> {
   // Create storage service
   const storageService = new MetricsStorageService();
@@ -31,9 +37,17 @@ export async function createMonitoringService(): Promise<{
   // Create collection service
   const collectionService = new MetricsCollectionService(storageService);
 
+  // Create notification service
+  const notificationService = new AlertNotificationService();
+
+  // Create alerting service
+  const alertingService = new AlertingService(storageService, notificationService);
+
   return {
     collectionService,
     storageService,
+    alertingService,
+    notificationService,
   };
 }
 
