@@ -13,7 +13,11 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "docker:build": "docker build -t cloudweave .",
-    "docker:run": "docker run -p 3000:3000 cloudweave"
+    "docker:run": "docker run -p 3000:3000 cloudweave",
+    "db:migrate": "knex migrate:latest",
+    "db:rollback": "knex migrate:rollback",
+    "db:seed": "knex seed:run",
+    "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run"
   },
   "keywords": [
     "cloud",
@@ -38,7 +42,10 @@
     "knex": "^3.0.1",
     "redis": "^4.6.10",
     "joi": "^17.11.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "express-rate-limit": "^7.1.5",
+    "swagger-ui-express": "^5.0.0",
+    "swagger-jsdoc": "^6.2.8"
   },
   "devDependencies": {
     "@types/node": "^20.8.7",
@@ -51,6 +58,8 @@
     "@types/uuid": "^9.0.6",
     "@types/jest": "^29.5.6",
     "@types/supertest": "^2.0.15",
+    "@types/swagger-ui-express": "^4.1.6",
+    "@types/swagger-jsdoc": "^6.0.4",
     "typescript": "^5.2.2",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",

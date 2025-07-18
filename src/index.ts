@@ -4,6 +4,10 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { config } from './config';
 import { logger } from './utils/logger';
+import { testConnection } from './database/connection';
+import { apiVersioning } from './middleware/versioning';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import apiRoutes from './routes';
 
 const app = express();
 
@@ -19,62 +23,50 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-  });
-});
+// API versioning middleware
+app.use('/api', apiVersioning);
 
-// API routes will be added here as services are implemented
-app.use(config.api.prefix, (req, res) => {
-  res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
-      message: 'API endpoint not found',
-      timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id'] || 'unknown',
-    },
-  });
-});
+// API routes with proper gateway
+app.use(config.api.prefix, apiRoutes);
+
+// 404 handler for unmatched routes
+app.use(notFoundHandler);
 
 // Global error handler
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error('Unhandled error:', err);
-  
-  res.status(500).json({
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred',
-      timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id'] || 'unknown',
-    },
-  });
-});
+app.use(errorHandler);
 
-const server = app.listen(config.port, () => {
-  logger.info(`Cloud Platform Engineering App started on port ${config.port}`);
-  logger.info(`Environment: ${config.nodeEnv}`);
-  logger.info(`API prefix: ${config.api.prefix}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Process terminated');
-    process.exit(0);
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  const server = app.listen(config.port, async () => {
+    logger.info(`CloudWeave started on port ${config.port}`);
+    logger.info(`Environment: ${config.nodeEnv}`);
+    logger.info(`API prefix: ${config.api.prefix}`);
+    
+    // Test database connection
+    const dbConnected = await testConnection();
+    if (dbConnected) {
+      logger.info('✅ Database connection established');
+    } else {
+      logger.warn('⚠️  Database connection failed - some features may not work');
+    }
   });
-});
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Process terminated');
-    process.exit(0);
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      logger.info('Process terminated');
+      process.exit(0);
+    });
   });
-});
+
+  process.on('SIGINT', () => {
+    logger.info('SIGINT received, shutting down gracefully');
+    server.close(() => {
+      logger.info('Process terminated');
+      process.exit(0);
+    });
+  });
+}
 
 export default app;

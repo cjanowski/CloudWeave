@@ -41,6 +41,35 @@ The application follows a microservices architecture with the following core ser
 - Redis 6+
 - Docker (optional)
 
+### Database Setup
+
+CloudWeave uses PostgreSQL as its primary database. Make sure you have PostgreSQL installed and running.
+
+1. Create a database for CloudWeave:
+```sql
+CREATE DATABASE cloud_platform_db;
+CREATE DATABASE cloud_platform_test_db; -- for testing
+```
+
+2. Set up your database connection in `.env`:
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=cloud_platform_db
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
+3. Run database migrations:
+```bash
+npm run db:migrate
+```
+
+4. Seed the database with initial data:
+```bash
+npm run db:seed
+```
+
 ### Installation
 
 1. Clone the repository:
@@ -81,6 +110,12 @@ npm run test:coverage # Run tests with coverage
 # Code Quality
 npm run lint        # Run ESLint
 npm run lint:fix    # Fix ESLint issues
+
+# Database
+npm run db:migrate  # Run database migrations
+npm run db:rollback # Rollback last migration
+npm run db:seed     # Seed database with initial data
+npm run db:reset    # Reset database (rollback all + migrate + seed)
 
 # Docker
 npm run docker:build # Build Docker image
