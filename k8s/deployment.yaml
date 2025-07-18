@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudweave
+  namespace: cloudweave
+  labels:
+    app: cloudweave
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cloudweave
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: cloudweave
+        version: v1
+    spec:
+      containers:
+      - name: cloudweave
+        image: cloudweave:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: cloudweave-secrets
+              key: db-host
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cloudweave-secrets
+              key: db-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: cloudweave-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudweave-service
+  namespace: cloudweave
+  labels:
+    app: cloudweave
+spec:
+  selector:
+    app: cloudweave
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP

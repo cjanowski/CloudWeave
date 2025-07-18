@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudweave
+  labels:
+    name: cloudweave
+    app.kubernetes.io/name: cloudweave
+    app.kubernetes.io/version: "1.0.0"

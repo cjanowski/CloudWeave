@@ -1,0 +1,67 @@
+{
+  "name": "cloudweave",
+  "version": "1.0.0",
+  "description": "CloudWeave - A unified cloud platform engineering application for managing multi-cloud infrastructure, deployments, and operations",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "docker:build": "docker build -t cloudweave .",
+    "docker:run": "docker run -p 3000:3000 cloudweave"
+  },
+  "keywords": [
+    "cloud",
+    "platform",
+    "engineering",
+    "infrastructure",
+    "devops",
+    "multi-cloud"
+  ],
+  "author": "Platform Engineering Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.11.3",
+    "knex": "^3.0.1",
+    "redis": "^4.6.10",
+    "joi": "^17.11.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "@types/express": "^4.17.20",
+    "@types/cors": "^2.8.15",
+    "@types/compression": "^1.7.4",
+    "@types/jsonwebtoken": "^9.0.4",
+    "@types/bcryptjs": "^2.4.5",
+    "@types/pg": "^8.10.7",
+    "@types/uuid": "^9.0.6",
+    "@types/jest": "^29.5.6",
+    "@types/supertest": "^2.0.15",
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "supertest": "^6.3.3",
+    "eslint": "^8.52.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
