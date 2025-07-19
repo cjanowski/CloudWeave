@@ -1,0 +1,288 @@
+{
+  "securityPolicies": [
+    {
+      "id": "auth-policy-001",
+      "name": "Authentication Security Policy",
+      "description": "Enforces secure authentication practices",
+      "category": "Authentication",
+      "severity": "high",
+      "rules": [
+        {
+          "id": "auth-rule-001",
+          "name": "Strong Password Policy",
+          "description": "Passwords must meet complexity requirements",
+          "conditions": [
+            {
+              "field": "password.length",
+              "operator": "greater_than",
+              "value": 8
+            },
+            {
+              "field": "password.complexity",
+              "operator": "contains",
+              "value": ["uppercase", "lowercase", "number", "special"]
+            }
+          ]
+        },
+        {
+          "id": "auth-rule-002",
+          "name": "Account Lockout Policy",
+          "description": "Lock accounts after failed login attempts",
+          "conditions": [
+            {
+              "field": "failed_attempts",
+              "operator": "greater_than",
+              "value": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data-policy-001",
+      "name": "Data Protection Policy",
+      "description": "Ensures data is properly protected",
+      "category": "Data Protection",
+      "severity": "critical",
+      "rules": [
+        {
+          "id": "data-rule-001",
+          "name": "Encryption at Rest",
+          "description": "All sensitive data must be encrypted at rest",
+          "conditions": [
+            {
+              "field": "data.classification",
+              "operator": "equals",
+              "value": "sensitive"
+            },
+            {
+              "field": "storage.encrypted",
+              "operator": "equals",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "data-rule-002",
+          "name": "Encryption in Transit",
+          "description": "All data transmission must use encryption",
+          "conditions": [
+            {
+              "field": "transmission.protocol",
+              "operator": "equals",
+              "value": "HTTPS"
+            },
+            {
+              "field": "transmission.tls_version",
+              "operator": "greater_than",
+              "value": "1.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "access-policy-001",
+      "name": "Access Control Policy",
+      "description": "Manages user access and permissions",
+      "category": "Access Control",
+      "severity": "high",
+      "rules": [
+        {
+          "id": "access-rule-001",
+          "name": "Role-Based Access Control",
+          "description": "Users must have appropriate roles for resource access",
+          "conditions": [
+            {
+              "field": "user.role",
+              "operator": "exists",
+              "value": true
+            },
+            {
+              "field": "resource.required_role",
+              "operator": "exists",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "access-rule-002",
+          "name": "Principle of Least Privilege",
+          "description": "Users should have minimum necessary permissions",
+          "conditions": [
+            {
+              "field": "user.permissions",
+              "operator": "not_contains",
+              "value": "admin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-policy-001",
+      "name": "Audit and Logging Policy",
+      "description": "Ensures comprehensive audit logging",
+      "category": "Audit",
+      "severity": "medium",
+      "rules": [
+        {
+          "id": "audit-rule-001",
+          "name": "Security Event Logging",
+          "description": "All security events must be logged",
+          "conditions": [
+            {
+              "field": "event.type",
+              "operator": "equals",
+              "value": "security"
+            },
+            {
+              "field": "event.logged",
+              "operator": "equals",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "audit-rule-002",
+          "name": "Log Retention",
+          "description": "Logs must be retained for required period",
+          "conditions": [
+            {
+              "field": "log.retention_days",
+              "operator": "greater_than",
+              "value": 90
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "vulnerabilityPatterns": [
+    {
+      "id": "vuln-001",
+      "name": "SQL Injection",
+      "pattern": "(?i)(union|select|insert|update|delete|drop|create|alter).*(?:--|#|/\\*)",
+      "severity": "critical",
+      "description": "Potential SQL injection vulnerability"
+    },
+    {
+      "id": "vuln-002",
+      "name": "Cross-Site Scripting (XSS)",
+      "pattern": "(?i)<script[^>]*>.*?</script>|javascript:|on\\w+\\s*=",
+      "severity": "high",
+      "description": "Potential XSS vulnerability"
+    },
+    {
+      "id": "vuln-003",
+      "name": "Command Injection",
+      "pattern": "(?i)(exec|system|shell_exec|passthru|eval)\\s*\\(",
+      "severity": "critical",
+      "description": "Potential command injection vulnerability"
+    },
+    {
+      "id": "vuln-004",
+      "name": "Path Traversal",
+      "pattern": "\\.\\.[\\/\\\\]",
+      "severity": "high",
+      "description": "Potential path traversal vulnerability"
+    },
+    {
+      "id": "vuln-005",
+      "name": "Hardcoded Credentials",
+      "pattern": "(?i)(password|pwd|pass|secret|key)\\s*[=:]\\s*['\"][^'\"]{3,}['\"]",
+      "severity": "high",
+      "description": "Hardcoded credentials detected"
+    }
+  ],
+  "complianceFrameworks": {
+    "SOC2": {
+      "name": "SOC 2 Type II",
+      "description": "System and Organization Controls 2",
+      "controls": [
+        {
+          "id": "CC6.1",
+          "name": "Logical and Physical Access Controls",
+          "category": "Access Control",
+          "mandatory": true
+        },
+        {
+          "id": "CC6.7",
+          "name": "Data Transmission and Disposal",
+          "category": "Data Protection",
+          "mandatory": true
+        },
+        {
+          "id": "CC7.2",
+          "name": "System Monitoring",
+          "category": "Monitoring",
+          "mandatory": true
+        }
+      ]
+    },
+    "GDPR": {
+      "name": "General Data Protection Regulation",
+      "description": "EU data protection regulation",
+      "controls": [
+        {
+          "id": "Article 32",
+          "name": "Security of Processing",
+          "category": "Security",
+          "mandatory": true
+        },
+        {
+          "id": "Article 5",
+          "name": "Data Retention",
+          "category": "Data Management",
+          "mandatory": true
+        },
+        {
+          "id": "Article 30",
+          "name": "Records of Processing Activities",
+          "category": "Documentation",
+          "mandatory": true
+        }
+      ]
+    },
+    "HIPAA": {
+      "name": "Health Insurance Portability and Accountability Act",
+      "description": "US healthcare data protection",
+      "controls": [
+        {
+          "id": "164.312(a)(1)",
+          "name": "Access Control",
+          "category": "Access Control",
+          "mandatory": true
+        },
+        {
+          "id": "164.312(e)(1)",
+          "name": "Transmission Security",
+          "category": "Data Protection",
+          "mandatory": true
+        }
+      ]
+    }
+  },
+  "testConfiguration": {
+    "vulnerability": {
+      "timeout": 30000,
+      "maxConcurrent": 5,
+      "retryAttempts": 2
+    },
+    "compliance": {
+      "timeout": 60000,
+      "frameworks": ["SOC2", "GDPR", "HIPAA"],
+      "evidenceRequired": true
+    },
+    "penetration": {
+      "timeout": 45000,
+      "maxPayloads": 10,
+      "safeMode": true
+    },
+    "audit": {
+      "timeout": 30000,
+      "logRetentionDays": 90,
+      "integrityChecks": true
+    }
+  }
+}

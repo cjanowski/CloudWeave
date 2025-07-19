@@ -1,0 +1,1280 @@
+{
+  "timestamp": "2025-07-19T17:45:56.666Z",
+  "summary": {
+    "vulnerability": {
+      "totalScans": 4,
+      "criticalVulns": 0,
+      "highVulns": 0,
+      "overallRisk": 3.5
+    },
+    "compliance": {
+      "frameworks": 5,
+      "avgScore": 30,
+      "failedControls": 8
+    },
+    "penetration": {
+      "totalTests": 24,
+      "vulnerableTests": 1,
+      "riskScore": 7,
+      "criticalIssues": 0
+    },
+    "audit": {
+      "totalTests": 17,
+      "passedTests": 2,
+      "overallScore": 48.8235294117647,
+      "complianceGaps": 2
+    }
+  },
+  "results": {
+    "vulnerability": {
+      "dependency": {
+        "scanType": "dependency",
+        "timestamp": "2025-07-19T17:45:56.498Z",
+        "duration": 1145,
+        "vulnerabilities": [],
+        "summary": {
+          "total": 0,
+          "critical": 0,
+          "high": 0,
+          "medium": 0,
+          "low": 0,
+          "info": 0
+        },
+        "passed": true,
+        "riskScore": 0
+      },
+      "code": {
+        "scanType": "code",
+        "timestamp": "2025-07-19T17:45:56.534Z",
+        "duration": 36,
+        "vulnerabilities": [],
+        "summary": {
+          "total": 0,
+          "critical": 0,
+          "high": 0,
+          "medium": 0,
+          "low": 0,
+          "info": 0
+        },
+        "passed": true,
+        "riskScore": 0
+      },
+      "container": {
+        "scanType": "container",
+        "timestamp": "2025-07-19T17:45:56.534Z",
+        "duration": 0,
+        "vulnerabilities": [
+          {
+            "id": "container-base-image-1",
+            "severity": "medium",
+            "title": "Outdated Base Image",
+            "description": "Base image contains outdated packages",
+            "component": "node:18-alpine",
+            "cve": "CVE-2023-1234",
+            "cvss": 5.5,
+            "references": [
+              "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-1234"
+            ]
+          },
+          {
+            "id": "container-package-1",
+            "severity": "low",
+            "title": "Minor Package Vulnerability",
+            "description": "Non-critical vulnerability in system package",
+            "component": "libssl1.1",
+            "version": "1.1.1f",
+            "fixedVersion": "1.1.1g",
+            "cve": "CVE-2023-5678",
+            "cvss": 3.1,
+            "references": [
+              "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-5678"
+            ]
+          }
+        ],
+        "summary": {
+          "total": 2,
+          "critical": 0,
+          "high": 0,
+          "medium": 1,
+          "low": 1,
+          "info": 0
+        },
+        "passed": true,
+        "riskScore": 6
+      },
+      "infrastructure": {
+        "scanType": "infrastructure",
+        "timestamp": "2025-07-19T17:45:56.535Z",
+        "duration": 1,
+        "vulnerabilities": [
+          {
+            "id": "k8s-root-namespace.yaml",
+            "severity": "medium",
+            "title": "Container Running as Root",
+            "description": "Container may be running as root user",
+            "component": "k8s/namespace.yaml",
+            "references": [
+              "https://kubernetes.io/docs/concepts/security/pod-security-standards/"
+            ]
+          },
+          {
+            "id": "k8s-no-security-context-namespace.yaml",
+            "severity": "medium",
+            "title": "Missing Security Context",
+            "description": "Pod/Container missing security context configuration",
+            "component": "k8s/namespace.yaml",
+            "references": [
+              "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
+            ]
+          }
+        ],
+        "summary": {
+          "total": 2,
+          "critical": 0,
+          "high": 0,
+          "medium": 2,
+          "low": 0,
+          "info": 0
+        },
+        "passed": true,
+        "riskScore": 8
+      }
+    },
+    "compliance": {
+      "soc2": {
+        "framework": "SOC2",
+        "timestamp": "2025-07-19T17:45:56.540Z",
+        "overallScore": 66.66666666666666,
+        "totalControls": 3,
+        "passedControls": 2,
+        "failedControls": 1,
+        "notApplicableControls": 0,
+        "results": [
+          {
+            "ruleId": "soc2-cc6.1",
+            "controlId": "CC6.1",
+            "framework": "SOC2",
+            "status": "pass",
+            "score": 100,
+            "message": "Access controls are properly implemented",
+            "evidence": [
+              "Authentication service: Implemented",
+              "RBAC service: Implemented"
+            ],
+            "recommendations": [],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "soc2-cc6.7",
+            "controlId": "CC6.7",
+            "framework": "SOC2",
+            "status": "fail",
+            "score": 50,
+            "message": "Encryption in transit needs improvement",
+            "evidence": [
+              "HTTPS enforced: false",
+              "TLS version: 1.2"
+            ],
+            "recommendations": [
+              "Enforce HTTPS for all communications",
+              "Use TLS 1.2 or higher",
+              "Implement HSTS headers"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "soc2-cc7.2",
+            "controlId": "CC7.2",
+            "framework": "SOC2",
+            "status": "pass",
+            "score": 100,
+            "message": "Audit logging is properly implemented",
+            "evidence": [
+              "Logger service: Implemented",
+              "Audit service: Implemented"
+            ],
+            "recommendations": [],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          }
+        ],
+        "summary": {
+          "criticalFailures": 0,
+          "highRiskIssues": 0,
+          "mediumRiskIssues": 1,
+          "lowRiskIssues": 0
+        },
+        "recommendations": [
+          "Enforce HTTPS for all communications",
+          "Use TLS 1.2 or higher",
+          "Implement HSTS headers"
+        ]
+      },
+      "gdpr": {
+        "framework": "GDPR",
+        "timestamp": "2025-07-19T17:45:56.540Z",
+        "overallScore": 33.33333333333333,
+        "totalControls": 3,
+        "passedControls": 1,
+        "failedControls": 2,
+        "notApplicableControls": 0,
+        "results": [
+          {
+            "ruleId": "gdpr-art32",
+            "controlId": "Article 32",
+            "framework": "GDPR",
+            "status": "fail",
+            "score": 0,
+            "message": "Encryption at rest is not fully implemented",
+            "evidence": [
+              "Database encryption: Disabled",
+              "File encryption: Disabled"
+            ],
+            "recommendations": [
+              "Enable database encryption",
+              "Implement file system encryption",
+              "Use strong encryption algorithms (AES-256)"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "gdpr-art5",
+            "controlId": "Article 5",
+            "framework": "GDPR",
+            "status": "fail",
+            "score": 0,
+            "message": "Data retention policy needs definition",
+            "evidence": [
+              "Retention period: 0 days"
+            ],
+            "recommendations": [
+              "Define clear data retention policies",
+              "Implement automated data purging",
+              "Document retention justifications"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "gdpr-art30",
+            "controlId": "Article 30",
+            "framework": "GDPR",
+            "status": "pass",
+            "score": 100,
+            "message": "Audit logging is properly implemented",
+            "evidence": [
+              "Logger service: Implemented",
+              "Audit service: Implemented"
+            ],
+            "recommendations": [],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          }
+        ],
+        "summary": {
+          "criticalFailures": 2,
+          "highRiskIssues": 2,
+          "mediumRiskIssues": 0,
+          "lowRiskIssues": 0
+        },
+        "recommendations": [
+          "Enable database encryption",
+          "Implement file system encryption",
+          "Use strong encryption algorithms (AES-256)",
+          "Define clear data retention policies",
+          "Implement automated data purging",
+          "Document retention justifications"
+        ]
+      },
+      "hipaa": {
+        "framework": "HIPAA",
+        "timestamp": "2025-07-19T17:45:56.540Z",
+        "overallScore": 50,
+        "totalControls": 2,
+        "passedControls": 1,
+        "failedControls": 1,
+        "notApplicableControls": 0,
+        "results": [
+          {
+            "ruleId": "hipaa-164.312a1",
+            "controlId": "164.312(a)(1)",
+            "framework": "HIPAA",
+            "status": "pass",
+            "score": 100,
+            "message": "Access controls are properly implemented",
+            "evidence": [
+              "Authentication service: Implemented",
+              "RBAC service: Implemented"
+            ],
+            "recommendations": [],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "hipaa-164.312e1",
+            "controlId": "164.312(e)(1)",
+            "framework": "HIPAA",
+            "status": "fail",
+            "score": 50,
+            "message": "Encryption in transit needs improvement",
+            "evidence": [
+              "HTTPS enforced: false",
+              "TLS version: 1.2"
+            ],
+            "recommendations": [
+              "Enforce HTTPS for all communications",
+              "Use TLS 1.2 or higher",
+              "Implement HSTS headers"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          }
+        ],
+        "summary": {
+          "criticalFailures": 0,
+          "highRiskIssues": 0,
+          "mediumRiskIssues": 1,
+          "lowRiskIssues": 0
+        },
+        "recommendations": [
+          "Enforce HTTPS for all communications",
+          "Use TLS 1.2 or higher",
+          "Implement HSTS headers"
+        ]
+      },
+      "pci": {
+        "framework": "PCI_DSS",
+        "timestamp": "2025-07-19T17:45:56.540Z",
+        "overallScore": 0,
+        "totalControls": 2,
+        "passedControls": 0,
+        "failedControls": 2,
+        "notApplicableControls": 0,
+        "results": [
+          {
+            "ruleId": "pci-req1",
+            "controlId": "Requirement 1",
+            "framework": "PCI_DSS",
+            "status": "fail",
+            "score": 40,
+            "message": "Network security needs enhancement",
+            "evidence": [
+              "Firewall: Disabled",
+              "Network segmentation: Disabled"
+            ],
+            "recommendations": [
+              "Enable firewall protection",
+              "Implement network segmentation",
+              "Regular security group reviews"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "pci-req3",
+            "controlId": "Requirement 3",
+            "framework": "PCI_DSS",
+            "status": "fail",
+            "score": 0,
+            "message": "Encryption at rest is not fully implemented",
+            "evidence": [
+              "Database encryption: Disabled",
+              "File encryption: Disabled"
+            ],
+            "recommendations": [
+              "Enable database encryption",
+              "Implement file system encryption",
+              "Use strong encryption algorithms (AES-256)"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          }
+        ],
+        "summary": {
+          "criticalFailures": 1,
+          "highRiskIssues": 2,
+          "mediumRiskIssues": 0,
+          "lowRiskIssues": 0
+        },
+        "recommendations": [
+          "Enable firewall protection",
+          "Implement network segmentation",
+          "Regular security group reviews",
+          "Enable database encryption",
+          "Implement file system encryption",
+          "Use strong encryption algorithms (AES-256)"
+        ]
+      },
+      "iso27001": {
+        "framework": "ISO27001",
+        "timestamp": "2025-07-19T17:45:56.540Z",
+        "overallScore": 0,
+        "totalControls": 2,
+        "passedControls": 0,
+        "failedControls": 2,
+        "notApplicableControls": 0,
+        "results": [
+          {
+            "ruleId": "iso-a12.6.1",
+            "controlId": "A.12.6.1",
+            "framework": "ISO27001",
+            "status": "fail",
+            "score": 20,
+            "message": "Vulnerability management needs improvement",
+            "evidence": [
+              "Vulnerability scanning: Enabled",
+              "Scan frequency: never"
+            ],
+            "recommendations": [
+              "Enable regular vulnerability scanning",
+              "Implement automated patching",
+              "Maintain vulnerability inventory"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          },
+          {
+            "ruleId": "iso-a12.3.1",
+            "controlId": "A.12.3.1",
+            "framework": "ISO27001",
+            "status": "fail",
+            "score": 0,
+            "message": "Backup procedures need implementation",
+            "evidence": [
+              "Backup enabled: false",
+              "Backup frequency: never"
+            ],
+            "recommendations": [
+              "Implement regular backup procedures",
+              "Test backup restoration",
+              "Secure backup storage"
+            ],
+            "timestamp": "2025-07-19T17:45:56.540Z"
+          }
+        ],
+        "summary": {
+          "criticalFailures": 1,
+          "highRiskIssues": 2,
+          "mediumRiskIssues": 0,
+          "lowRiskIssues": 0
+        },
+        "recommendations": [
+          "Enable regular vulnerability scanning",
+          "Implement automated patching",
+          "Maintain vulnerability inventory",
+          "Implement regular backup procedures",
+          "Test backup restoration",
+          "Secure backup storage"
+        ]
+      }
+    },
+    "penetration": {
+      "suiteId": "pentest-1752947156547",
+      "suiteName": "Comprehensive Penetration Test",
+      "baseUrl": "http://localhost:3000",
+      "timestamp": "2025-07-19T17:45:56.655Z",
+      "duration": 108,
+      "totalTests": 24,
+      "vulnerableTests": 1,
+      "secureTests": 5,
+      "errorTests": 1,
+      "results": [
+        {
+          "testId": "auth-sql-injection-login",
+          "testName": "SQL Injection in Login",
+          "category": "authentication",
+          "severity": "info",
+          "status": "secure",
+          "description": "Tests for SQL injection vulnerabilities in login endpoint",
+          "details": "Login endpoint properly handles SQL injection attempts",
+          "evidence": [],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.602Z",
+          "duration": 55
+        },
+        {
+          "testId": "auth-brute-force-protection",
+          "testName": "Brute Force Protection",
+          "category": "authentication",
+          "severity": "high",
+          "status": "vulnerable",
+          "description": "Tests for brute force attack protection mechanisms",
+          "details": "No brute force protection detected",
+          "evidence": [],
+          "recommendations": [
+            "Implement rate limiting for login attempts",
+            "Add account lockout mechanisms",
+            "Use CAPTCHA after failed attempts",
+            "Monitor and alert on suspicious login patterns"
+          ],
+          "timestamp": "2025-07-19T17:45:56.620Z",
+          "duration": 18
+        },
+        {
+          "testId": "auth-password-policy",
+          "testName": "Password Policy Enforcement",
+          "category": "authentication",
+          "severity": "info",
+          "status": "secure",
+          "description": "Tests password policy enforcement during registration",
+          "details": "Strong password policy is enforced",
+          "evidence": [],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.632Z",
+          "duration": 11
+        },
+        {
+          "testId": "auth-account-lockout",
+          "testName": "Account Lockout Mechanism",
+          "category": "authentication",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Tests account lockout after multiple failed attempts",
+          "details": "Account lockout mechanism requires manual verification",
+          "evidence": [
+            "Test requires specific account setup and monitoring"
+          ],
+          "recommendations": [
+            "Implement account lockout after N failed attempts",
+            "Provide account unlock mechanisms",
+            "Log lockout events for monitoring",
+            "Consider progressive delays instead of permanent lockout"
+          ],
+          "timestamp": "2025-07-19T17:45:56.632Z",
+          "duration": 0
+        },
+        {
+          "testId": "auth-jwt-validation",
+          "testName": "JWT Token Validation",
+          "category": "authentication",
+          "severity": "info",
+          "status": "secure",
+          "description": "Tests JWT token validation mechanisms",
+          "details": "JWT validation is working correctly",
+          "evidence": [],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.639Z",
+          "duration": 7
+        },
+        {
+          "testId": "authz-privilege-escalation",
+          "testName": "Privilege Escalation",
+          "category": "authorization",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Tests for privilege escalation vulnerabilities",
+          "details": "Privilege escalation testing requires specific user setup",
+          "evidence": [
+            "Test requires multiple user accounts with different privilege levels"
+          ],
+          "recommendations": [
+            "Implement proper role-based access control",
+            "Validate user permissions on every request",
+            "Use principle of least privilege",
+            "Regular access reviews and audits"
+          ],
+          "timestamp": "2025-07-19T17:45:56.639Z",
+          "duration": 0
+        },
+        {
+          "testId": "authz-horizontal-access",
+          "testName": "Horizontal Access Control",
+          "category": "authorization",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Tests for horizontal privilege escalation",
+          "details": "Horizontal access control testing requires multiple user accounts",
+          "evidence": [
+            "Test requires setup of multiple user accounts at same privilege level"
+          ],
+          "recommendations": [
+            "Validate user ownership of resources",
+            "Implement proper resource isolation",
+            "Use user context in all data queries",
+            "Regular access control testing"
+          ],
+          "timestamp": "2025-07-19T17:45:56.639Z",
+          "duration": 0
+        },
+        {
+          "testId": "authz-vertical-access",
+          "testName": "Vertical Access Control",
+          "category": "authorization",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Tests for vertical privilege escalation",
+          "details": "Vertical access control testing requires hierarchical user setup",
+          "evidence": [
+            "Test requires setup of users with different privilege levels"
+          ],
+          "recommendations": [
+            "Implement role hierarchy validation",
+            "Check permissions at every access point",
+            "Use centralized authorization service",
+            "Regular privilege reviews"
+          ],
+          "timestamp": "2025-07-19T17:45:56.639Z",
+          "duration": 0
+        },
+        {
+          "testId": "authz-direct-object-refs",
+          "testName": "Insecure Direct Object References",
+          "category": "authorization",
+          "severity": "info",
+          "status": "secure",
+          "description": "Tests for insecure direct object reference vulnerabilities",
+          "details": "Object access controls appear to be working",
+          "evidence": [
+            "Properly protected resource ID: ../../../etc/passwd"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.648Z",
+          "duration": 9
+        },
+        {
+          "testId": "injection-sql",
+          "testName": "SQL Injection",
+          "category": "injection",
+          "severity": "info",
+          "status": "secure",
+          "description": "Tests for SQL injection vulnerabilities in search and query endpoints",
+          "details": "No SQL injection vulnerabilities found",
+          "evidence": [],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 5
+        },
+        {
+          "testId": "injection-nosql",
+          "testName": "NoSQL Injection",
+          "category": "injection",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "NoSQL Injection testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement NoSQL Injection testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "injection-command",
+          "testName": "Command Injection",
+          "category": "injection",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Command Injection testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Command Injection testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "injection-ldap",
+          "testName": "LDAP Injection",
+          "category": "injection",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "LDAP Injection testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement LDAP Injection testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "xss-reflected",
+          "testName": "Reflected XSS",
+          "category": "xss",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Reflected XSS testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Reflected XSS testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "xss-stored",
+          "testName": "Stored XSS",
+          "category": "xss",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Stored XSS testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Stored XSS testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "xss-dom",
+          "testName": "DOM-based XSS",
+          "category": "xss",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "DOM-based XSS testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement DOM-based XSS testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "csrf-token",
+          "testName": "CSRF Token Validation",
+          "category": "csrf",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "CSRF Token Validation testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement CSRF Token Validation testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "csrf-samesite",
+          "testName": "SameSite Cookie Attribute",
+          "category": "csrf",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "SameSite Cookie Attribute testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement SameSite Cookie Attribute testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "session-fixation",
+          "testName": "Session Fixation",
+          "category": "session",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Session Fixation testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Session Fixation testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "session-timeout",
+          "testName": "Session Timeout",
+          "category": "session",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Session Timeout testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Session Timeout testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "session-cookies",
+          "testName": "Secure Cookie Flags",
+          "category": "session",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Secure Cookie Flags testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Secure Cookie Flags testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.653Z",
+          "duration": 0
+        },
+        {
+          "testId": "config-security-headers",
+          "testName": "Security Headers",
+          "category": "configuration",
+          "severity": "info",
+          "status": "error",
+          "description": "Error occurred during Security Headers testing",
+          "details": "Request failed with status code 500",
+          "evidence": [
+            "AxiosError: Request failed with status code 500\n    at settle (/Users/coryjanowski/Projects/CloudWeave/node_modules/axios/lib/core/settle.js:19:12)\n    at IncomingMessage.handleStreamEnd (/Users/coryjanowski/Projects/CloudWeave/node_modules/axios/lib/adapters/http.js:599:11)\n    at IncomingMessage.emit (node:events:519:35)\n    at endReadableNT (node:internal/streams/readable:1701:12)\n    at processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/coryjanowski/Projects/CloudWeave/node_modules/axios/lib/core/Axios.js:45:41)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at PenetrationTester.testSecurityHeaders (/Users/coryjanowski/Projects/CloudWeave/tests/security/helpers/penetration-tester.ts:669:24)\n    at PenetrationTester.testConfiguration (/Users/coryjanowski/Projects/CloudWeave/tests/security/helpers/penetration-tester.ts:225:18)\n    at PenetrationTester.runFullSuite (/Users/coryjanowski/Projects/CloudWeave/tests/security/helpers/penetration-tester.ts:80:21)\n    at Object.<anonymous> (/Users/coryjanowski/Projects/CloudWeave/tests/security/security-test-runner.test.ts:111:30)"
+          ],
+          "recommendations": [
+            "Review test configuration and target availability"
+          ],
+          "timestamp": "2025-07-19T17:45:56.655Z",
+          "duration": 2
+        },
+        {
+          "testId": "config-info-disclosure",
+          "testName": "Information Disclosure",
+          "category": "configuration",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "Information Disclosure testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement Information Disclosure testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.655Z",
+          "duration": 0
+        },
+        {
+          "testId": "config-http-methods",
+          "testName": "HTTP Methods",
+          "category": "configuration",
+          "severity": "info",
+          "status": "inconclusive",
+          "description": "HTTP Methods testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific setup and implementation"
+          ],
+          "recommendations": [
+            "Implement HTTP Methods testing",
+            "Review security best practices"
+          ],
+          "timestamp": "2025-07-19T17:45:56.655Z",
+          "duration": 0
+        }
+      ],
+      "riskScore": 7,
+      "summary": {
+        "critical": 0,
+        "high": 1,
+        "medium": 0,
+        "low": 0,
+        "info": 23
+      }
+    },
+    "audit": {
+      "reportId": "audit-1752947156657",
+      "timestamp": "2025-07-19T17:45:56.664Z",
+      "duration": 7,
+      "totalTests": 17,
+      "passedTests": 2,
+      "failedTests": 2,
+      "warningTests": 13,
+      "overallScore": 48.8235294117647,
+      "results": [
+        {
+          "testId": "logging-file-existence",
+          "testName": "Log File Existence",
+          "category": "logging",
+          "status": "warning",
+          "score": 50,
+          "description": "Verifies that required log files exist",
+          "details": "2/4 required log files exist",
+          "evidence": [
+            "Existing files: combined.log, error.log",
+            "Missing files: access.log, security.log"
+          ],
+          "recommendations": [
+            "Create missing log files",
+            "Configure logging framework properly",
+            "Ensure log directory permissions are correct"
+          ],
+          "timestamp": "2025-07-19T17:45:56.663Z",
+          "duration": 6
+        },
+        {
+          "testId": "logging-format-validation",
+          "testName": "Log Format Validation",
+          "category": "logging",
+          "status": "pass",
+          "score": 100,
+          "description": "Validates log entry format and structure",
+          "details": "100.0% of log entries follow proper format",
+          "evidence": [
+            "Valid format entries: 100",
+            "Invalid format entries: 0",
+            "Valid: {\"level\":\"info\",\"message\":\"API prefix: /api/v1\",\"service\":\"cloudweave\",\"timestamp\":\"2025-07-18T01:50...",
+            "Valid: {\"level\":\"info\",\"message\":\"Database connection established successfully\",\"service\":\"cloudweave\",\"tim...",
+            "Valid: {\"level\":\"info\",\"message\":\"✅ Database connection established\",\"service\":\"cloudweave\",\"timestamp\":\"20..."
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.663Z",
+          "duration": 0
+        },
+        {
+          "testId": "logging-security-events",
+          "testName": "Security Event Logging",
+          "category": "logging",
+          "status": "fail",
+          "score": 0,
+          "description": "Verifies that security events are properly logged",
+          "details": "Found 0 security-related log entries",
+          "evidence": [
+            "Security log file not found",
+            "Security events in combined log: 0"
+          ],
+          "recommendations": [
+            "Implement dedicated security event logging",
+            "Log all authentication attempts",
+            "Log authorization failures",
+            "Include security context in log entries"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 1
+        },
+        {
+          "testId": "logging-error-events",
+          "testName": "Error Logging",
+          "category": "logging",
+          "status": "pass",
+          "score": 100,
+          "description": "Verifies that errors are properly logged",
+          "details": "Error logging is active with 10 entries",
+          "evidence": [
+            "Error log file exists: /Users/coryjanowski/Projects/CloudWeave/logs/error.log",
+            "Error entries found: 10"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "logging-access-events",
+          "testName": "Access Logging",
+          "category": "logging",
+          "status": "warning",
+          "score": 50,
+          "description": "Verifies that access events are properly logged",
+          "details": "Access logging verification requires web server configuration",
+          "evidence": [
+            "Test requires web server access log configuration"
+          ],
+          "recommendations": [
+            "Configure web server access logging",
+            "Log all HTTP requests and responses",
+            "Include client IP, user agent, and response codes",
+            "Implement request correlation IDs"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "integrity-tampering-detection",
+          "testName": "Log Tampering Detection",
+          "category": "integrity",
+          "status": "warning",
+          "score": 30,
+          "description": "Verifies mechanisms to detect log tampering",
+          "details": "Log tampering detection mechanisms not implemented",
+          "evidence": [
+            "No checksum or digital signature verification found"
+          ],
+          "recommendations": [
+            "Implement log file checksums",
+            "Use digital signatures for log entries",
+            "Store logs in tamper-evident storage",
+            "Implement log integrity monitoring"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "integrity-file-permissions",
+          "testName": "Log File Permissions",
+          "category": "integrity",
+          "status": "fail",
+          "score": 0,
+          "description": "Verifies that log files have secure permissions",
+          "details": "0/3 log files have secure permissions",
+          "evidence": [
+            "combined.log: 644",
+            "error.log: 644",
+            "security.log: not found"
+          ],
+          "recommendations": [
+            "Set restrictive permissions on log files (600 or 640)",
+            "Ensure only authorized users can read logs",
+            "Prevent write access to log files by applications",
+            "Regular permission audits"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "integrity-rotation",
+          "testName": "Log Rotation Integrity",
+          "category": "integrity",
+          "status": "warning",
+          "score": 50,
+          "description": "Log Rotation Integrity testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Log Rotation Integrity testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "integrity-checksum",
+          "testName": "Checksum Validation",
+          "category": "integrity",
+          "status": "warning",
+          "score": 50,
+          "description": "Checksum Validation testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Checksum Validation testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "retention-period",
+          "testName": "Retention Period Compliance",
+          "category": "retention",
+          "status": "warning",
+          "score": 50,
+          "description": "Retention Period Compliance testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Retention Period Compliance testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "retention-cleanup",
+          "testName": "Automated Cleanup",
+          "category": "retention",
+          "status": "warning",
+          "score": 50,
+          "description": "Automated Cleanup testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Automated Cleanup testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "retention-archive",
+          "testName": "Archive Functionality",
+          "category": "retention",
+          "status": "warning",
+          "score": 50,
+          "description": "Archive Functionality testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Archive Functionality testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "retention-documentation",
+          "testName": "Retention Policy Documentation",
+          "category": "retention",
+          "status": "warning",
+          "score": 50,
+          "description": "Retention Policy Documentation testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Retention Policy Documentation testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "compliance-gdpr",
+          "testName": "GDPR Compliance Logging",
+          "category": "compliance",
+          "status": "warning",
+          "score": 50,
+          "description": "GDPR Compliance Logging testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement GDPR Compliance Logging testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "compliance-soc2",
+          "testName": "SOC 2 Compliance Logging",
+          "category": "compliance",
+          "status": "warning",
+          "score": 50,
+          "description": "SOC 2 Compliance Logging testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement SOC 2 Compliance Logging testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "compliance-hipaa",
+          "testName": "HIPAA Compliance Logging",
+          "category": "compliance",
+          "status": "warning",
+          "score": 50,
+          "description": "HIPAA Compliance Logging testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement HIPAA Compliance Logging testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        },
+        {
+          "testId": "compliance-audit-trail",
+          "testName": "Audit Trail Completeness",
+          "category": "compliance",
+          "status": "warning",
+          "score": 50,
+          "description": "Audit Trail Completeness testing requires additional implementation",
+          "details": "Test implementation is pending",
+          "evidence": [
+            "Test requires specific configuration and setup"
+          ],
+          "recommendations": [
+            "Implement Audit Trail Completeness testing",
+            "Review audit requirements"
+          ],
+          "timestamp": "2025-07-19T17:45:56.664Z",
+          "duration": 0
+        }
+      ],
+      "summary": {
+        "loggingScore": 60,
+        "integrityScore": 32.5,
+        "retentionScore": 50,
+        "complianceScore": 50
+      },
+      "recommendations": [
+        "Create missing log files",
+        "Configure logging framework properly",
+        "Ensure log directory permissions are correct",
+        "Implement dedicated security event logging",
+        "Log all authentication attempts",
+        "Log authorization failures",
+        "Include security context in log entries",
+        "Configure web server access logging",
+        "Log all HTTP requests and responses",
+        "Include client IP, user agent, and response codes",
+        "Implement request correlation IDs",
+        "Implement log file checksums",
+        "Use digital signatures for log entries",
+        "Store logs in tamper-evident storage",
+        "Implement log integrity monitoring",
+        "Set restrictive permissions on log files (600 or 640)",
+        "Ensure only authorized users can read logs",
+        "Prevent write access to log files by applications",
+        "Regular permission audits",
+        "Implement Log Rotation Integrity testing",
+        "Review audit requirements",
+        "Implement Checksum Validation testing",
+        "Implement Retention Period Compliance testing",
+        "Implement Automated Cleanup testing",
+        "Implement Archive Functionality testing",
+        "Implement Retention Policy Documentation testing",
+        "Implement GDPR Compliance Logging testing",
+        "Implement SOC 2 Compliance Logging testing",
+        "Implement HIPAA Compliance Logging testing",
+        "Implement Audit Trail Completeness testing"
+      ]
+    }
+  },
+  "recommendations": [
+    "Improve SOC2 compliance score (currently 66.7%)",
+    "Improve GDPR compliance score (currently 33.3%)",
+    "Address 2 critical GDPR compliance failures",
+    "Improve HIPAA compliance score (currently 50.0%)",
+    "Improve PCI compliance score (currently 0.0%)",
+    "Address 1 critical PCI compliance failures",
+    "Improve ISO27001 compliance score (currently 0.0%)",
+    "Address 1 critical ISO27001 compliance failures",
+    "Improve audit trail compliance (currently 48.8%)"
+  ]
+}

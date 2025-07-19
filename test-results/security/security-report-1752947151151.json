@@ -1,0 +1,125 @@
+{
+  "timestamp": "2025-07-19T17:45:51.151Z",
+  "summary": {
+    "totalScans": 4,
+    "passedScans": 4,
+    "failedScans": 0,
+    "totalVulnerabilities": 4,
+    "averageRiskScore": 3.5,
+    "overallPassed": true
+  },
+  "results": [
+    {
+      "scanType": "dependency",
+      "timestamp": "2025-07-19T17:45:51.118Z",
+      "duration": 1155,
+      "vulnerabilities": [],
+      "summary": {
+        "total": 0,
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "passed": true,
+      "riskScore": 0
+    },
+    {
+      "scanType": "code",
+      "timestamp": "2025-07-19T17:45:51.149Z",
+      "duration": 31,
+      "vulnerabilities": [],
+      "summary": {
+        "total": 0,
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "passed": true,
+      "riskScore": 0
+    },
+    {
+      "scanType": "container",
+      "timestamp": "2025-07-19T17:45:51.149Z",
+      "duration": 0,
+      "vulnerabilities": [
+        {
+          "id": "container-base-image-1",
+          "severity": "medium",
+          "title": "Outdated Base Image",
+          "description": "Base image contains outdated packages",
+          "component": "node:18-alpine",
+          "cve": "CVE-2023-1234",
+          "cvss": 5.5,
+          "references": [
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-1234"
+          ]
+        },
+        {
+          "id": "container-package-1",
+          "severity": "low",
+          "title": "Minor Package Vulnerability",
+          "description": "Non-critical vulnerability in system package",
+          "component": "libssl1.1",
+          "version": "1.1.1f",
+          "fixedVersion": "1.1.1g",
+          "cve": "CVE-2023-5678",
+          "cvss": 3.1,
+          "references": [
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-5678"
+          ]
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 1,
+        "info": 0
+      },
+      "passed": true,
+      "riskScore": 6
+    },
+    {
+      "scanType": "infrastructure",
+      "timestamp": "2025-07-19T17:45:51.150Z",
+      "duration": 1,
+      "vulnerabilities": [
+        {
+          "id": "k8s-root-namespace.yaml",
+          "severity": "medium",
+          "title": "Container Running as Root",
+          "description": "Container may be running as root user",
+          "component": "k8s/namespace.yaml",
+          "references": [
+            "https://kubernetes.io/docs/concepts/security/pod-security-standards/"
+          ]
+        },
+        {
+          "id": "k8s-no-security-context-namespace.yaml",
+          "severity": "medium",
+          "title": "Missing Security Context",
+          "description": "Pod/Container missing security context configuration",
+          "component": "k8s/namespace.yaml",
+          "references": [
+            "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
+          ]
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "critical": 0,
+        "high": 0,
+        "medium": 2,
+        "low": 0,
+        "info": 0
+      },
+      "passed": true,
+      "riskScore": 8
+    }
+  ]
+}

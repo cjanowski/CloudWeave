@@ -1,0 +1,368 @@
+{
+  "reportId": "audit-1752947148286",
+  "timestamp": "2025-07-19T17:45:48.290Z",
+  "duration": 4,
+  "totalTests": 17,
+  "passedTests": 2,
+  "failedTests": 2,
+  "warningTests": 13,
+  "overallScore": 48.8235294117647,
+  "results": [
+    {
+      "testId": "logging-file-existence",
+      "testName": "Log File Existence",
+      "category": "logging",
+      "status": "warning",
+      "score": 50,
+      "description": "Verifies that required log files exist",
+      "details": "2/4 required log files exist",
+      "evidence": [
+        "Existing files: combined.log, error.log",
+        "Missing files: access.log, security.log"
+      ],
+      "recommendations": [
+        "Create missing log files",
+        "Configure logging framework properly",
+        "Ensure log directory permissions are correct"
+      ],
+      "timestamp": "2025-07-19T17:45:48.288Z",
+      "duration": 2
+    },
+    {
+      "testId": "logging-format-validation",
+      "testName": "Log Format Validation",
+      "category": "logging",
+      "status": "pass",
+      "score": 100,
+      "description": "Validates log entry format and structure",
+      "details": "100.0% of log entries follow proper format",
+      "evidence": [
+        "Valid format entries: 100",
+        "Invalid format entries: 0",
+        "Valid: {\"level\":\"info\",\"message\":\"API prefix: /api/v1\",\"service\":\"cloudweave\",\"timestamp\":\"2025-07-18T01:50...",
+        "Valid: {\"level\":\"info\",\"message\":\"Database connection established successfully\",\"service\":\"cloudweave\",\"tim...",
+        "Valid: {\"level\":\"info\",\"message\":\"✅ Database connection established\",\"service\":\"cloudweave\",\"timestamp\":\"20..."
+      ],
+      "recommendations": [],
+      "timestamp": "2025-07-19T17:45:48.289Z",
+      "duration": 1
+    },
+    {
+      "testId": "logging-security-events",
+      "testName": "Security Event Logging",
+      "category": "logging",
+      "status": "fail",
+      "score": 0,
+      "description": "Verifies that security events are properly logged",
+      "details": "Found 0 security-related log entries",
+      "evidence": [
+        "Security log file not found",
+        "Security events in combined log: 0"
+      ],
+      "recommendations": [
+        "Implement dedicated security event logging",
+        "Log all authentication attempts",
+        "Log authorization failures",
+        "Include security context in log entries"
+      ],
+      "timestamp": "2025-07-19T17:45:48.289Z",
+      "duration": 0
+    },
+    {
+      "testId": "logging-error-events",
+      "testName": "Error Logging",
+      "category": "logging",
+      "status": "pass",
+      "score": 100,
+      "description": "Verifies that errors are properly logged",
+      "details": "Error logging is active with 10 entries",
+      "evidence": [
+        "Error log file exists: /Users/coryjanowski/Projects/CloudWeave/logs/error.log",
+        "Error entries found: 10"
+      ],
+      "recommendations": [],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 1
+    },
+    {
+      "testId": "logging-access-events",
+      "testName": "Access Logging",
+      "category": "logging",
+      "status": "warning",
+      "score": 50,
+      "description": "Verifies that access events are properly logged",
+      "details": "Access logging verification requires web server configuration",
+      "evidence": [
+        "Test requires web server access log configuration"
+      ],
+      "recommendations": [
+        "Configure web server access logging",
+        "Log all HTTP requests and responses",
+        "Include client IP, user agent, and response codes",
+        "Implement request correlation IDs"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "integrity-tampering-detection",
+      "testName": "Log Tampering Detection",
+      "category": "integrity",
+      "status": "warning",
+      "score": 30,
+      "description": "Verifies mechanisms to detect log tampering",
+      "details": "Log tampering detection mechanisms not implemented",
+      "evidence": [
+        "No checksum or digital signature verification found"
+      ],
+      "recommendations": [
+        "Implement log file checksums",
+        "Use digital signatures for log entries",
+        "Store logs in tamper-evident storage",
+        "Implement log integrity monitoring"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "integrity-file-permissions",
+      "testName": "Log File Permissions",
+      "category": "integrity",
+      "status": "fail",
+      "score": 0,
+      "description": "Verifies that log files have secure permissions",
+      "details": "0/3 log files have secure permissions",
+      "evidence": [
+        "combined.log: 644",
+        "error.log: 644",
+        "security.log: not found"
+      ],
+      "recommendations": [
+        "Set restrictive permissions on log files (600 or 640)",
+        "Ensure only authorized users can read logs",
+        "Prevent write access to log files by applications",
+        "Regular permission audits"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "integrity-rotation",
+      "testName": "Log Rotation Integrity",
+      "category": "integrity",
+      "status": "warning",
+      "score": 50,
+      "description": "Log Rotation Integrity testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Log Rotation Integrity testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "integrity-checksum",
+      "testName": "Checksum Validation",
+      "category": "integrity",
+      "status": "warning",
+      "score": 50,
+      "description": "Checksum Validation testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Checksum Validation testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "retention-period",
+      "testName": "Retention Period Compliance",
+      "category": "retention",
+      "status": "warning",
+      "score": 50,
+      "description": "Retention Period Compliance testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Retention Period Compliance testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "retention-cleanup",
+      "testName": "Automated Cleanup",
+      "category": "retention",
+      "status": "warning",
+      "score": 50,
+      "description": "Automated Cleanup testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Automated Cleanup testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "retention-archive",
+      "testName": "Archive Functionality",
+      "category": "retention",
+      "status": "warning",
+      "score": 50,
+      "description": "Archive Functionality testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Archive Functionality testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "retention-documentation",
+      "testName": "Retention Policy Documentation",
+      "category": "retention",
+      "status": "warning",
+      "score": 50,
+      "description": "Retention Policy Documentation testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Retention Policy Documentation testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "compliance-gdpr",
+      "testName": "GDPR Compliance Logging",
+      "category": "compliance",
+      "status": "warning",
+      "score": 50,
+      "description": "GDPR Compliance Logging testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement GDPR Compliance Logging testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "compliance-soc2",
+      "testName": "SOC 2 Compliance Logging",
+      "category": "compliance",
+      "status": "warning",
+      "score": 50,
+      "description": "SOC 2 Compliance Logging testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement SOC 2 Compliance Logging testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "compliance-hipaa",
+      "testName": "HIPAA Compliance Logging",
+      "category": "compliance",
+      "status": "warning",
+      "score": 50,
+      "description": "HIPAA Compliance Logging testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement HIPAA Compliance Logging testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    },
+    {
+      "testId": "compliance-audit-trail",
+      "testName": "Audit Trail Completeness",
+      "category": "compliance",
+      "status": "warning",
+      "score": 50,
+      "description": "Audit Trail Completeness testing requires additional implementation",
+      "details": "Test implementation is pending",
+      "evidence": [
+        "Test requires specific configuration and setup"
+      ],
+      "recommendations": [
+        "Implement Audit Trail Completeness testing",
+        "Review audit requirements"
+      ],
+      "timestamp": "2025-07-19T17:45:48.290Z",
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "loggingScore": 60,
+    "integrityScore": 32.5,
+    "retentionScore": 50,
+    "complianceScore": 50
+  },
+  "recommendations": [
+    "Create missing log files",
+    "Configure logging framework properly",
+    "Ensure log directory permissions are correct",
+    "Implement dedicated security event logging",
+    "Log all authentication attempts",
+    "Log authorization failures",
+    "Include security context in log entries",
+    "Configure web server access logging",
+    "Log all HTTP requests and responses",
+    "Include client IP, user agent, and response codes",
+    "Implement request correlation IDs",
+    "Implement log file checksums",
+    "Use digital signatures for log entries",
+    "Store logs in tamper-evident storage",
+    "Implement log integrity monitoring",
+    "Set restrictive permissions on log files (600 or 640)",
+    "Ensure only authorized users can read logs",
+    "Prevent write access to log files by applications",
+    "Regular permission audits",
+    "Implement Log Rotation Integrity testing",
+    "Review audit requirements",
+    "Implement Checksum Validation testing",
+    "Implement Retention Period Compliance testing",
+    "Implement Automated Cleanup testing",
+    "Implement Archive Functionality testing",
+    "Implement Retention Policy Documentation testing",
+    "Implement GDPR Compliance Logging testing",
+    "Implement SOC 2 Compliance Logging testing",
+    "Implement HIPAA Compliance Logging testing",
+    "Implement Audit Trail Completeness testing"
+  ]
+}

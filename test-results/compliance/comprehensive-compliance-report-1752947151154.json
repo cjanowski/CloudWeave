@@ -1,0 +1,332 @@
+{
+  "timestamp": "2025-07-19T17:45:51.154Z",
+  "summary": {
+    "totalFrameworks": 5,
+    "averageScore": 30,
+    "totalControls": 12,
+    "totalPassed": 4,
+    "totalFailed": 8,
+    "criticalIssues": 4,
+    "highRiskIssues": 6
+  },
+  "reports": [
+    {
+      "framework": "SOC2",
+      "timestamp": "2025-07-19T17:45:51.153Z",
+      "overallScore": 66.66666666666666,
+      "totalControls": 3,
+      "passedControls": 2,
+      "failedControls": 1,
+      "notApplicableControls": 0,
+      "results": [
+        {
+          "ruleId": "soc2-cc6.1",
+          "controlId": "CC6.1",
+          "framework": "SOC2",
+          "status": "pass",
+          "score": 100,
+          "message": "Access controls are properly implemented",
+          "evidence": [
+            "Authentication service: Implemented",
+            "RBAC service: Implemented"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "soc2-cc6.7",
+          "controlId": "CC6.7",
+          "framework": "SOC2",
+          "status": "fail",
+          "score": 50,
+          "message": "Encryption in transit needs improvement",
+          "evidence": [
+            "HTTPS enforced: false",
+            "TLS version: 1.2"
+          ],
+          "recommendations": [
+            "Enforce HTTPS for all communications",
+            "Use TLS 1.2 or higher",
+            "Implement HSTS headers"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "soc2-cc7.2",
+          "controlId": "CC7.2",
+          "framework": "SOC2",
+          "status": "pass",
+          "score": 100,
+          "message": "Audit logging is properly implemented",
+          "evidence": [
+            "Logger service: Implemented",
+            "Audit service: Implemented"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        }
+      ],
+      "summary": {
+        "criticalFailures": 0,
+        "highRiskIssues": 0,
+        "mediumRiskIssues": 1,
+        "lowRiskIssues": 0
+      },
+      "recommendations": [
+        "Enforce HTTPS for all communications",
+        "Use TLS 1.2 or higher",
+        "Implement HSTS headers"
+      ]
+    },
+    {
+      "framework": "GDPR",
+      "timestamp": "2025-07-19T17:45:51.153Z",
+      "overallScore": 33.33333333333333,
+      "totalControls": 3,
+      "passedControls": 1,
+      "failedControls": 2,
+      "notApplicableControls": 0,
+      "results": [
+        {
+          "ruleId": "gdpr-art32",
+          "controlId": "Article 32",
+          "framework": "GDPR",
+          "status": "fail",
+          "score": 0,
+          "message": "Encryption at rest is not fully implemented",
+          "evidence": [
+            "Database encryption: Disabled",
+            "File encryption: Disabled"
+          ],
+          "recommendations": [
+            "Enable database encryption",
+            "Implement file system encryption",
+            "Use strong encryption algorithms (AES-256)"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "gdpr-art5",
+          "controlId": "Article 5",
+          "framework": "GDPR",
+          "status": "fail",
+          "score": 0,
+          "message": "Data retention policy needs definition",
+          "evidence": [
+            "Retention period: 0 days"
+          ],
+          "recommendations": [
+            "Define clear data retention policies",
+            "Implement automated data purging",
+            "Document retention justifications"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "gdpr-art30",
+          "controlId": "Article 30",
+          "framework": "GDPR",
+          "status": "pass",
+          "score": 100,
+          "message": "Audit logging is properly implemented",
+          "evidence": [
+            "Logger service: Implemented",
+            "Audit service: Implemented"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        }
+      ],
+      "summary": {
+        "criticalFailures": 2,
+        "highRiskIssues": 2,
+        "mediumRiskIssues": 0,
+        "lowRiskIssues": 0
+      },
+      "recommendations": [
+        "Enable database encryption",
+        "Implement file system encryption",
+        "Use strong encryption algorithms (AES-256)",
+        "Define clear data retention policies",
+        "Implement automated data purging",
+        "Document retention justifications"
+      ]
+    },
+    {
+      "framework": "HIPAA",
+      "timestamp": "2025-07-19T17:45:51.153Z",
+      "overallScore": 50,
+      "totalControls": 2,
+      "passedControls": 1,
+      "failedControls": 1,
+      "notApplicableControls": 0,
+      "results": [
+        {
+          "ruleId": "hipaa-164.312a1",
+          "controlId": "164.312(a)(1)",
+          "framework": "HIPAA",
+          "status": "pass",
+          "score": 100,
+          "message": "Access controls are properly implemented",
+          "evidence": [
+            "Authentication service: Implemented",
+            "RBAC service: Implemented"
+          ],
+          "recommendations": [],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "hipaa-164.312e1",
+          "controlId": "164.312(e)(1)",
+          "framework": "HIPAA",
+          "status": "fail",
+          "score": 50,
+          "message": "Encryption in transit needs improvement",
+          "evidence": [
+            "HTTPS enforced: false",
+            "TLS version: 1.2"
+          ],
+          "recommendations": [
+            "Enforce HTTPS for all communications",
+            "Use TLS 1.2 or higher",
+            "Implement HSTS headers"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        }
+      ],
+      "summary": {
+        "criticalFailures": 0,
+        "highRiskIssues": 0,
+        "mediumRiskIssues": 1,
+        "lowRiskIssues": 0
+      },
+      "recommendations": [
+        "Enforce HTTPS for all communications",
+        "Use TLS 1.2 or higher",
+        "Implement HSTS headers"
+      ]
+    },
+    {
+      "framework": "PCI_DSS",
+      "timestamp": "2025-07-19T17:45:51.153Z",
+      "overallScore": 0,
+      "totalControls": 2,
+      "passedControls": 0,
+      "failedControls": 2,
+      "notApplicableControls": 0,
+      "results": [
+        {
+          "ruleId": "pci-req1",
+          "controlId": "Requirement 1",
+          "framework": "PCI_DSS",
+          "status": "fail",
+          "score": 40,
+          "message": "Network security needs enhancement",
+          "evidence": [
+            "Firewall: Disabled",
+            "Network segmentation: Disabled"
+          ],
+          "recommendations": [
+            "Enable firewall protection",
+            "Implement network segmentation",
+            "Regular security group reviews"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "pci-req3",
+          "controlId": "Requirement 3",
+          "framework": "PCI_DSS",
+          "status": "fail",
+          "score": 0,
+          "message": "Encryption at rest is not fully implemented",
+          "evidence": [
+            "Database encryption: Disabled",
+            "File encryption: Disabled"
+          ],
+          "recommendations": [
+            "Enable database encryption",
+            "Implement file system encryption",
+            "Use strong encryption algorithms (AES-256)"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        }
+      ],
+      "summary": {
+        "criticalFailures": 1,
+        "highRiskIssues": 2,
+        "mediumRiskIssues": 0,
+        "lowRiskIssues": 0
+      },
+      "recommendations": [
+        "Enable firewall protection",
+        "Implement network segmentation",
+        "Regular security group reviews",
+        "Enable database encryption",
+        "Implement file system encryption",
+        "Use strong encryption algorithms (AES-256)"
+      ]
+    },
+    {
+      "framework": "ISO27001",
+      "timestamp": "2025-07-19T17:45:51.154Z",
+      "overallScore": 0,
+      "totalControls": 2,
+      "passedControls": 0,
+      "failedControls": 2,
+      "notApplicableControls": 0,
+      "results": [
+        {
+          "ruleId": "iso-a12.6.1",
+          "controlId": "A.12.6.1",
+          "framework": "ISO27001",
+          "status": "fail",
+          "score": 20,
+          "message": "Vulnerability management needs improvement",
+          "evidence": [
+            "Vulnerability scanning: Enabled",
+            "Scan frequency: never"
+          ],
+          "recommendations": [
+            "Enable regular vulnerability scanning",
+            "Implement automated patching",
+            "Maintain vulnerability inventory"
+          ],
+          "timestamp": "2025-07-19T17:45:51.153Z"
+        },
+        {
+          "ruleId": "iso-a12.3.1",
+          "controlId": "A.12.3.1",
+          "framework": "ISO27001",
+          "status": "fail",
+          "score": 0,
+          "message": "Backup procedures need implementation",
+          "evidence": [
+            "Backup enabled: false",
+            "Backup frequency: never"
+          ],
+          "recommendations": [
+            "Implement regular backup procedures",
+            "Test backup restoration",
+            "Secure backup storage"
+          ],
+          "timestamp": "2025-07-19T17:45:51.154Z"
+        }
+      ],
+      "summary": {
+        "criticalFailures": 1,
+        "highRiskIssues": 2,
+        "mediumRiskIssues": 0,
+        "lowRiskIssues": 0
+      },
+      "recommendations": [
+        "Enable regular vulnerability scanning",
+        "Implement automated patching",
+        "Maintain vulnerability inventory",
+        "Implement regular backup procedures",
+        "Test backup restoration",
+        "Secure backup storage"
+      ]
+    }
+  ]
+}
