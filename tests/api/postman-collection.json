@@ -1,0 +1,485 @@
+{
+  "info": {
+    "name": "CloudWeave API Tests",
+    "description": "Comprehensive API test collection for CloudWeave platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set base URL if not already set",
+          "if (!pm.environment.get('baseUrl')) {",
+          "    pm.environment.set('baseUrl', 'http://localhost:3000');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('token');",
+                  "    pm.expect(responseJson).to.have.property('user');",
+                  "    pm.expect(responseJson).to.have.property('organization');",
+                  "});",
+                  "",
+                  "// Store auth token for subsequent requests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('authToken', responseJson.token);",
+                  "    pm.environment.set('organizationId', responseJson.organization.id);",
+                  "    pm.environment.set('userId', responseJson.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"{{organizationName}}\",\n  \"adminEmail\": \"{{adminEmail}}\",\n  \"adminPassword\": \"{{adminPassword}}\",\n  \"adminPasswordConfirm\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Store auth token",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('authToken', responseJson.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has user data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('email');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "item": [
+        {
+          "name": "List Resources",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has resources array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('resources');",
+                  "    pm.expect(responseJson.resources).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/infrastructure/resources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "infrastructure", "resources"]
+            }
+          }
+        },
+        {
+          "name": "Create Resource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has resource data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('name');",
+                  "    pm.expect(responseJson).to.have.property('status');",
+                  "});",
+                  "",
+                  "// Store resource ID for subsequent tests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('resourceId', responseJson.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"test-server-{{$randomInt}}\",\n  \"type\": \"ec2-instance\",\n  \"cloudProvider\": \"aws\",\n  \"region\": \"us-east-1\",\n  \"configuration\": {\n    \"instanceType\": \"t3.micro\",\n    \"imageId\": \"ami-12345678\"\n  },\n  \"tags\": {\n    \"environment\": \"test\",\n    \"project\": \"cloudweave\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/infrastructure/resources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "infrastructure", "resources"]
+            }
+          }
+        },
+        {
+          "name": "Get Resource by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has resource data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.id).to.equal(pm.environment.get('resourceId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/infrastructure/resources/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "infrastructure", "resources", "{{resourceId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deployments",
+      "item": [
+        {
+          "name": "List Pipelines",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pipelines array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('pipelines');",
+                  "    pm.expect(responseJson.pipelines).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/pipelines",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "deployments", "pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Create Pipeline",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has pipeline data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('name');",
+                  "});",
+                  "",
+                  "// Store pipeline ID",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('pipelineId', responseJson.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"test-pipeline-{{$randomInt}}\",\n  \"description\": \"Test deployment pipeline\",\n  \"sourceRepository\": \"https://github.com/test/repo\",\n  \"branch\": \"main\",\n  \"deploymentStrategy\": \"blue-green\",\n  \"targetEnvironment\": \"staging\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/pipelines",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "deployments", "pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Get Deployment History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has deployments array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('deployments');",
+                  "    pm.expect(responseJson.deployments).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "deployments", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring",
+      "item": [
+        {
+          "name": "Get Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has metrics data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('metrics');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monitoring/metrics?timeRange=1h&metrics=cpu,memory",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monitoring", "metrics"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "1h"
+                },
+                {
+                  "key": "metrics",
+                  "value": "cpu,memory"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Alerts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has alerts array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('alerts');",
+                  "    pm.expect(responseJson.alerts).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monitoring/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monitoring", "alerts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Service is healthy', function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson).to.have.property('status', 'healthy');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "health"]
+        }
+      }
+    }
+  ]
+}
