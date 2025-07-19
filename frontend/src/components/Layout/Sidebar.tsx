@@ -271,6 +271,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, width, collapsedWidth, isMobile
             duration: theme.transitions.duration.enteringScreen,
           }),
           overflowX: 'hidden',
+          position: 'relative', // Ensure proper positioning
         },
       }}
     >

@@ -8,7 +8,9 @@ import {
   ConfigurationRollback,
   ConfigurationExport,
   ConfigurationImport,
-  ConfigurationVersion
+  ConfigurationVersion,
+  ConfigurationSchema,
+  ConfigurationType
 } from './types';
 import {
   IConfigurationService,
@@ -189,7 +191,7 @@ export class ConfigurationService implements IConfigurationService {
         value: configData.value,
         type: configData.type || 'string',
         isSecret: configData.isSecret || false,
-        description: configData.description,
+        description: configData.description || 'Bulk import configuration',
         tags: {},
         createdBy: 'system' // Should be passed from auth context
       };

@@ -27,6 +27,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [isMobile, sidebarOpen, dispatch])
 
+  // Calculate the current sidebar width for proper content positioning
+  const currentSidebarWidth = isMobile ? 0 : (sidebarOpen ? sidebarWidth : collapsedSidebarWidth)
+
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Sidebar */}
@@ -41,15 +44,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0, // Prevents flex item from overflowing
-          transition: theme.transitions.create(['margin'], {
+          overflow: 'hidden', // Prevent content from overflowing
+          // Use calc to ensure proper width calculation
+          width: isMobile ? '100%' : `calc(100vw - ${currentSidebarWidth}px)`,
+          transition: theme.transitions.create(['width'], {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
+            duration: theme.transitions.duration.enteringScreen,
           }),
-          marginLeft: isMobile ? 0 : sidebarOpen ? 0 : `-${sidebarWidth - collapsedSidebarWidth}px`,
         }}
       >
         {/* Header */}
@@ -62,6 +66,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             overflow: 'auto',
             backgroundColor: theme.palette.background.default,
             p: 3,
+            // Ensure content is properly centered within available space
+            width: '100%',
+            maxWidth: '100%',
           }}
         >
           {children}

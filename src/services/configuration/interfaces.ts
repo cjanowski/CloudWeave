@@ -87,6 +87,7 @@ export interface IConfigurationValidator {
   validateValue(type: string, value: any): boolean;
   validateSchema(schema: any): { valid: boolean; errors: string[] };
   validateTemplate(template: Partial<ConfigurationTemplate>): Promise<{ valid: boolean; errors: string[] }>;
+  validateConfigurationAgainstSchema(value: any, schema: ConfigurationSchema): { valid: boolean; errors: string[] };
 }
 
 export interface IConfigurationEncryption {

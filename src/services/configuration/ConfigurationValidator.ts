@@ -137,7 +137,7 @@ export class ConfigurationValidator implements IConfigurationValidator {
       try {
         const validate = this.ajv.compile(template.schema);
         if (!validate(template.defaultValues)) {
-          const validationErrors = validate.errors?.map(err => 
+          const validationErrors = validate.errors?.map((err: any) => 
             `Default value error at ${err.instancePath}: ${err.message}`
           ) || ['Default values do not match schema'];
           errors.push(...validationErrors);
@@ -159,7 +159,7 @@ export class ConfigurationValidator implements IConfigurationValidator {
       const valid = validate(value);
       
       if (!valid) {
-        const errors = validate.errors?.map(err => 
+        const errors = validate.errors?.map((err: any) => 
           `Validation error at ${err.instancePath}: ${err.message}`
         ) || ['Validation failed'];
         

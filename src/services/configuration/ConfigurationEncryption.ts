@@ -2,10 +2,8 @@ import crypto from 'crypto';
 import { IConfigurationEncryption } from './interfaces';
 
 export class ConfigurationEncryption implements IConfigurationEncryption {
-  private readonly algorithm = 'aes-256-gcm';
   private readonly keyLength = 32;
   private readonly ivLength = 16;
-  private readonly tagLength = 16;
   private readonly encryptionKey: Buffer;
 
   constructor(encryptionKey?: string) {
@@ -31,15 +29,13 @@ export class ConfigurationEncryption implements IConfigurationEncryption {
   async encrypt(value: string): Promise<string> {
     try {
       const iv = crypto.randomBytes(this.ivLength);
-      const cipher = crypto.createCipherGCM(this.algorithm, this.encryptionKey, iv);
+      const cipher = crypto.createCipheriv('aes-256-cbc', this.encryptionKey, iv);
       
       let encrypted = cipher.update(value, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       
-      const tag = cipher.getAuthTag();
-      
-      // Combine IV, tag, and encrypted data
-      const combined = Buffer.concat([iv, tag, Buffer.from(encrypted, 'hex')]);
+      // Combine IV and encrypted data
+      const combined = Buffer.concat([iv, Buffer.from(encrypted, 'hex')]);
       
       // Add prefix to identify encrypted values
       return `enc:${combined.toString('base64')}`;
@@ -57,13 +53,11 @@ export class ConfigurationEncryption implements IConfigurationEncryption {
       // Remove prefix and decode
       const combined = Buffer.from(encryptedValue.slice(4), 'base64');
       
-      // Extract IV, tag, and encrypted data
+      // Extract IV and encrypted data
       const iv = combined.subarray(0, this.ivLength);
-      const tag = combined.subarray(this.ivLength, this.ivLength + this.tagLength);
-      const encrypted = combined.subarray(this.ivLength + this.tagLength);
+      const encrypted = combined.subarray(this.ivLength);
       
-      const decipher = crypto.createDecipherGCM(this.algorithm, this.encryptionKey, iv);
-      decipher.setAuthTag(tag);
+      const decipher = crypto.createDecipheriv('aes-256-cbc', this.encryptionKey, iv);
       
       let decrypted = decipher.update(encrypted, undefined, 'utf8');
       decrypted += decipher.final('utf8');

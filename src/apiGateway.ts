@@ -23,6 +23,7 @@ import {
 import authRoutes from './routes/auth';
 import rbacRoutes from './routes/rbac';
 import healthRoutes from './routes/health';
+import configurationRoutes from './routes/configuration';
 import docsRoutes from './routes/docs';
 import statusRoutes from './routes/status';
 
@@ -52,13 +53,15 @@ export const configureApiGateway = (): Router => {
   // RBAC routes (with standard rate limiting)
   router.use('/rbac', apiRateLimit, rbacRoutes);
 
+  // Configuration routes
+  router.use('/config', apiRateLimit, configurationRoutes);
+
   // Future routes will be added here:
   // router.use('/infrastructure', apiRateLimit, infrastructureRoutes);
   // router.use('/deployments', apiRateLimit, deploymentRoutes);
   // router.use('/monitoring', readOnlyRateLimit, monitoringRoutes);
   // router.use('/security', apiRateLimit, securityRoutes);
   // router.use('/cost', readOnlyRateLimit, costRoutes);
-  // router.use('/config', apiRateLimit, configRoutes);
 
   return router;
 };
