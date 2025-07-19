@@ -2,6 +2,9 @@
 
 A unified cloud platform engineering application for managing multi-cloud infrastructure, deployments, and operations. CloudWeave provides developers and platform engineers with powerful tools to weave together multi-cloud environments seamlessly.
 
+## Preview
+<img width="1511" height="824" alt="Screenshot 2025-07-19 at 11 15 30 AM" src="https://github.com/user-attachments/assets/ed935072-ceb5-423a-b200-3ea5a968d68f" />
+
 ## Features
 
 - **Multi-cloud Management**: Unified interface for AWS, Azure, and GCP resources
