@@ -6,16 +6,23 @@
 // Types and interfaces
 export * from './types';
 export * from './interfaces';
+export * from './SecurityIncidentService';
 
 // Core services
 export { SecurityPolicyEngine } from './SecurityPolicyEngine';
 export { ComplianceManager } from './ComplianceManager';
 export { DataClassificationService } from './DataClassificationService';
+export { SecurityIncidentService } from './SecurityIncidentService';
+export { ComplianceValidationService } from './ComplianceValidationService';
+export { ComplianceEnforcementService } from './ComplianceEnforcementService';
 
 // Convenience functions for creating and configuring services
 import { SecurityPolicyEngine } from './SecurityPolicyEngine';
 import { ComplianceManager } from './ComplianceManager';
 import { DataClassificationService } from './DataClassificationService';
+import { SecurityIncidentService } from './SecurityIncidentService';
+import { ComplianceValidationService } from './ComplianceValidationService';
+import { ComplianceEnforcementService } from './ComplianceEnforcementService';
 
 /**
  * Create a fully configured security service suite
@@ -24,6 +31,9 @@ export async function createSecurityServices(): Promise<{
   policyEngine: SecurityPolicyEngine;
   complianceManager: ComplianceManager;
   dataClassificationService: DataClassificationService;
+  incidentService: SecurityIncidentService;
+  validationService: ComplianceValidationService;
+  enforcementService: ComplianceEnforcementService;
 }> {
   // Create policy engine
   const policyEngine = new SecurityPolicyEngine();
@@ -34,10 +44,26 @@ export async function createSecurityServices(): Promise<{
   // Create data classification service
   const dataClassificationService = new DataClassificationService();
 
+  // Create incident service
+  const incidentService = new SecurityIncidentService();
+
+  // Create validation service
+  const validationService = new ComplianceValidationService(
+    policyEngine,
+    complianceManager,
+    dataClassificationService
+  );
+
+  // Create enforcement service
+  const enforcementService = new ComplianceEnforcementService();
+
   return {
     policyEngine,
     complianceManager,
     dataClassificationService,
+    incidentService,
+    validationService,
+    enforcementService,
   };
 }
 

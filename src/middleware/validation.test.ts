@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import Joi from 'joi';
 import { validateRequest, commonSchemas, addRequestId, requestLogger } from './validation';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 
 describe('Validation Middleware', () => {
   let app: express.Application;
@@ -143,9 +144,9 @@ describe('Validation Middleware', () => {
     it('should add request ID if not present', async () => {
       app.use(addRequestId);
       app.get('/test', (req, res) => {
-        res.json({ 
-          success: true, 
-          requestId: req.headers['x-request-id'] 
+        res.json({
+          success: true,
+          requestId: req.headers['x-request-id']
         });
       });
 
@@ -160,9 +161,9 @@ describe('Validation Middleware', () => {
     it('should preserve existing request ID', async () => {
       app.use(addRequestId);
       app.get('/test', (req, res) => {
-        res.json({ 
-          success: true, 
-          requestId: req.headers['x-request-id'] 
+        res.json({
+          success: true,
+          requestId: req.headers['x-request-id']
         });
       });
 
