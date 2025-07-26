@@ -10,20 +10,23 @@ type User struct {
 	Name           string                 `json:"name" db:"name"`
 	PasswordHash   string                 `json:"-" db:"password_hash"`
 	Role           string                 `json:"role" db:"role"`
-	OrganizationID string                 `json:"organizationId" db:"organization_id"`
+	OrganizationID *string                `json:"organizationId" db:"organization_id"`
 	Preferences    map[string]interface{} `json:"preferences" db:"preferences"`
+	AvatarURL      *string                `json:"avatarUrl" db:"avatar_url"`
+	EmailVerified  bool                   `json:"emailVerified" db:"email_verified"`
 	CreatedAt      time.Time              `json:"createdAt" db:"created_at"`
 	UpdatedAt      time.Time              `json:"updatedAt" db:"updated_at"`
+	LastLoginAt    *time.Time             `json:"lastLoginAt" db:"last_login_at"`
 }
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 type RegisterRequest struct {
 	Email          string `json:"email" binding:"required,email"`
-	Password       string `json:"password" binding:"required,min=6"`
+	Password       string `json:"password" binding:"required,min=8"`
 	Name           string `json:"name" binding:"required,min=2"`
 	OrganizationID string `json:"organizationId" binding:"required"`
 }

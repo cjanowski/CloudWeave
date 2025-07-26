@@ -3,7 +3,11 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
+	"cloudweave/internal/models"
+	"cloudweave/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -45,17 +49,18 @@ func ErrorHandler() gin.HandlerFunc {
 }
 
 // AuthRequired middleware validates JWT tokens
-func AuthRequired() gin.HandlerFunc {
+func AuthRequired(jwtService *services.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error": map[string]interface{}{
-					"code":      "UNAUTHORIZED",
-					"message":   "Authorization header required",
-					"timestamp": time.Now(),
+			c.JSON(http.StatusUnauthorized, models.ApiResponse{
+				Success: false,
+				Error: &models.ApiError{
+					Code:      "UNAUTHORIZED",
+					Message:   "Authorization header required",
+					Timestamp: time.Now(),
 				},
+				RequestID: c.GetString("requestID"),
 			})
 			c.Abort()
 			return
@@ -63,24 +68,58 @@ func AuthRequired() gin.HandlerFunc {
 
 		// Extract token from "Bearer <token>"
 		tokenString := ""
-		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		if len(authHeader) > 7 && strings.HasPrefix(authHeader, "Bearer ") {
 			tokenString = authHeader[7:]
 		} else {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error": map[string]interface{}{
-					"code":      "INVALID_TOKEN_FORMAT",
-					"message":   "Invalid authorization header format",
-					"timestamp": time.Now(),
+			c.JSON(http.StatusUnauthorized, models.ApiResponse{
+				Success: false,
+				Error: &models.ApiError{
+					Code:      "INVALID_TOKEN_FORMAT",
+					Message:   "Invalid authorization header format. Expected 'Bearer <token>'",
+					Timestamp: time.Now(),
 				},
+				RequestID: c.GetString("requestID"),
 			})
 			c.Abort()
 			return
 		}
 
-		// TODO: Validate JWT token here
-		// For now, we'll just pass through
+		// Validate JWT token
+		claims, err := jwtService.ValidateToken(c.Request.Context(), tokenString)
+		if err != nil {
+			errorCode := "INVALID_TOKEN"
+			errorMessage := "Invalid or malformed token"
+			
+			if err == services.ErrExpiredToken {
+				errorCode = "TOKEN_EXPIRED"
+				errorMessage = "Token has expired"
+			} else if err == services.ErrInvalidSignature {
+				errorCode = "INVALID_SIGNATURE"
+				errorMessage = "Invalid token signature"
+			}
+
+			c.JSON(http.StatusUnauthorized, models.ApiResponse{
+				Success: false,
+				Error: &models.ApiError{
+					Code:      errorCode,
+					Message:   errorMessage,
+					Timestamp: time.Now(),
+				},
+				RequestID: c.GetString("requestID"),
+			})
+			c.Abort()
+			return
+		}
+
+		// Set user information in context for use by handlers
+		c.Set("userID", claims.UserID)
+		c.Set("userEmail", claims.Email)
+		c.Set("userName", claims.Name)
+		c.Set("userRole", claims.Role)
+		c.Set("organizationID", claims.OrganizationID)
+		c.Set("tokenID", claims.TokenID)
 		c.Set("token", tokenString)
+		
 		c.Next()
 	}
 }

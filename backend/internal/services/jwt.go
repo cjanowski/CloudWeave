@@ -1,9 +1,11 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"cloudweave/internal/config"
@@ -14,16 +16,17 @@ import (
 )
 
 type JWTService struct {
-	config *config.Config
+	config            *config.Config
+	blacklistService  *TokenBlacklistService
 }
 
 type Claims struct {
-	UserID         string `json:"sub"`
-	Email          string `json:"email"`
-	Name           string `json:"name"`
-	Role           string `json:"role"`
-	OrganizationID string `json:"organizationId"`
-	TokenID        string `json:"jti"`
+	UserID         string  `json:"sub"`
+	Email          string  `json:"email"`
+	Name           string  `json:"name"`
+	Role           string  `json:"role"`
+	OrganizationID *string `json:"organizationId"`
+	TokenID        string  `json:"jti"`
 	jwt.RegisteredClaims
 }
 
@@ -39,9 +42,10 @@ var (
 	ErrInvalidSignature = errors.New("invalid token signature")
 )
 
-func NewJWTService(cfg *config.Config) *JWTService {
+func NewJWTService(cfg *config.Config, blacklistService *TokenBlacklistService) *JWTService {
 	return &JWTService{
-		config: cfg,
+		config:           cfg,
+		blacklistService: blacklistService,
 	}
 }
 
@@ -92,7 +96,7 @@ func (j *JWTService) GenerateRefreshToken(userID string) (string, error) {
 }
 
 // ValidateToken validates a JWT token and returns the claims
-func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
+func (j *JWTService) ValidateToken(ctx context.Context, tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		// Verify signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -109,6 +113,16 @@ func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		// Check if token is blacklisted
+		if j.blacklistService != nil {
+			isBlacklisted, err := j.blacklistService.IsTokenBlacklisted(ctx, claims.TokenID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check token blacklist: %w", err)
+			}
+			if isBlacklisted {
+				return nil, ErrInvalidToken
+			}
+		}
 		return claims, nil
 	}
 
@@ -116,7 +130,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 }
 
 // ValidateRefreshToken validates a refresh token and returns the claims
-func (j *JWTService) ValidateRefreshToken(tokenString string) (*RefreshClaims, error) {
+func (j *JWTService) ValidateRefreshToken(ctx context.Context, tokenString string) (*RefreshClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &RefreshClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Verify signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -133,6 +147,16 @@ func (j *JWTService) ValidateRefreshToken(tokenString string) (*RefreshClaims, e
 	}
 
 	if claims, ok := token.Claims.(*RefreshClaims); ok && token.Valid {
+		// Check if token is blacklisted
+		if j.blacklistService != nil {
+			isBlacklisted, err := j.blacklistService.IsTokenBlacklisted(ctx, claims.TokenID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check token blacklist: %w", err)
+			}
+			if isBlacklisted {
+				return nil, ErrInvalidToken
+			}
+		}
 		return claims, nil
 	}
 
@@ -170,4 +194,42 @@ func (j *JWTService) IsTokenExpired(tokenString string) bool {
 	}
 	
 	return claims.ExpiresAt.Before(time.Now())
+}
+
+// BlacklistToken adds a token to the blacklist
+func (j *JWTService) BlacklistToken(ctx context.Context, tokenString, reason string) error {
+	if j.blacklistService == nil {
+		return fmt.Errorf("blacklist service not available")
+	}
+
+	claims, err := j.ParseToken(tokenString)
+	if err != nil {
+		return fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	tokenType := "access"
+	expiresAt := claims.ExpiresAt.Time
+
+	return j.blacklistService.BlacklistToken(ctx, claims.TokenID, claims.UserID, tokenType, expiresAt, reason)
+}
+
+// BlacklistRefreshToken adds a refresh token to the blacklist
+func (j *JWTService) BlacklistRefreshToken(ctx context.Context, tokenString, reason string) error {
+	if j.blacklistService == nil {
+		return fmt.Errorf("blacklist service not available")
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &RefreshClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(j.config.JWTSecret), nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to parse refresh token: %w", err)
+	}
+
+	if claims, ok := token.Claims.(*RefreshClaims); ok {
+		return j.blacklistService.BlacklistToken(ctx, claims.TokenID, claims.UserID, "refresh", claims.ExpiresAt.Time, reason)
+	}
+
+	return fmt.Errorf("invalid refresh token claims")
 }

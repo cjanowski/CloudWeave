@@ -17,6 +17,7 @@ type Config struct {
 	DatabaseName     string
 	DatabaseUser     string
 	DatabasePassword string
+	DatabaseSSLMode  string
 	
 	// JWT
 	JWTSecret           string
@@ -44,6 +45,7 @@ func Load() *Config {
 		DatabaseName:     getEnv("DB_NAME", "cloud_platform_db"),
 		DatabaseUser:     getEnv("DB_USER", "postgres"),
 		DatabasePassword: getEnv("DB_PASSWORD", ""),
+		DatabaseSSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		
 		// JWT
 		JWTSecret:         getEnv("JWT_SECRET", "your-super-secret-jwt-key-that-should-be-changed-in-production"),
