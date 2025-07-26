@@ -105,7 +105,6 @@ CloudWeave is built with modern, scalable technologies:
 - SSO integration
 - Dedicated support
 - Custom deployment options
-- Currently accepting customer offers
 
 [View detailed pricing →](https://cloudweave-marketing.vercel.app/#pricing)
 
