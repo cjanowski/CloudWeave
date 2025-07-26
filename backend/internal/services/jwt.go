@@ -25,7 +25,7 @@ type Claims struct {
 	Email          string  `json:"email"`
 	Name           string  `json:"name"`
 	Role           string  `json:"role"`
-	OrganizationID *string `json:"organizationId"`
+	OrganizationID string `json:"organizationId"`
 	TokenID        string  `json:"jti"`
 	jwt.RegisteredClaims
 }

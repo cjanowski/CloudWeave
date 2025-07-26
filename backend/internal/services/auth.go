@@ -36,16 +36,25 @@ func NewAuthService(
 
 // Login authenticates a user with email and password
 func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
+	fmt.Printf("DEBUG: Login attempt for email: %s\n", req.Email)
+	
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
+		fmt.Printf("DEBUG: User not found for email %s: %v\n", req.Email, err)
 		return nil, fmt.Errorf("invalid email or password")
 	}
+	
+	fmt.Printf("DEBUG: Found user %s with hash: %s\n", user.Email, user.PasswordHash)
+	fmt.Printf("DEBUG: Attempting to verify password: %s\n", req.Password)
 
 	// Verify password
 	if err := s.passwordService.VerifyPassword(user.PasswordHash, req.Password); err != nil {
+		fmt.Printf("DEBUG: Password verification failed: %v\n", err)
 		return nil, fmt.Errorf("invalid email or password")
 	}
+	
+	fmt.Printf("DEBUG: Password verification successful for user %s\n", user.Email)
 
 	// Update last login timestamp
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID); err != nil {
@@ -109,8 +118,9 @@ func (s *AuthService) Register(ctx context.Context, req models.RegisterRequest) 
 		Email:          req.Email,
 		Name:           req.Name,
 		PasswordHash:   hashedPassword,
+		OrganizationID: org.ID,
+		IsActive:       true,
 		Role:           "user", // Default role
-		OrganizationID: &org.ID,
 		Preferences:    make(map[string]interface{}),
 		EmailVerified:  false,
 	}
