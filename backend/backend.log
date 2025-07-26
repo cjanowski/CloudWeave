@@ -1,0 +1,25 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/v1/health            --> cloudweave/internal/handlers.HealthCheck (7 handlers)
+[GIN-debug] POST   /api/v1/auth/login        --> cloudweave/internal/handlers.Login (7 handlers)
+[GIN-debug] POST   /api/v1/auth/register     --> cloudweave/internal/handlers.Register (7 handlers)
+[GIN-debug] POST   /api/v1/auth/refresh      --> cloudweave/internal/handlers.RefreshToken (7 handlers)
+[GIN-debug] POST   /api/v1/auth/logout       --> cloudweave/internal/handlers.Logout (7 handlers)
+[GIN-debug] GET    /api/v1/auth/me           --> cloudweave/internal/handlers.GetCurrentUser (8 handlers)
+2025/07/25 18:47:58 Starting CloudWeave server on port 3001
+2025/07/25 18:47:58 Environment: development
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :3001
+::1 - [Fri, 25 Jul 2025 18:48:01 EDT] "GET /api/v1/health HTTP/1.1 200 913µs "curl/8.7.1" "
+[GIN] 2025/07/25 - 18:48:01 | 200 |    1.563834ms |             ::1 | GET      "/api/v1/health"
+[GIN] 2025/07/25 - 18:48:23 | 204 |     587.625µs |             ::1 | OPTIONS  "/api/v1/auth/login"
+2025/07/25 18:48:23 Login request received - Email: demo@cloudweave.com, Password length: 11
+2025/07/25 18:48:23 Login successful for user: demo@cloudweave.com
+::1 - [Fri, 25 Jul 2025 18:48:23 EDT] "POST /api/v1/auth/login HTTP/1.1 200 2.316042ms "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36" "
+[GIN] 2025/07/25 - 18:48:23 | 200 |       2.386ms |             ::1 | POST     "/api/v1/auth/login"
+signal: killed
