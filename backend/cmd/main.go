@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"cloudweave/internal/config"
+	"cloudweave/internal/database"
 	"cloudweave/internal/handlers"
 	"cloudweave/internal/middleware"
 
@@ -22,8 +23,29 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-	// Initialize JWT service
-	handlers.InitializeJWTService(cfg)
+	// Initialize database
+	dbConfig := database.Config{
+		Host:     cfg.DatabaseHost,
+		Port:     cfg.DatabasePort,
+		User:     cfg.DatabaseUser,
+		Password: cfg.DatabasePassword,
+		DBName:   cfg.DatabaseName,
+		SSLMode:  cfg.DatabaseSSLMode,
+	}
+
+	db, err := database.NewDatabase(dbConfig)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer db.Close()
+
+	// Run database migrations
+	if err := db.Migrate(); err != nil {
+		log.Fatal("Failed to run database migrations:", err)
+	}
+
+	// Initialize authentication services
+	handlers.InitializeAuthServices(cfg, db)
 
 	// Set Gin mode
 	if cfg.Environment == "production" {
@@ -50,7 +72,7 @@ func main() {
 	api := router.Group("/api/v1")
 	{
 		// Health check
-		api.GET("/health", handlers.HealthCheck)
+		api.GET("/health", handlers.HealthCheckWithDB(db))
 
 		// Auth routes
 		auth := api.Group("/auth")
@@ -59,12 +81,12 @@ func main() {
 			auth.POST("/register", handlers.Register)
 			auth.POST("/refresh", handlers.RefreshToken)
 			auth.POST("/logout", handlers.Logout)
-			auth.GET("/me", middleware.AuthRequired(), handlers.GetCurrentUser)
+			auth.GET("/me", middleware.AuthRequired(handlers.GetJWTService()), handlers.GetCurrentUser)
 		}
 
 		// Protected routes
 		protected := api.Group("/")
-		protected.Use(middleware.AuthRequired())
+		protected.Use(middleware.AuthRequired(handlers.GetJWTService()))
 		{
 			// Add other protected routes here
 		}
