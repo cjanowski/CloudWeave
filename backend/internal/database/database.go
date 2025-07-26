@@ -32,6 +32,8 @@ func NewDatabase(config Config) (*Database, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode)
 
+	log.Printf("DEBUG: Using DSN: %s", dsn)
+
 	// Open database connection
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -46,6 +48,24 @@ func NewDatabase(config Config) (*Database, error) {
 	// Test connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Debug: Test query to see what database we're connected to
+	var dbName, currentUser, currentSchema string
+	err = db.QueryRow("SELECT current_database(), current_user, current_schema()").Scan(&dbName, &currentUser, &currentSchema)
+	if err != nil {
+		log.Printf("Warning: Could not query database info: %v", err)
+	} else {
+		log.Printf("DEBUG: Connected to database '%s' as user '%s' in schema '%s'", dbName, currentUser, currentSchema)
+	}
+
+	// Debug: Check if users table exists
+	var tableExists bool
+	err = db.QueryRow("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users')").Scan(&tableExists)
+	if err != nil {
+		log.Printf("Warning: Could not check if users table exists: %v", err)
+	} else {
+		log.Printf("DEBUG: Users table exists: %v", tableExists)
 	}
 
 	// Setup migrator
