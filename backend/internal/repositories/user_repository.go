@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"cloudweave/internal/models"
 
@@ -21,8 +22,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 // Create creates a new user in the database
 func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (id, email, name, password_hash, role, organization_id, preferences, avatar_url, email_verified)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO users (id, email, name, password_hash, organization_id, role, preferences, email_verified)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING created_at, updated_at`
 
 	err := r.db.QueryRowContext(ctx, query,
@@ -30,10 +31,9 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 		user.Email,
 		user.Name,
 		user.PasswordHash,
-		user.Role,
 		user.OrganizationID,
-		user.Preferences,
-		user.AvatarURL,
+		user.Role,
+		`{}`, // preferences as JSON
 		user.EmailVerified,
 	).Scan(&user.CreatedAt, &user.UpdatedAt)
 
@@ -56,25 +56,31 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, email, name, password_hash, role, organization_id, preferences, 
-		       avatar_url, email_verified, created_at, updated_at, last_login_at
-		FROM users 
+		SELECT id, email, name, password_hash, organization_id, role,
+		       preferences, email_verified, created_at, updated_at, last_login_at
+		FROM users
 		WHERE id = $1`
 
+	var preferencesJSON string
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Name,
 		&user.PasswordHash,
-		&user.Role,
 		&user.OrganizationID,
-		&user.Preferences,
-		&user.AvatarURL,
+		&user.Role,
+		&preferencesJSON,
 		&user.EmailVerified,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.LastLoginAt,
 	)
+
+	// Parse preferences JSON and set defaults
+	if err == nil {
+		user.Preferences = make(map[string]interface{})
+		user.IsActive = true // Set default for compatibility
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -90,32 +96,54 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, email, name, password_hash, role, organization_id, preferences, 
-		       avatar_url, email_verified, created_at, updated_at, last_login_at
-		FROM users 
+		SELECT id, email, name, password_hash, organization_id, role,
+		       preferences, email_verified, created_at, updated_at, last_login_at
+		FROM users
 		WHERE email = $1`
 
+	fmt.Printf("DEBUG: Repository querying for email: %s\n", email)
+	fmt.Printf("DEBUG: Query: %s\n", query)
+
+	// Test if we can see any users at all
+	var userCount int
+	countErr := r.db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if countErr != nil {
+		fmt.Printf("DEBUG: Error counting users: %v\n", countErr)
+	} else {
+		fmt.Printf("DEBUG: Total users in database: %d\n", userCount)
+	}
+
+	var preferencesJSON string
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Name,
 		&user.PasswordHash,
-		&user.Role,
 		&user.OrganizationID,
-		&user.Preferences,
-		&user.AvatarURL,
+		&user.Role,
+		&preferencesJSON,
 		&user.EmailVerified,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.LastLoginAt,
 	)
 
+	// Parse preferences JSON and set defaults
+	if err == nil {
+		user.Preferences = make(map[string]interface{})
+		user.IsActive = true // Set default for compatibility
+	}
+
 	if err != nil {
 		if err == sql.ErrNoRows {
+			fmt.Printf("DEBUG: No rows found for email: %s\n", email)
 			return nil, fmt.Errorf("user with email %s not found", email)
 		}
+		fmt.Printf("DEBUG: Database error for email %s: %v\n", email, err)
 		return nil, fmt.Errorf("failed to get user by email: %w", err)
 	}
+
+	fmt.Printf("DEBUG: Successfully found user: %s (ID: %s)\n", user.Email, user.ID)
 
 	return user, nil
 }
@@ -123,19 +151,16 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 // Update updates an existing user
 func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
-		UPDATE users 
-		SET name = $2, role = $3, organization_id = $4, preferences = $5, 
-		    avatar_url = $6, email_verified = $7, updated_at = NOW()
+		UPDATE users
+		SET name = $2, organization_id = $3, role = $4, email_verified = $5, updated_at = NOW()
 		WHERE id = $1
 		RETURNING updated_at`
 
 	err := r.db.QueryRowContext(ctx, query,
 		user.ID,
 		user.Name,
-		user.Role,
 		user.OrganizationID,
-		user.Preferences,
-		user.AvatarURL,
+		user.Role,
 		user.EmailVerified,
 	).Scan(&user.UpdatedAt)
 
@@ -152,7 +177,7 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 // UpdateLastLogin updates the user's last login timestamp
 func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID string) error {
 	query := `UPDATE users SET last_login_at = NOW() WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, userID)
 	if err != nil {
 		return fmt.Errorf("failed to update last login: %w", err)
@@ -173,7 +198,7 @@ func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID string) err
 // UpdatePassword updates the user's password hash
 func (r *UserRepository) UpdatePassword(ctx context.Context, userID, passwordHash string) error {
 	query := `UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, userID, passwordHash)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
@@ -194,7 +219,7 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, userID, passwordHas
 // Delete deletes a user by their ID
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM users WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -216,11 +241,101 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 func (r *UserRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
-	
+
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if email exists: %w", err)
 	}
 
 	return exists, nil
+}
+
+// List retrieves users with pagination and filtering
+func (r *UserRepository) List(ctx context.Context, params ListParams) ([]*models.User, error) {
+	params.Validate()
+
+	var whereClause strings.Builder
+	var args []interface{}
+	argIndex := 1
+
+	// Add search filter if provided
+	if params.Search != "" {
+		whereClause.WriteString("WHERE (name ILIKE $")
+		whereClause.WriteString(fmt.Sprintf("%d", argIndex))
+		whereClause.WriteString(" OR email ILIKE $")
+		whereClause.WriteString(fmt.Sprintf("%d", argIndex+1))
+		whereClause.WriteString(")")
+		searchPattern := "%" + params.Search + "%"
+		args = append(args, searchPattern, searchPattern)
+		argIndex += 2
+	}
+
+	// Validate sort column
+	validSortColumns := map[string]bool{
+		"name":           true,
+		"email":          true,
+		"role":           true,
+		"email_verified": true,
+		"created_at":     true,
+		"updated_at":     true,
+		"last_login_at":  true,
+	}
+	if !validSortColumns[params.SortBy] {
+		params.SortBy = "created_at"
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, email, name, password_hash, organization_id, role,
+		       preferences, email_verified, created_at, updated_at, last_login_at
+		FROM users
+		%s
+		ORDER BY %s %s
+		LIMIT $%d OFFSET $%d`,
+		whereClause.String(),
+		params.SortBy,
+		params.Order,
+		argIndex,
+		argIndex+1,
+	)
+
+	args = append(args, params.Limit, params.Offset)
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		user := &models.User{}
+		var preferencesJSON string
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.Name,
+			&user.PasswordHash,
+			&user.OrganizationID,
+			&user.Role,
+			&preferencesJSON,
+			&user.EmailVerified,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.LastLoginAt,
+		)
+
+		// Set default values for compatibility
+		user.Preferences = make(map[string]interface{})
+		user.IsActive = true
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating user rows: %w", err)
+	}
+
+	return users, nil
 }

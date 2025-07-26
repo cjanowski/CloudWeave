@@ -5,18 +5,21 @@ import (
 )
 
 type User struct {
-	ID             string                 `json:"id" db:"id"`
-	Email          string                 `json:"email" db:"email"`
-	Name           string                 `json:"name" db:"name"`
-	PasswordHash   string                 `json:"-" db:"password_hash"`
-	Role           string                 `json:"role" db:"role"`
-	OrganizationID *string                `json:"organizationId" db:"organization_id"`
-	Preferences    map[string]interface{} `json:"preferences" db:"preferences"`
-	AvatarURL      *string                `json:"avatarUrl" db:"avatar_url"`
-	EmailVerified  bool                   `json:"emailVerified" db:"email_verified"`
-	CreatedAt      time.Time              `json:"createdAt" db:"created_at"`
-	UpdatedAt      time.Time              `json:"updatedAt" db:"updated_at"`
-	LastLoginAt    *time.Time             `json:"lastLoginAt" db:"last_login_at"`
+	ID             string     `json:"id" db:"id"`
+	Email          string     `json:"email" db:"email"`
+	Name           string     `json:"name" db:"name"`
+	PasswordHash   string     `json:"-" db:"password_hash"`
+	OrganizationID string     `json:"organizationId" db:"organization_id"`
+	IsActive       bool       `json:"isActive" db:"is_active"`
+	CreatedAt      time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt      time.Time  `json:"updatedAt" db:"updated_at"`
+	LastLoginAt    *time.Time `json:"lastLoginAt" db:"last_login_at"`
+	
+	// Virtual fields for compatibility
+	Role           string                 `json:"role" db:"-"`
+	Preferences    map[string]interface{} `json:"preferences" db:"-"`
+	AvatarURL      *string                `json:"avatarUrl" db:"-"`
+	EmailVerified  bool                   `json:"emailVerified" db:"-"`
 }
 
 type LoginRequest struct {

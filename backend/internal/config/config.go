@@ -43,7 +43,7 @@ func Load() *Config {
 		DatabaseHost:     getEnv("DB_HOST", "localhost"),
 		DatabasePort:     getEnv("DB_PORT", "5432"),
 		DatabaseName:     getEnv("DB_NAME", "cloud_platform_db"),
-		DatabaseUser:     getEnv("DB_USER", "postgres"),
+		DatabaseUser:     getEnv("DB_USER", "coryjanowski"),
 		DatabasePassword: getEnv("DB_PASSWORD", ""),
 		DatabaseSSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		

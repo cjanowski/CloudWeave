@@ -1,3 +1,36 @@
 .DS_Store
 .kiro/
 .vscode/
+
+# Build artifacts
+backend/main
+backend/migrate
+backend/bin/
+**/bin/
+
+# Database files
+*.db
+database.db
+
+# Log files
+*.log
+
+# Test files
+*_test.go
+*.test.ts
+*.test.tsx
+**/test/
+**/__tests__/
+
+# Temporary files
+temp_*.go
+*_temp.*
+
+# Development documentation
+IMPLEMENTATION_SUMMARY.md
+DATABASE.md
+tasks.md
+plans/
+
+# Node modules and dependencies
+node_modules/
