@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import {
-  Dashboard as DashboardIcon,
-  TrendingUp as TrendingUpIcon,
-  Speed as SpeedIcon,
-  Security as SecurityIcon,
-  CloudQueue as CloudIcon,
-  Assessment as ReportsIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -28,37 +21,37 @@ export const DashboardTabs: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <DashboardIcon />,
+      icon: <Icon name="nav-dashboard" size="sm" />,
       content: <OverviewTab isDark={isDark} />,
     },
     {
       id: 'performance',
       label: 'Performance',
-      icon: <SpeedIcon />,
+      icon: <Icon name="monitor-pulse" size="sm" />,
       content: <PerformanceTab isDark={isDark} />,
     },
     {
       id: 'costs',
       label: 'Costs',
-      icon: <TrendingUpIcon />,
+      icon: <Icon name="monitor-line-chart" size="sm" />,
       content: <CostsTab isDark={isDark} />,
     },
     {
       id: 'security',
       label: 'Security',
-      icon: <SecurityIcon />,
+      icon: <Icon name="security-shield" size="sm" />,
       content: <SecurityTab isDark={isDark} />,
     },
     {
       id: 'infrastructure',
       label: 'Infrastructure',
-      icon: <CloudIcon />,
+      icon: <Icon name="cloud-server" size="sm" />,
       content: <InfrastructureTab isDark={isDark} />,
     },
     {
       id: 'reports',
       label: 'Reports',
-      icon: <ReportsIcon />,
+      icon: <Icon name="cost-report" size="sm" />,
       content: <ReportsTab isDark={isDark} />,
     },
   ];

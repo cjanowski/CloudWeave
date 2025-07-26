@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import {
-  Security as SecurityIcon,
-  Policy as PolicyIcon,
-  Assessment as ComplianceIcon,
-  Warning as VulnerabilityIcon,
-  Shield as ProtectionIcon,
-  Gavel as AuditIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -28,31 +21,31 @@ export const SecurityPage: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <SecurityIcon />,
+      icon: <Icon name="security-shield" size="md" />,
       content: <SecurityOverview isDark={isDark} />,
     },
     {
       id: 'policies',
       label: 'Policies',
-      icon: <PolicyIcon />,
+      icon: <Icon name="security-audit" size="md" />,
       content: <PoliciesTab isDark={isDark} />,
     },
     {
       id: 'compliance',
       label: 'Compliance',
-      icon: <ComplianceIcon />,
+      icon: <Icon name="monitor-chart" size="md" />,
       content: <ComplianceTab isDark={isDark} />,
     },
     {
       id: 'vulnerabilities',
       label: 'Vulnerabilities',
-      icon: <VulnerabilityIcon />,
+      icon: <Icon name="status-warning" size="md" />,
       content: <VulnerabilitiesTab isDark={isDark} />,
     },
     {
       id: 'audit',
       label: 'Audit Logs',
-      icon: <AuditIcon />,
+      icon: <Icon name="security-audit" size="md" />,
       content: <AuditTab isDark={isDark} />,
     },
   ];
@@ -155,10 +148,10 @@ export const SecurityPage: React.FC = () => {
 // Tab Content Components
 const SecurityOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const stats = [
-    { title: 'Security Score', value: '94%', change: '+2%', trend: 'up', icon: <ProtectionIcon /> },
-    { title: 'Active Vulnerabilities', value: '3', change: '-5', trend: 'down', icon: <VulnerabilityIcon /> },
-    { title: 'Compliance Rate', value: '98%', change: '+1%', trend: 'up', icon: <ComplianceIcon /> },
-    { title: 'Policy Violations', value: '1', change: '-2', trend: 'down', icon: <PolicyIcon /> },
+    { title: 'Security Score', value: '94%', change: '+2%', trend: 'up', icon: <Icon name="security-shield" size="lg" /> },
+    { title: 'Active Vulnerabilities', value: '3', change: '-5', trend: 'down', icon: <Icon name="status-warning" size="lg" /> },
+    { title: 'Compliance Rate', value: '98%', change: '+1%', trend: 'up', icon: <Icon name="monitor-chart" size="lg" /> },
+    { title: 'Policy Violations', value: '1', change: '-2', trend: 'down', icon: <Icon name="security-audit" size="lg" /> },
   ];
 
   return (

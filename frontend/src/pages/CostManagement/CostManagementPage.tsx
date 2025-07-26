@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import {
-  AttachMoney as CostIcon,
-  TrendingUp as TrendingIcon,
-  Assessment as ReportIcon,
-  Savings as OptimizationIcon,
-  AccountBalance as BudgetIcon,
-  Timeline as ForecastIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -28,31 +21,31 @@ export const CostManagementPage: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <CostIcon />,
+      icon: <Icon name="cost-dollar" size="md" />,
       content: <CostOverview isDark={isDark} />,
     },
     {
       id: 'reports',
       label: 'Reports',
-      icon: <ReportIcon />,
+      icon: <Icon name="cost-report" size="md" />,
       content: <ReportsTab isDark={isDark} />,
     },
     {
       id: 'optimization',
       label: 'Optimization',
-      icon: <OptimizationIcon />,
+      icon: <Icon name="cost-savings" size="md" />,
       content: <OptimizationTab isDark={isDark} />,
     },
     {
       id: 'budgets',
       label: 'Budgets',
-      icon: <BudgetIcon />,
+      icon: <Icon name="cost-budget" size="md" />,
       content: <BudgetsTab isDark={isDark} />,
     },
     {
       id: 'forecasting',
       label: 'Forecasting',
-      icon: <ForecastIcon />,
+      icon: <Icon name="monitor-clock" size="md" />,
       content: <ForecastingTab isDark={isDark} />,
     },
   ];
@@ -155,10 +148,10 @@ export const CostManagementPage: React.FC = () => {
 // Tab Content Components
 const CostOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const stats = [
-    { title: 'Monthly Spend', value: '$12,450', change: '+8.2%', trend: 'up', icon: <CostIcon /> },
-    { title: 'Daily Average', value: '$415', change: '-2.1%', trend: 'down', icon: <TrendingIcon /> },
-    { title: 'Budget Remaining', value: '$7,550', change: '-$1,200', trend: 'down', icon: <BudgetIcon /> },
-    { title: 'Savings This Month', value: '$2,340', change: '+15%', trend: 'up', icon: <OptimizationIcon /> },
+    { title: 'Monthly Spend', value: '$12,450', change: '+8.2%', trend: 'up', icon: <Icon name="cost-dollar" size="lg" /> },
+    { title: 'Daily Average', value: '$415', change: '-2.1%', trend: 'down', icon: <Icon name="cost-chart" size="lg" /> },
+    { title: 'Budget Remaining', value: '$7,550', change: '-$1,200', trend: 'down', icon: <Icon name="cost-budget" size="lg" /> },
+    { title: 'Savings This Month', value: '$2,340', change: '+15%', trend: 'up', icon: <Icon name="cost-savings" size="lg" /> },
   ];
 
   return (

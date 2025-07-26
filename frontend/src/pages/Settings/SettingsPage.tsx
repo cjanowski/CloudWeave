@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Person as PersonIcon,
-  Security as SecurityIcon,
-  Notifications as NotificationsIcon,
-  Palette as ThemeIcon,
-  Business as OrganizationIcon,
-  VpnKey as ApiIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 import { toggleTheme } from '../../store/slices/uiSlice';
@@ -31,37 +24,37 @@ export const SettingsPage: React.FC = () => {
     {
       id: 'profile',
       label: 'Profile',
-      icon: <PersonIcon />,
+      icon: <Icon name="auth-user" size="md" />,
       content: <ProfileTab isDark={isDark} user={user} />,
     },
     {
       id: 'security',
       label: 'Security',
-      icon: <SecurityIcon />,
+      icon: <Icon name="security-shield" size="md" />,
       content: <SecurityTab isDark={isDark} />,
     },
     {
       id: 'notifications',
       label: 'Notifications',
-      icon: <NotificationsIcon />,
+      icon: <Icon name="monitor-bell" size="md" />,
       content: <NotificationsTab isDark={isDark} />,
     },
     {
       id: 'appearance',
       label: 'Appearance',
-      icon: <ThemeIcon />,
+      icon: <Icon name="action-settings" size="md" />,
       content: <AppearanceTab isDark={isDark} onToggleTheme={() => dispatch(toggleTheme())} />,
     },
     {
       id: 'organization',
       label: 'Organization',
-      icon: <OrganizationIcon />,
+      icon: <Icon name="cloud-server" size="md" />,
       content: <OrganizationTab isDark={isDark} />,
     },
     {
       id: 'api',
       label: 'API Keys',
-      icon: <ApiIcon />,
+      icon: <Icon name="security-key" size="md" />,
       content: <ApiKeysTab isDark={isDark} />,
     },
   ];

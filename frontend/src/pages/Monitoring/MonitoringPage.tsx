@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import {
-  Timeline as TimelineIcon,
-  Assessment as AssessmentIcon,
-  NotificationsActive as AlertIcon,
-  TrendingUp as TrendingIcon,
-  Speed as PerformanceIcon,
-  BarChart as MetricsIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -28,25 +21,25 @@ export const MonitoringPage: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <AssessmentIcon />,
+      icon: <Icon name="monitor-chart" size="md" />,
       content: <MonitoringOverview isDark={isDark} />,
     },
     {
       id: 'metrics',
       label: 'Metrics',
-      icon: <MetricsIcon />,
+      icon: <Icon name="monitor-chart" size="md" />,
       content: <MetricsTab isDark={isDark} />,
     },
     {
       id: 'alerts',
       label: 'Alerts',
-      icon: <AlertIcon />,
+      icon: <Icon name="monitor-bell" size="md" />,
       content: <AlertsTab isDark={isDark} />,
     },
     {
       id: 'performance',
       label: 'Performance',
-      icon: <PerformanceIcon />,
+      icon: <Icon name="monitor-pulse" size="md" />,
       content: <PerformanceTab isDark={isDark} />,
     },
   ];
@@ -149,10 +142,10 @@ export const MonitoringPage: React.FC = () => {
 // Tab Content Components
 const MonitoringOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const stats = [
-    { title: 'System Health', value: '98.5%', change: '+0.2%', trend: 'up', icon: <PerformanceIcon /> },
-    { title: 'Active Alerts', value: '3', change: '-2', trend: 'down', icon: <AlertIcon /> },
-    { title: 'Response Time', value: '245ms', change: '-15ms', trend: 'up', icon: <TimelineIcon /> },
-    { title: 'Uptime', value: '99.9%', change: '0%', trend: 'stable', icon: <TrendingIcon /> },
+    { title: 'System Health', value: '98.5%', change: '+0.2%', trend: 'up', icon: <Icon name="monitor-pulse" size="lg" /> },
+    { title: 'Active Alerts', value: '3', change: '-2', trend: 'down', icon: <Icon name="monitor-bell" size="lg" /> },
+    { title: 'Response Time', value: '245ms', change: '-15ms', trend: 'up', icon: <Icon name="monitor-clock" size="lg" /> },
+    { title: 'Uptime', value: '99.9%', change: '0%', trend: 'stable', icon: <Icon name="monitor-line-chart" size="lg" /> },
   ];
 
   return (

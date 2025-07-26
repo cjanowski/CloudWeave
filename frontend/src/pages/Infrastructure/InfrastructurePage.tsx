@@ -2,15 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-import {
-  Storage as StorageIcon,
-  Timeline as TimelineIcon,
-  Policy as PolicyIcon,
-  Assessment as AssessmentIcon,
-  CloudQueue as CloudIcon,
-  Computer as ComputeIcon,
-  NetworkCheck as NetworkIcon,
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -42,31 +34,31 @@ export const InfrastructurePage: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <CloudIcon />,
+      icon: <Icon name="cloud-cdn" size="md" />,
       content: <InfrastructureOverview isDark={isDark} />,
     },
     {
       id: 'resources',
       label: 'Resources',
-      icon: <StorageIcon />,
+      icon: <Icon name="cloud-storage" size="md" />,
       content: <ResourcesTab isDark={isDark} />,
     },
     {
       id: 'templates',
       label: 'Templates',
-      icon: <TimelineIcon />,
+      icon: <Icon name="monitor-clock" size="md" />,
       content: <TemplatesTab isDark={isDark} />,
     },
     {
       id: 'policies',
       label: 'Policies',
-      icon: <PolicyIcon />,
+      icon: <Icon name="security-audit" size="md" />,
       content: <PoliciesTab isDark={isDark} />,
     },
     {
       id: 'compliance',
       label: 'Compliance',
-      icon: <AssessmentIcon />,
+      icon: <Icon name="monitor-chart" size="md" />,
       content: <ComplianceTab isDark={isDark} />,
     },
   ];
@@ -169,10 +161,10 @@ export const InfrastructurePage: React.FC = () => {
 // Tab Content Components
 const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const stats = [
-    { title: 'Total Resources', value: '156', change: '+12', trend: 'up', icon: <StorageIcon /> },
-    { title: 'Active Instances', value: '24', change: '+3', trend: 'up', icon: <ComputeIcon /> },
-    { title: 'Networks', value: '8', change: '0', trend: 'stable', icon: <NetworkIcon /> },
-    { title: 'Compliance Score', value: '94%', change: '+2%', trend: 'up', icon: <AssessmentIcon /> },
+    { title: 'Total Resources', value: '156', change: '+12', trend: 'up', icon: <Icon name="cloud-storage" size="lg" /> },
+    { title: 'Active Instances', value: '24', change: '+3', trend: 'up', icon: <Icon name="cloud-compute" size="lg" /> },
+    { title: 'Networks', value: '8', change: '0', trend: 'stable', icon: <Icon name="cloud-network" size="lg" /> },
+    { title: 'Compliance Score', value: '94%', change: '+2%', trend: 'up', icon: <Icon name="monitor-chart" size="lg" /> },
   ];
 
   return (
