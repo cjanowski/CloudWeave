@@ -45,6 +45,29 @@ lint:
 	@echo "Running Go linter..."
 	cd backend && golangci-lint run
 
+# Database commands
+db-setup:
+	@echo "Setting up database..."
+	cd backend && chmod +x scripts/setup-db.sh && ./scripts/setup-db.sh
+
+db-migrate:
+	@echo "Running database migrations..."
+	cd backend && go run cmd/migrate/main.go -action=up
+
+db-rollback:
+	@echo "Rolling back last migration..."
+	cd backend && go run cmd/migrate/main.go -action=down
+
+db-version:
+	@echo "Checking migration version..."
+	cd backend && go run cmd/migrate/main.go -action=version
+
+db-reset:
+	@echo "Resetting database (WARNING: This will drop all data)..."
+	cd backend && dropdb cloud_platform_db || true
+	cd backend && createdb cloud_platform_db
+	cd backend && go run cmd/migrate/main.go -action=up
+
 # Docker commands
 docker-build:
 	docker build -t cloudweave-go .
