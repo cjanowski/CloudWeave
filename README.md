@@ -2,6 +2,9 @@
 
 A modern cloud platform management system built with Go backend and React frontend.
 
+## Pre-Alpha Preview
+<img width="1512" height="825" alt="Screenshot 2025-07-26 at 7 00 40 AM" src="https://github.com/user-attachments/assets/28c7f441-bc17-48ae-8a23-c8a35dcfd910" />
+
 ## 🚀 Quick Start
 
 ```bash
