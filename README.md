@@ -8,6 +8,8 @@
 
 A modern, enterprise-grade cloud platform management system that simplifies infrastructure operations and enhances team productivity.
 
+<img width="1512" height="823" alt="Screenshot 2025-07-26 at 12 25 42 PM" src="https://github.com/user-attachments/assets/7dfa1694-b001-4180-bc7d-93a57689ffff" />
+
 ## 🌟 Features
 
 ### Core Platform Management
