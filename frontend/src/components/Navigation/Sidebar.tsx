@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Icon } from '../common/Icon';
 
 interface NavItem {
   id: string;
@@ -15,63 +16,63 @@ const navigationItems: NavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: '▦',
+    icon: 'nav-dashboard',
     path: '/dashboard',
   },
   {
     id: 'infrastructure',
     label: 'Infrastructure',
-    icon: '☁',
+    icon: 'cloud-server',
     path: '/infrastructure',
     children: [
-      { id: 'resources', label: 'Resources', icon: '⚏', path: '/infrastructure/resources' },
-      { id: 'templates', label: 'Templates', icon: '⚏', path: '/infrastructure/templates' },
+      { id: 'resources', label: 'Resources', icon: 'cloud-storage', path: '/infrastructure/resources' },
+      { id: 'templates', label: 'Templates', icon: 'cloud-container', path: '/infrastructure/templates' },
     ],
   },
   {
     id: 'deployments',
     label: 'Deployments',
-    icon: '⚡',
+    icon: 'action-upload',
     path: '/deployments',
     children: [
-      { id: 'pipelines', label: 'Pipelines', icon: '⚡', path: '/deployments/pipelines' },
-      { id: 'history', label: 'History', icon: '⚏', path: '/deployments/history' },
+      { id: 'pipelines', label: 'Pipelines', icon: 'monitor-activity', path: '/deployments/pipelines' },
+      { id: 'history', label: 'History', icon: 'monitor-clock', path: '/deployments/history' },
     ],
   },
   {
     id: 'monitoring',
     label: 'Monitoring',
-    icon: '⚠',
+    icon: 'monitor-chart',
     path: '/monitoring',
     children: [
-      { id: 'metrics', label: 'Metrics', icon: '▦', path: '/monitoring/metrics' },
-      { id: 'alerts', label: 'Alerts', icon: '⚠', path: '/monitoring/alerts' },
+      { id: 'metrics', label: 'Metrics', icon: 'monitor-line-chart', path: '/monitoring/metrics' },
+      { id: 'alerts', label: 'Alerts', icon: 'monitor-alert', path: '/monitoring/alerts' },
     ],
   },
   {
     id: 'security',
     label: 'Security',
-    icon: '⚿',
+    icon: 'security-shield',
     path: '/security',
     children: [
-      { id: 'policies', label: 'Policies', icon: '⚏', path: '/security/policies' },
-      { id: 'compliance', label: 'Compliance', icon: '✓', path: '/security/compliance' },
+      { id: 'policies', label: 'Policies', icon: 'security-key', path: '/security/policies' },
+      { id: 'compliance', label: 'Compliance', icon: 'security-shield-check', path: '/security/compliance' },
     ],
   },
   {
     id: 'cost-management',
     label: 'Cost Management',
-    icon: '$',
+    icon: 'cost-dollar',
     path: '/cost-management',
     children: [
-      { id: 'overview', label: 'Overview', icon: '▦', path: '/cost-management/overview' },
-      { id: 'optimization', label: 'Optimization', icon: '⚡', path: '/cost-management/optimization' },
+      { id: 'overview', label: 'Overview', icon: 'cost-chart', path: '/cost-management/overview' },
+      { id: 'optimization', label: 'Optimization', icon: 'cost-savings', path: '/cost-management/optimization' },
     ],
   },
   {
     id: 'settings',
     label: 'Settings',
-    icon: '⚙',
+    icon: 'action-settings',
     path: '/settings',
   },
 ];
@@ -162,13 +163,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             whileHover={{ scale: 1.05, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             style={{
-              fontSize: '32px',
               marginRight: isExpanded ? 8 : 0,
               cursor: 'pointer',
               filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3))',
             }}
           >
-            ☁
+            <Icon name="cloud-cdn" size="xl" color="#7C3AED" />
           </motion.div>
           <AnimatePresence>
             {isExpanded && (
@@ -243,9 +243,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     alignItems: 'center',
                     minWidth: '24px',
                     marginRight: isExpanded ? '12px' : 0,
-                    fontSize: '18px',
                   }}>
-                    {item.icon}
+                    <Icon name={item.icon} size="sm" />
                   </div>
                   <AnimatePresence>
                     {isExpanded && (
@@ -267,9 +266,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <motion.div
                       animate={{ rotate: expandedItems.includes(item.id) ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
-                      style={{ fontSize: '16px' }}
                     >
-                      {expandedItems.includes(item.id) ? '▲' : '▼'}
+                      <Icon name={expandedItems.includes(item.id) ? 'nav-up' : 'nav-down'} size="xs" />
                     </motion.div>
                   )}
                 </div>
@@ -316,8 +314,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               }
                             }}
                           >
-                            <div style={{ marginRight: '8px', fontSize: '16px' }}>
-                              {child.icon}
+                            <div style={{ marginRight: '8px' }}>
+                              <Icon name={child.icon} size="xs" />
                             </div>
                             {child.label}
                           </div>

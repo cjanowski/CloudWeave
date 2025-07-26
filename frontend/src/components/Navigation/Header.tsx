@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { setSidebarOpen, toggleTheme } from '../../store/slices/uiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { GlassButton } from '../common/GlassButton';
+import { Icon } from '../common/Icon';
 
 interface HeaderProps {
   sidebarWidth: number;
@@ -65,15 +66,18 @@ export const Header: React.FC<HeaderProps> = ({
           size="small"
           isDark={isDark}
           onClick={() => dispatch(setSidebarOpen(!sidebarOpen))}
-          icon="≡"
+          icon={<Icon name="nav-menu" size="sm" />}
           style={{ minWidth: '40px', padding: '8px' }}
         >
         </GlassButton>
 
+        {/* Left Spacer */}
+        <div style={{ flex: 1 }} />
+
         {/* Search - Centered */}
         <motion.div
           whileHover={{ scale: 1.02 }}
-          style={{ flex: 1, maxWidth: '400px' }}
+          style={{ maxWidth: '400px', width: '100%' }}
         >
           <div
             style={{
@@ -90,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
               borderRadius: '12px',
             }}
           >
-            <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '18px' }}>⌕</span>
+            <Icon name="security-scan" size="sm" color={isDark ? '#ffffff' : '#666666'} />
             <input
               type="text"
               placeholder="Search resources, deployments..."
@@ -106,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </motion.div>
 
-        {/* Spacer */}
+        {/* Right Spacer */}
         <div style={{ flex: 1 }} />
 
         {/* Theme Toggle */}
@@ -115,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
           size="small"
           isDark={isDark}
           onClick={() => dispatch(toggleTheme())}
-          icon={isDark ? '☀' : '☽'}
+          icon={<Icon name={isDark ? 'status-check' : 'monitor-clock'} size="sm" />}
           style={{ minWidth: '40px', padding: '8px' }}
         >
         </GlassButton>
@@ -125,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
           variant="ghost"
           size="small"
           isDark={isDark}
-          icon="⚠"
+          icon={<Icon name="monitor-bell" size="sm" />}
           style={{ minWidth: '40px', padding: '8px' }}
         >
         </GlassButton>
@@ -136,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
             size="small"
             isDark={isDark}
             onClick={() => setShowUserMenu(!showUserMenu)}
-            icon="⚬"
+            icon={<Icon name="auth-user" size="sm" />}
             style={{ minWidth: '40px', padding: '8px' }}
           >
             {user?.name || 'User'}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Email, ArrowBack, CheckCircle } from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { forgotPasswordAsync, clearError } from '../../store/slices/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import { GlassCard } from '../../components/common/GlassCard';
@@ -105,7 +105,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 fontSize: '32px',
                 color: '#ffffff',
               }}>
-                <CheckCircle style={{ fontSize: '32px' }} />
+                <Icon name="status-check-circle" size={32} />
               </div>
               <h1 style={{
                 fontSize: '24px',
@@ -190,7 +190,7 @@ export const ForgotPasswordPage: React.FC = () => {
                   gap: '8px',
                 }}
               >
-                <ArrowBack style={{ fontSize: '16px' }} />
+                <Icon name="nav-back" size={16} />
                 Back to Sign In
               </Link>
             </motion.div>
@@ -304,7 +304,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 value={email}
                 onChange={handleEmailChange}
                 error={validationError}
-                icon={<Email />}
+                icon={<Icon name="auth-mail" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -352,7 +352,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 gap: '8px',
               }}
             >
-              <ArrowBack style={{ fontSize: '16px' }} />
+              <Icon name="nav-back" size={16} />
               Back to Sign In
             </Link>
           </motion.div>

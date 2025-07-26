@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Email, Lock, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { loginAsync, clearError } from '../../store/slices/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import { GlassCard } from '../../components/common/GlassCard';
@@ -176,7 +176,7 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={handleEmailChange}
                 error={validationErrors.email}
-                icon={<Email />}
+                icon={<Icon name="auth-mail" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -196,7 +196,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={handlePasswordChange}
                 error={validationErrors.password}
-                icon={<Lock />}
+                icon={<Icon name="auth-lock" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -218,7 +218,7 @@ export const LoginPage: React.FC = () => {
                   zIndex: 2,
                 }}
               >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
+                {showPassword ? <Icon name="auth-eye-off" size="sm" /> : <Icon name="auth-eye" size="sm" />}
               </button>
             </motion.div>
 

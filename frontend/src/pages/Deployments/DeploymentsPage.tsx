@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import {
-  RocketLaunch as DeployIcon,
-  Timeline as PipelineIcon,
-  History as HistoryIcon,
-  PlayArrow as StartIcon,
-  Stop as StopIcon,
-  // Refresh as RestartIcon, // Unused for now
-} from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 
@@ -28,25 +21,25 @@ export const DeploymentsPage: React.FC = () => {
     {
       id: 'overview',
       label: 'Overview',
-      icon: <DeployIcon />,
+      icon: <Icon name="deploy-rocket" size="sm" />,
       content: <DeploymentsOverview isDark={isDark} />,
     },
     {
       id: 'pipelines',
       label: 'Pipelines',
-      icon: <PipelineIcon />,
+      icon: <Icon name="deploy-pipeline" size="sm" />,
       content: <PipelinesTab isDark={isDark} />,
     },
     {
       id: 'history',
       label: 'History',
-      icon: <HistoryIcon />,
+      icon: <Icon name="deploy-history" size="sm" />,
       content: <HistoryTab isDark={isDark} />,
     },
     {
       id: 'environments',
       label: 'Environments',
-      icon: <StartIcon />,
+      icon: <Icon name="deploy-start" size="sm" />,
       content: <EnvironmentsTab isDark={isDark} />,
     },
   ];
@@ -149,10 +142,10 @@ export const DeploymentsPage: React.FC = () => {
 // Tab Content Components
 const DeploymentsOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const stats = [
-    { title: 'Active Deployments', value: '12', change: '+2', trend: 'up', icon: <DeployIcon /> },
-    { title: 'Success Rate', value: '98.5%', change: '+1.2%', trend: 'up', icon: <StartIcon /> },
-    { title: 'Failed Deployments', value: '1', change: '-3', trend: 'down', icon: <StopIcon /> },
-    { title: 'Avg Deploy Time', value: '4.2min', change: '-0.8min', trend: 'up', icon: <PipelineIcon /> },
+    { title: 'Active Deployments', value: '12', change: '+2', trend: 'up', icon: <Icon name="deploy-rocket" size="lg" /> },
+    { title: 'Success Rate', value: '98.5%', change: '+1.2%', trend: 'up', icon: <Icon name="deploy-start" size="lg" /> },
+    { title: 'Failed Deployments', value: '1', change: '-3', trend: 'down', icon: <Icon name="deploy-stop" size="lg" /> },
+    { title: 'Avg Deploy Time', value: '4.2min', change: '-0.8min', trend: 'up', icon: <Icon name="deploy-pipeline" size="lg" /> },
   ];
 
   return (

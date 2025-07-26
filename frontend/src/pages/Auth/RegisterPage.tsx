@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Email, Lock, Person, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Icon } from '../../components/common/Icon';
 import { registerAsync, clearError } from '../../store/slices/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import { GlassCard } from '../../components/common/GlassCard';
@@ -204,7 +204,7 @@ export const RegisterPage: React.FC = () => {
                 value={formData.name}
                 onChange={handleInputChange('name')}
                 error={validationErrors.name}
-                icon={<Person />}
+                icon={<Icon name="auth-user" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -224,7 +224,7 @@ export const RegisterPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleInputChange('email')}
                 error={validationErrors.email}
-                icon={<Email />}
+                icon={<Icon name="auth-mail" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -244,7 +244,7 @@ export const RegisterPage: React.FC = () => {
                 value={formData.password}
                 onChange={handleInputChange('password')}
                 error={validationErrors.password}
-                icon={<Lock />}
+                icon={<Icon name="auth-lock" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -267,7 +267,7 @@ export const RegisterPage: React.FC = () => {
                   zIndex: 2,
                 }}
               >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
+                {showPassword ? <Icon name="auth-eye-off" size="sm" /> : <Icon name="auth-eye" size="sm" />}
               </button>
             </motion.div>
 
@@ -283,7 +283,7 @@ export const RegisterPage: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange('confirmPassword')}
                 error={validationErrors.confirmPassword}
-                icon={<Lock />}
+                icon={<Icon name="auth-lock" size="sm" />}
                 iconPosition="left"
                 isDark={true}
                 required
@@ -306,7 +306,7 @@ export const RegisterPage: React.FC = () => {
                   zIndex: 2,
                 }}
               >
-                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                {showConfirmPassword ? <Icon name="auth-eye-off" size="sm" /> : <Icon name="auth-eye" size="sm" />}
               </button>
             </motion.div>
 
