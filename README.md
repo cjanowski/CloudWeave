@@ -1,3 +1,8 @@
+![Go Version](https://img.shields.io/badge/Go-1.24.5-00ADD8?style=flat&logo=go&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=flat&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=flat&logo=react&logoColor=black)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/cjanowski/CloudWeave)
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat)     
 # CloudWeave - Cloud Platform Management System
 
 A modern cloud platform management system built with Go backend and React frontend.
