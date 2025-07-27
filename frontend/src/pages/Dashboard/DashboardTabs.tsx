@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import { dashboardService } from '../../services/dashboardService';
+import type { DashboardStats, DashboardActivity, PerformanceMetrics, CostMetrics, SecurityMetrics, InfrastructureMetrics, ReportsMetrics } from '../../services/dashboardService';
 
 interface TabItem {
   id: string;
@@ -126,15 +128,138 @@ export const DashboardTabs: React.FC = () => {
 
 // Tab Content Components
 const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-  const stats = [
-    { title: 'Active Resources', value: '24', change: '+12%', trend: 'up' },
-    { title: 'Deployments', value: '8', change: '+5%', trend: 'up' },
-    { title: 'Cost This Month', value: '$1,234', change: '-8%', trend: 'down' },
-    { title: 'Uptime', value: '99.9%', change: '+0.1%', trend: 'up' },
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activity, setActivity] = useState<DashboardActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [statsData, activityData] = await Promise.all([
+          dashboardService.getDashboardStats(),
+          dashboardService.getRecentActivity()
+        ]);
+        setStats(statsData);
+        setActivity(activityData);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+
+    // Start real-time updates
+    dashboardService.startRealTimeUpdates();
+
+    // Subscribe to real-time updates
+    const unsubscribeStats = dashboardService.subscribe('stats-updated', (newStats: DashboardStats) => {
+      setStats(newStats);
+      setLastUpdated(new Date());
+    });
+
+    const unsubscribeActivity = dashboardService.subscribe('activity-added', (newActivity: DashboardActivity) => {
+      setActivity(prev => [newActivity, ...prev.slice(0, 4)]); // Keep only latest 5 activities
+      setLastUpdated(new Date());
+    });
+
+    // Cleanup subscriptions
+    return () => {
+      unsubscribeStats();
+      unsubscribeActivity();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '200px',
+        color: isDark ? '#ffffff' : '#666666'
+      }}>
+        Loading dashboard data...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '200px',
+        color: '#EF4444'
+      }}>
+        {error}
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
+
+  const statsArray = [
+    { 
+      title: 'Active Resources', 
+      value: stats.activeResources.toString(), 
+      change: stats.activeResourcesChange, 
+      trend: stats.activeResourcesTrend 
+    },
+    { 
+      title: 'Deployments', 
+      value: stats.deployments.toString(), 
+      change: stats.deploymentsChange, 
+      trend: stats.deploymentsTrend 
+    },
+    { 
+      title: 'Cost This Month', 
+      value: `$${stats.costThisMonth.toLocaleString()}`, 
+      change: stats.costThisMonthChange, 
+      trend: stats.costThisMonthTrend 
+    },
+    { 
+      title: 'Uptime', 
+      value: `${stats.uptime}%`, 
+      change: stats.uptimeChange, 
+      trend: stats.uptimeTrend 
+    },
   ];
 
   return (
     <div>
+      {/* Real-time indicator */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px',
+        fontSize: '14px',
+        color: isDark ? '#ffffff' : '#666666',
+        opacity: 0.8
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: '#10B981',
+            animation: 'pulse 2s infinite'
+          }} />
+          <span>Live data</span>
+        </div>
+        <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+      </div>
+
       {/* Stats Grid */}
       <div style={{
         display: 'grid',
@@ -142,7 +267,7 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         gap: '20px',
         marginBottom: '32px',
       }}>
-        {stats.map((stat, index) => (
+        {statsArray.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -217,18 +342,12 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             Recent Activity
           </h2>
           <div>
-            {[
-              'Deployment "web-app-v2" completed successfully',
-              'New EC2 instance launched in us-east-1',
-              'Cost alert: Monthly budget 80% reached',
-              'Security scan completed - no issues found',
-              'Auto-scaling triggered for production cluster',
-            ].map((activity, index) => (
+            {activity.map((activityItem, index) => (
               <div
-                key={index}
+                key={activityItem.id}
                 style={{
                   padding: '16px 0',
-                  borderBottom: index < 4 ? `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` : 'none',
+                  borderBottom: index < activity.length - 1 ? `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` : 'none',
                   color: isDark ? '#ffffff' : '#000000',
                   fontSize: '14px',
                   display: 'flex',
@@ -243,7 +362,21 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                   background: '#7C3AED',
                   flexShrink: 0,
                 }} />
-                {activity}
+                <span style={{ 
+                  color: getActivityColor(activityItem.type, isDark),
+                  fontWeight: 500
+                }}>
+                  {activityItem.type.toUpperCase()}
+                </span>
+                {' '}
+                {activityItem.message}
+                <span style={{ 
+                  opacity: 0.6,
+                  fontSize: '12px',
+                  marginLeft: '8px'
+                }}>
+                  {formatRelativeTime(activityItem.timestamp)}
+                </span>
               </div>
             ))}
           </div>
@@ -298,64 +431,270 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
-const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Performance Metrics</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>CPU Usage: 45%</p>
-      <p>Memory Usage: 62%</p>
-      <p>Network I/O: 1.2 GB/s</p>
-      <p>Response Time: 120ms</p>
-    </div>
-  </GlassCard>
-);
+const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-const CostsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Analysis</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>This Month: $1,234</p>
-      <p>Last Month: $1,342</p>
-      <p>Projected: $1,180</p>
-      <p>Savings: $162 (12%)</p>
-    </div>
-  </GlassCard>
-);
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await dashboardService.getPerformanceMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch performance metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
 
-const SecurityTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Security Overview</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Security Score: 98/100</p>
-      <p>Vulnerabilities: 0 Critical, 2 Medium</p>
-      <p>Last Scan: 2 hours ago</p>
-      <p>Compliance: SOC2, ISO27001</p>
-    </div>
-  </GlassCard>
-);
+    // Subscribe to real-time performance updates
+    const unsubscribe = dashboardService.subscribe('performance-updated', (newMetrics: PerformanceMetrics) => {
+      setMetrics(newMetrics);
+      setLastUpdated(new Date());
+    });
 
-const InfrastructureTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Infrastructure Status</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>EC2 Instances: 12 running</p>
-      <p>Load Balancers: 3 active</p>
-      <p>Databases: 2 RDS, 1 DynamoDB</p>
-      <p>Storage: 2.4 TB used</p>
-    </div>
-  </GlassCard>
-);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
-const ReportsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Reports & Analytics</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Monthly Report: Available</p>
-      <p>Cost Optimization: 15 recommendations</p>
-      <p>Performance Trends: Improving</p>
-      <p>Security Audit: Scheduled for next week</p>
-    </div>
-  </GlassCard>
-);
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px'
+      }}>
+        <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Performance Metrics</h2>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '12px',
+          color: isDark ? '#ffffff' : '#666666',
+          opacity: 0.7
+        }}>
+          <div style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: '#10B981',
+            animation: 'pulse 2s infinite'
+          }} />
+          <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+        </div>
+      </div>
+      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+        <p>CPU Usage: {metrics?.cpuUsage || 0}%</p>
+        <p>Memory Usage: {metrics?.memoryUsage || 0}%</p>
+        <p>Network I/O: {metrics?.networkIO || 0} GB/s</p>
+        <p>Response Time: {metrics?.responseTime || 0}ms</p>
+        {metrics?.timestamp && (
+          <p style={{ marginTop: '16px', fontSize: '12px', opacity: 0.7 }}>
+            Last updated: {new Date(metrics.timestamp).toLocaleString()}
+          </p>
+        )}
+      </div>
+    </GlassCard>
+  );
+};
+
+const CostsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [metrics, setMetrics] = useState<CostMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await dashboardService.getCostMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch cost metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+      <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Analysis</h2>
+      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+        <p>This Month: ${metrics?.thisMonth?.toLocaleString() || 0}</p>
+        <p>Last Month: ${metrics?.lastMonth?.toLocaleString() || 0}</p>
+        <p>Projected: ${metrics?.projected?.toLocaleString() || 0}</p>
+        <p style={{ color: '#10B981' }}>Savings: ${metrics?.savings?.toLocaleString() || 0} ({metrics?.savingsPercentage || 0}%)</p>
+      </div>
+    </GlassCard>
+  );
+};
+
+const SecurityTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [metrics, setMetrics] = useState<SecurityMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await dashboardService.getSecurityMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch security metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+      <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Security Overview</h2>
+      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+        <p>Security Score: {metrics?.securityScore || 0}/100</p>
+        <p>Vulnerabilities: {metrics?.vulnerabilities.critical || 0} Critical, {metrics?.vulnerabilities.medium || 0} Medium, {metrics?.vulnerabilities.low || 0} Low</p>
+        <p>Last Scan: {metrics?.lastScan ? formatRelativeTime(metrics.lastScan) : 'Unknown'}</p>
+        <p>Compliance: {metrics?.compliance?.join(', ') || 'None'}</p>
+      </div>
+    </GlassCard>
+  );
+};
+
+const InfrastructureTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [metrics, setMetrics] = useState<InfrastructureMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await dashboardService.getInfrastructureMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch infrastructure metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+      <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Infrastructure Status</h2>
+      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+        <p>EC2 Instances: {metrics?.ec2Instances || 0} running</p>
+        <p>Load Balancers: {metrics?.loadBalancers || 0} active</p>
+        <p>Databases: {metrics?.databases.rds || 0} RDS, {metrics?.databases.dynamodb || 0} DynamoDB</p>
+        <p>Storage: {metrics?.storageUsed || 0} TB used</p>
+      </div>
+    </GlassCard>
+  );
+};
+
+const ReportsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [metrics, setMetrics] = useState<ReportsMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await dashboardService.getReportsMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch reports metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+      <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Reports & Analytics</h2>
+      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+        <p>Monthly Report: {metrics?.monthlyReportAvailable ? 'Available' : 'Not Available'}</p>
+        <p>Cost Optimization: {metrics?.costOptimizationRecommendations || 0} recommendations</p>
+        <p>Performance Trends: {metrics?.performanceTrend || 'Unknown'}</p>
+        <p>Security Audit: {metrics?.nextSecurityAudit ? `Scheduled for ${new Date(metrics.nextSecurityAudit).toLocaleDateString()}` : 'Not scheduled'}</p>
+      </div>
+    </GlassCard>
+  );
+};
+
+// Helper functions
+const getActivityColor = (type: string, isDark: boolean) => {
+  const colors = {
+    deployment: '#10B981',
+    infrastructure: '#3B82F6',
+    security: '#F59E0B',
+    cost: '#EF4444',
+    alert: '#8B5CF6'
+  };
+  return colors[type as keyof typeof colors] || (isDark ? '#ffffff' : '#666666');
+};
+
+const formatRelativeTime = (timestamp: string) => {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffMs = now.getTime() - time.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) {
+    return 'just now';
+  } else if (diffMins < 60) {
+    return `${diffMins}m ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else {
+    return `${diffDays}d ago`;
+  }
+};
 
 export default DashboardTabs;

@@ -1,12 +1,91 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { DashboardTabs } from './DashboardTabs';
+import { useWebSocket } from '../../hooks/useWebSocket';
+import { RealTimeNotification, RealTimeNotification as NotificationType } from '../../components/common/RealTimeNotification';
+import './Dashboard.css';
 
 export const Dashboard: React.FC = () => {
   const { theme } = useSelector((state: any) => state.ui);
   const { user } = useSelector((state: any) => state.auth);
   const isDark = theme === 'dark';
+  
+  // WebSocket hook for real-time updates
+  const { isConnected, onDeploymentStatus, onInfrastructureUpdate, onMetricsUpdate, onAlert } = useWebSocket();
+  
+  // Real-time notifications state
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+
+  // WebSocket event handlers
+  useEffect(() => {
+    // Handle deployment status updates
+    const unsubscribeDeployment = onDeploymentStatus((data) => {
+      const notification: NotificationType = {
+        id: `deployment-${data.deploymentId}-${Date.now()}`,
+        type: 'deployment_status',
+        title: `Deployment ${data.status}`,
+        message: data.message || `Deployment ${data.deploymentId} is now ${data.status}`,
+        severity: data.status === 'completed' ? 'success' : 
+                 data.status === 'failed' ? 'error' : 
+                 data.status === 'running' ? 'info' : 'warning',
+        timestamp: new Date().toISOString(),
+        data,
+      };
+      setNotifications(prev => [notification, ...prev]);
+    });
+
+    // Handle infrastructure updates
+    const unsubscribeInfrastructure = onInfrastructureUpdate((data) => {
+      const notification: NotificationType = {
+        id: `infrastructure-${data.infrastructureId}-${Date.now()}`,
+        type: 'infrastructure_update',
+        title: `Infrastructure ${data.status}`,
+        message: data.message || `Infrastructure ${data.infrastructureId} is now ${data.status}`,
+        severity: data.status === 'running' ? 'success' : 
+                 data.status === 'error' ? 'error' : 
+                 data.status === 'stopped' ? 'warning' : 'info',
+        timestamp: new Date().toISOString(),
+        data,
+      };
+      setNotifications(prev => [notification, ...prev]);
+    });
+
+    // Handle metrics updates
+    const unsubscribeMetrics = onMetricsUpdate((data) => {
+      const notification: NotificationType = {
+        id: `metrics-${Date.now()}`,
+        type: 'metrics_update',
+        title: 'Metrics Updated',
+        message: 'Real-time metrics have been updated',
+        severity: 'info',
+        timestamp: new Date().toISOString(),
+        data,
+      };
+      setNotifications(prev => [notification, ...prev]);
+    });
+
+    // Handle alert notifications
+    const unsubscribeAlert = onAlert((data) => {
+      const notification: NotificationType = {
+        id: `alert-${Date.now()}`,
+        type: 'alert_notification',
+        title: data.title || 'Alert',
+        message: data.message || 'A new alert has been triggered',
+        severity: data.severity || 'warning',
+        timestamp: new Date().toISOString(),
+        data,
+      };
+      setNotifications(prev => [notification, ...prev]);
+    });
+
+    return () => {
+      unsubscribeDeployment();
+      unsubscribeInfrastructure();
+      unsubscribeMetrics();
+      unsubscribeAlert();
+    };
+  }, [onDeploymentStatus, onInfrastructureUpdate, onMetricsUpdate, onAlert]);
 
   return (
     <div style={{
@@ -44,11 +123,29 @@ export const Dashboard: React.FC = () => {
           color: isDark ? '#ffffff' : '#666666',
         }}>
           Here's what's happening with your infrastructure today.
+          {isConnected && (
+            <span style={{ 
+              color: '#10B981', 
+              marginLeft: '8px',
+              fontSize: '14px',
+            }}>
+              ● Real-time updates active
+            </span>
+          )}
         </p>
       </motion.div>
 
       {/* Dashboard Tabs */}
       <DashboardTabs />
+      
+      {/* Real-time Notifications */}
+      <RealTimeNotification
+        notifications={notifications}
+        onDismiss={(id) => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        }}
+        maxNotifications={5}
+      />
     </div>
   );
 };
