@@ -89,6 +89,10 @@ import { Icon } from '../components/common/Icon';
 - `action-refresh` - Refresh/reload
 - `action-settings` - Settings/configure
 - `action-more` - More options
+- `action-search` - Search
+- `action-clear` - Clear/reset
+- `action-drag` - Drag handle
+- `action-file` - File
 
 ### Status Icons
 - `status-check` - Success/complete
@@ -196,3 +200,360 @@ To add new icons to the system:
 4. Use semantic icon names that clearly represent functionality
 5. Test icons in both light and dark themes
 6. Ensure sufficient color contrast for accessibility
+
+---
+
+# Advanced UI Components Documentation
+
+## Overview
+
+CloudWeave now includes a comprehensive set of advanced UI components designed specifically for cloud management platforms. These components provide enhanced functionality while maintaining the glassmorphism design aesthetic.
+
+## Data Table Component
+
+A feature-rich data table with sorting, filtering, pagination, and row selection.
+
+```tsx
+import { DataTable, type Column } from '../components/common/DataTable';
+
+const columns: Column[] = [
+  { key: 'name', label: 'Server Name', sortable: true, filterable: true },
+  { key: 'status', label: 'Status', sortable: true, filterable: true },
+  { key: 'cpu', label: 'CPU Usage', sortable: true, align: 'center' },
+];
+
+const data = [
+  { id: '1', name: 'Web Server 1', status: 'Running', cpu: '45%' },
+  { id: '2', name: 'Database Server', status: 'Running', cpu: '23%' },
+];
+
+<DataTable
+  data={data}
+  columns={columns}
+  isDark={isDark}
+  selectable
+  onSelectionChange={(selected) => console.log('Selected:', selected)}
+  onRowClick={(row) => console.log('Clicked:', row)}
+/>
+```
+
+### Features
+- **Sorting**: Click column headers to sort
+- **Filtering**: Built-in search and column filters
+- **Pagination**: Configurable page sizes
+- **Row Selection**: Single or multiple row selection
+- **Responsive**: Mobile-friendly design
+- **Custom Rendering**: Custom cell content rendering
+- **Loading States**: Built-in loading indicators
+
+## Chart Components
+
+Comprehensive chart library using Chart.js with glassmorphism styling.
+
+```tsx
+import { 
+  LineChart, 
+  BarChart, 
+  DoughnutChart, 
+  RadarChart, 
+  ScatterChart,
+  type ChartData 
+} from '../components/common/ChartComponents';
+
+const chartData: ChartData = {
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  datasets: [
+    {
+      label: 'CPU Usage',
+      data: [65, 59, 80, 81, 56, 55],
+      fill: true,
+    },
+  ],
+};
+
+<LineChart
+  data={chartData}
+  title="Resource Usage Over Time"
+  height={300}
+  isDark={isDark}
+/>
+```
+
+### Available Chart Types
+- **LineChart**: Time series and trend data
+- **BarChart**: Categorical data comparison
+- **DoughnutChart**: Proportional data
+- **RadarChart**: Multi-dimensional metrics
+- **ScatterChart**: Correlation analysis
+
+### Features
+- **Theme Integration**: Automatic light/dark mode support
+- **Responsive**: Adapts to container size
+- **Interactive**: Hover tooltips and animations
+- **Customizable**: Extensive styling options
+- **Accessible**: Screen reader support
+
+## Advanced Form Components
+
+Enhanced form components for better user experience.
+
+### Multi-Select Component
+
+```tsx
+import { MultiSelect } from '../components/common/AdvancedForms';
+
+const options = [
+  { value: 'aws', label: 'Amazon Web Services' },
+  { value: 'azure', label: 'Microsoft Azure' },
+  { value: 'gcp', label: 'Google Cloud Platform' },
+];
+
+<MultiSelect
+  options={options}
+  value={selectedOptions}
+  onChange={setSelectedOptions}
+  label="Select Cloud Providers"
+  placeholder="Choose providers..."
+  isDark={isDark}
+/>
+```
+
+### Date Picker Component
+
+```tsx
+import { DatePicker } from '../components/common/AdvancedForms';
+
+<DatePicker
+  value={selectedDate}
+  onChange={setSelectedDate}
+  label="Select Date"
+  placeholder="Choose a date..."
+  isDark={isDark}
+/>
+```
+
+### File Upload Component
+
+```tsx
+import { FileUpload } from '../components/common/AdvancedForms';
+
+<FileUpload
+  onFileSelect={(files) => console.log('Selected files:', files)}
+  accept=".json,.yaml,.yml"
+  multiple
+  maxSize={10}
+  label="Upload Configuration Files"
+  isDark={isDark}
+/>
+```
+
+### Toggle Switch Component
+
+```tsx
+import { ToggleSwitch } from '../components/common/AdvancedForms';
+
+<ToggleSwitch
+  checked={toggleValue}
+  onChange={setToggleValue}
+  label="Enable Auto-scaling"
+  isDark={isDark}
+/>
+```
+
+## Drag and Drop Components
+
+Interactive drag and drop interfaces for enhanced user experience.
+
+### Sortable List Component
+
+```tsx
+import { SortableList, type DraggableItem } from '../components/common/DragAndDrop';
+
+const items: DraggableItem[] = [
+  { id: '1', content: 'Infrastructure Monitoring' },
+  { id: '2', content: 'Cost Optimization' },
+];
+
+<SortableList
+  items={items}
+  onReorder={setItems}
+  isDark={isDark}
+/>
+```
+
+### Kanban Board Component
+
+```tsx
+import { KanbanBoard, type KanbanColumn } from '../components/common/DragAndDrop';
+
+const columns: KanbanColumn[] = [
+  {
+    id: 'todo',
+    title: 'To Do',
+    items: [{ id: '1', content: 'Deploy new server' }],
+  },
+  {
+    id: 'in-progress',
+    title: 'In Progress',
+    items: [{ id: '2', content: 'Database migration' }],
+  },
+];
+
+<KanbanBoard
+  columns={columns}
+  onColumnUpdate={setColumns}
+  isDark={isDark}
+/>
+```
+
+### File Drop Zone Component
+
+```tsx
+import { FileDropZone } from '../components/common/DragAndDrop';
+
+<FileDropZone
+  onFilesDrop={(files) => console.log('Dropped files:', files)}
+  acceptTypes={['image/*', 'application/pdf']}
+  maxFiles={5}
+  isDark={isDark}
+/>
+```
+
+## Metric Card Component
+
+Display key performance indicators with change indicators.
+
+```tsx
+import { MetricCard } from '../components/common/ChartComponents';
+
+<MetricCard
+  title="Total Servers"
+  value="24"
+  change={{ value: 12, isPositive: true }}
+  icon="cloud-server"
+  color="#3B82F6"
+  isDark={isDark}
+/>
+```
+
+## Demo Page
+
+Visit the Components Demo page to see all components in action:
+
+```tsx
+import { ComponentsDemoPage } from '../pages/ComponentsDemo/ComponentsDemoPage';
+
+// Add to your routing
+<Route path="/components-demo" element={<ComponentsDemoPage />} />
+```
+
+## Best Practices
+
+1. **Theme Consistency**: Always pass the `isDark` prop for proper theming
+2. **Accessibility**: Components include built-in accessibility features
+3. **Performance**: Use React.memo for frequently re-rendered components
+4. **Error Handling**: Implement proper error boundaries
+5. **Responsive Design**: Components are mobile-friendly by default
+6. **TypeScript**: Full TypeScript support with comprehensive type definitions
+
+## Integration Examples
+
+### Dashboard Integration
+
+```tsx
+// In your dashboard component
+import { DataTable, LineChart, MetricCard } from '../components/common';
+
+export const Dashboard = () => {
+  const { theme } = useSelector((state: any) => state.ui);
+  const isDark = theme === 'dark';
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+        <MetricCard
+          title="Active Servers"
+          value="24"
+          icon="cloud-server"
+          isDark={isDark}
+        />
+        <MetricCard
+          title="Monthly Cost"
+          value="$2,847"
+          icon="cost-dollar"
+          isDark={isDark}
+        />
+      </div>
+      
+      <LineChart
+        data={metricsData}
+        title="Resource Usage"
+        height={300}
+        isDark={isDark}
+      />
+      
+      <DataTable
+        data={serversData}
+        columns={serverColumns}
+        isDark={isDark}
+      />
+    </div>
+  );
+};
+```
+
+### Form Integration
+
+```tsx
+// In your form component
+import { MultiSelect, DatePicker, FileUpload } from '../components/common/AdvancedForms';
+
+export const DeploymentForm = () => {
+  const { theme } = useSelector((state: any) => state.ui);
+  const isDark = theme === 'dark';
+
+  return (
+    <form>
+      <MultiSelect
+        options={cloudProviders}
+        value={selectedProviders}
+        onChange={setSelectedProviders}
+        label="Cloud Providers"
+        isDark={isDark}
+      />
+      
+      <DatePicker
+        value={deploymentDate}
+        onChange={setDeploymentDate}
+        label="Deployment Date"
+        isDark={isDark}
+      />
+      
+      <FileUpload
+        onFileSelect={handleConfigFiles}
+        accept=".yaml,.yml,.json"
+        label="Configuration Files"
+        isDark={isDark}
+      />
+    </form>
+  );
+};
+```
+
+## Performance Considerations
+
+1. **Virtualization**: For large datasets, consider implementing virtual scrolling
+2. **Memoization**: Use React.memo for expensive components
+3. **Lazy Loading**: Load chart components only when needed
+4. **Debouncing**: Debounce search and filter inputs
+5. **Pagination**: Use pagination for large data tables
+
+## Accessibility Features
+
+All components include:
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+- Focus management
+- ARIA labels and descriptions
+- Semantic HTML structure

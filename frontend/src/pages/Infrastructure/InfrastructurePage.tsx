@@ -362,288 +362,439 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
+// Resources Tab Component
 const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const [resources, setResources] = useState<Infrastructure[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<InfrastructureFilters>({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [, setHasMore] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [filters, setFilters] = useState({
+    provider: '',
+    type: '',
+    status: '',
+    search: ''
+  });
 
   useEffect(() => {
     const fetchResources = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const response = await infrastructureService.listInfrastructure(currentPage, 10, filters);
-        setResources(response.data);
-        setTotalPages(Math.ceil(response.total / 10));
-        setHasMore(response.hasMore);
-      } catch (err) {
-        console.error('Failed to fetch infrastructure resources:', err);
-        setError('Failed to load resources');
+        const data = await infrastructureService.getInfrastructure();
+        setResources(data);
+      } catch (error) {
+        console.error('Failed to fetch infrastructure:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchResources();
-  }, [currentPage, filters]);
+  }, []);
 
-  const handleFilterChange = (key: keyof InfrastructureFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value || undefined }));
-    setCurrentPage(1); // Reset to first page when filtering
-  };
+  const filteredResources = resources.filter(resource => {
+    if (filters.provider && resource.provider !== filters.provider) return false;
+    if (filters.type && resource.type !== filters.type) return false;
+    if (filters.status && resource.status !== filters.status) return false;
+    if (filters.search && !resource.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    return true;
+  });
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      running: '#10B981',
-      stopped: '#6B7280',
-      pending: '#F59E0B',
-      error: '#EF4444',
-      terminated: '#EF4444'
-    };
-    return colors[status as keyof typeof colors] || '#6B7280';
-  };
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Create Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Infrastructure Resources</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Manage your cloud infrastructure resources
+          </p>
+        </div>
+        <GlassButton
+          variant="primary"
+          size="medium"
+          isDark={isDark}
+          onClick={() => setShowCreateForm(true)}
+          style={{ borderRadius: '12px' }}
+        >
+          <Icon name="action-plus" size="sm" />
+          Create Resource
+        </GlassButton>
+      </div>
 
-  const getProviderIcon = (provider: string) => {
-    const icons = {
-      aws: 'cloud-compute',
-      azure: 'cloud-storage',
-      gcp: 'cloud-network'
-    };
-    return icons[provider as keyof typeof icons] || 'cloud-compute';
-  };
+      {/* Filters */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Provider
+            </label>
+            <select
+              value={filters.provider}
+              onChange={(e) => setFilters({ ...filters, provider: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Providers</option>
+              <option value="aws">AWS</option>
+              <option value="azure">Azure</option>
+              <option value="gcp">GCP</option>
+            </select>
+          </div>
 
-  if (loading) {
-    return (
-      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Type
+            </label>
+            <select
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Types</option>
+              <option value="server">Server</option>
+              <option value="database">Database</option>
+              <option value="storage">Storage</option>
+              <option value="network">Network</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Status
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="running">Running</option>
+              <option value="stopped">Stopped</option>
+              <option value="pending">Pending</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Search resources..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Resources Grid */}
+      {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
           Loading resources...
         </div>
-      </GlassCard>
-    );
-  }
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+          {filteredResources.map((resource) => (
+            <GlassCard key={resource.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div>
+                  <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                    {resource.name}
+                  </h3>
+                  <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                    {resource.type} • {resource.provider}
+                  </p>
+                </div>
+                <div style={{
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  background: getStatusColor(resource.status),
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  textTransform: 'uppercase'
+                }}>
+                  {resource.status}
+                </div>
+              </div>
 
-  if (error) {
-    return (
-      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <div style={{ textAlign: 'center', padding: '40px', color: '#EF4444' }}>
-          {error}
+              <div style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Region:</span>
+                  <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{resource.region}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Cost:</span>
+                  <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>
+                    ${resource.cost?.daily || 0}/day
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px', flex: 1 }}
+                >
+                  <Icon name="action-edit" size="sm" />
+                  Edit
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px', flex: 1 }}
+                >
+                  <Icon name="monitor-chart" size="sm" />
+                  Monitor
+                </GlassButton>
+              </div>
+            </GlassCard>
+          ))}
         </div>
-      </GlassCard>
-    );
-  }
+      )}
+
+      {/* Create Resource Form Modal */}
+      {showCreateForm && (
+        <CreateResourceForm isDark={isDark} onClose={() => setShowCreateForm(false)} onSuccess={(newResource) => {
+          setResources([newResource, ...resources]);
+          setShowCreateForm(false);
+        }} />
+      )}
+    </div>
+  );
+};
+
+// Create Resource Form Component
+const CreateResourceForm: React.FC<{ 
+  isDark: boolean; 
+  onClose: () => void; 
+  onSuccess: (resource: Infrastructure) => void;
+}> = ({ isDark, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'server',
+    provider: 'aws',
+    region: 'us-east-1',
+    specifications: {} as any
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const newResource = await infrastructureService.createInfrastructure(formData);
+      onSuccess(newResource);
+    } catch (error) {
+      console.error('Failed to create resource:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      {/* Filters */}
-      <GlassCard variant="card" elevation="low" isDark={isDark} style={{ marginBottom: '20px', borderRadius: '16px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ color: isDark ? '#ffffff' : '#000000', fontWeight: 500 }}>Filters:</div>
-          
-          <select 
-            value={filters.provider || ''} 
-            onChange={(e) => handleFilterChange('provider', e.target.value)}
-            style={{
-              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              borderRadius: '8px',
-              padding: '8px 12px',
-              color: isDark ? '#ffffff' : '#000000',
-              fontSize: '14px'
-            }}
-          >
-            <option value="">All Providers</option>
-            <option value="aws">AWS</option>
-            <option value="azure">Azure</option>
-            <option value="gcp">Google Cloud</option>
-          </select>
-
-          <select 
-            value={filters.type || ''} 
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-            style={{
-              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              borderRadius: '8px',
-              padding: '8px 12px',
-              color: isDark ? '#ffffff' : '#000000',
-              fontSize: '14px'
-            }}
-          >
-            <option value="">All Types</option>
-            <option value="compute">Compute</option>
-            <option value="storage">Storage</option>
-            <option value="database">Database</option>
-            <option value="network">Network</option>
-            <option value="security">Security</option>
-          </select>
-
-          <select 
-            value={filters.status || ''} 
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            style={{
-              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              borderRadius: '8px',
-              padding: '8px 12px',
-              color: isDark ? '#ffffff' : '#000000',
-              fontSize: '14px'
-            }}
-          >
-            <option value="">All Statuses</option>
-            <option value="running">Running</option>
-            <option value="stopped">Stopped</option>
-            <option value="pending">Pending</option>
-            <option value="error">Error</option>
-          </select>
-        </div>
-      </GlassCard>
-
-      {/* Resources List */}
-      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Infrastructure Resources</h2>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000
+    }}>
+      <GlassCard variant="card" elevation="high" isDark={isDark} style={{ 
+        borderRadius: '20px', 
+        maxWidth: '500px', 
+        width: '90%',
+        maxHeight: '90vh',
+        overflow: 'auto'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Create New Resource</h2>
           <GlassButton
-            variant="primary"
+            variant="ghost"
             size="small"
             isDark={isDark}
-            icon={<Icon name="cloud-compute" size="sm" />}
-            style={{ borderRadius: '12px' }}
+            onClick={onClose}
+            style={{ borderRadius: '8px' }}
           >
-            Add Resource
+            <Icon name="action-close" size="sm" />
           </GlassButton>
         </div>
 
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {resources.map((resource) => (
-            <motion.div
-              key={resource.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Resource Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter resource name"
               style={{
-                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
-                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                borderRadius: '12px',
-                padding: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer'
-              }}
-              whileHover={{ 
-                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                transform: 'translateY(-1px)'
-              }}
-            >
-              <div style={{ color: '#10B981', fontSize: '20px' }}>
-                <Icon name={getProviderIcon(resource.provider)} size="md" />
-              </div>
-              
-              <div style={{ flex: 1 }}>
-                <div style={{ 
-                  color: isDark ? '#ffffff' : '#000000',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  marginBottom: '4px'
-                }}>
-                  {resource.name}
-                </div>
-                <div style={{ 
-                  color: isDark ? '#ffffff' : '#666666',
-                  fontSize: '14px',
-                  opacity: 0.8
-                }}>
-                  {resource.provider.toUpperCase()} • {resource.type} • {resource.region}
-                </div>
-              </div>
-
-              <div style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '4px 12px',
-                background: `${getStatusColor(resource.status)}20`,
-                borderRadius: '20px',
-                border: `1px solid ${getStatusColor(resource.status)}40`
-              }}>
-                <div style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: getStatusColor(resource.status)
-                }} />
-                <span style={{
-                  color: getStatusColor(resource.status),
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  textTransform: 'capitalize'
-                }}>
-                  {resource.status}
-                </span>
-              </div>
-
-              <div style={{ 
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
                 color: isDark ? '#ffffff' : '#000000',
-                fontWeight: 600,
-                fontSize: '14px',
-                textAlign: 'right'
-              }}>
-                ${resource.cost.monthly.toFixed(2)}/mo
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                fontSize: '14px'
+              }}
+            />
+          </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            marginTop: '24px',
-            paddingTop: '20px',
-            borderTop: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`
-          }}>
-            <GlassButton
-              variant="ghost"
-              size="small"
-              isDark={isDark}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              style={{ borderRadius: '8px' }}
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Resource Type *
+            </label>
+            <select
+              required
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
             >
-              Previous
+              <option value="server">Server</option>
+              <option value="database">Database</option>
+              <option value="storage">Storage</option>
+              <option value="network">Network</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Cloud Provider *
+            </label>
+            <select
+              required
+              value={formData.provider}
+              onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="aws">AWS</option>
+              <option value="azure">Azure</option>
+              <option value="gcp">Google Cloud</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Region *
+            </label>
+            <select
+              required
+              value={formData.region}
+              onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="us-east-1">US East (N. Virginia)</option>
+              <option value="us-west-2">US West (Oregon)</option>
+              <option value="eu-west-1">Europe (Ireland)</option>
+              <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+            <GlassButton
+              type="submit"
+              variant="primary"
+              size="medium"
+              isDark={isDark}
+              disabled={loading}
+              style={{ borderRadius: '12px', flex: 1 }}
+            >
+              {loading ? 'Creating...' : 'Create Resource'}
             </GlassButton>
-            
-            <span style={{ 
-              color: isDark ? '#ffffff' : '#666666',
-              padding: '8px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              fontSize: '14px'
-            }}>
-              Page {currentPage} of {totalPages}
-            </span>
-            
             <GlassButton
+              type="button"
               variant="ghost"
-              size="small"
+              size="medium"
               isDark={isDark}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              style={{ borderRadius: '8px' }}
+              onClick={onClose}
+              style={{ borderRadius: '12px', flex: 1 }}
             >
-              Next
+              Cancel
             </GlassButton>
           </div>
-        )}
+        </form>
       </GlassCard>
     </div>
   );
+};
+
+// Helper function for status colors
+const getStatusColor = (status: string) => {
+  const colors = {
+    running: '#10B981',
+    stopped: '#F59E0B',
+    pending: '#3B82F6',
+    error: '#EF4444'
+  };
+  return colors[status as keyof typeof colors] || '#666666';
 };
 
 const TemplatesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (

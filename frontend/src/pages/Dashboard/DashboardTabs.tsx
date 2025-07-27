@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import { LineChart, BarChart, DoughnutChart, MetricCard, type ChartData } from '../../components/common/ChartComponents';
 import { dashboardService } from '../../services/dashboardService';
 import type { DashboardStats, DashboardActivity, PerformanceMetrics, CostMetrics, SecurityMetrics, InfrastructureMetrics, ReportsMetrics } from '../../services/dashboardService';
 
@@ -176,6 +177,25 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     };
   }, []);
 
+  const handleExport = () => {
+    const data = {
+      stats,
+      activity,
+      lastUpdated: lastUpdated.toISOString(),
+      exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-overview-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div style={{ 
@@ -197,236 +217,217 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '200px',
-        color: '#EF4444'
+        color: '#ef4444'
       }}>
         {error}
       </div>
     );
   }
 
-  if (!stats) {
-    return null;
-  }
-
-  const statsArray = [
-    { 
-      title: 'Active Resources', 
-      value: stats.activeResources.toString(), 
-      change: stats.activeResourcesChange, 
-      trend: stats.activeResourcesTrend 
-    },
-    { 
-      title: 'Deployments', 
-      value: stats.deployments.toString(), 
-      change: stats.deploymentsChange, 
-      trend: stats.deploymentsTrend 
-    },
-    { 
-      title: 'Cost This Month', 
-      value: `$${stats.costThisMonth.toLocaleString()}`, 
-      change: stats.costThisMonthChange, 
-      trend: stats.costThisMonthTrend 
-    },
-    { 
-      title: 'Uptime', 
-      value: `${stats.uptime}%`, 
-      change: stats.uptimeChange, 
-      trend: stats.uptimeTrend 
-    },
-  ];
-
   return (
-    <div>
-      {/* Real-time indicator */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '20px',
-        fontSize: '14px',
-        color: isDark ? '#ffffff' : '#666666',
-        opacity: 0.8
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#10B981',
-            animation: 'pulse 2s infinite'
-          }} />
-          <span>Live data</span>
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Export Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Dashboard Overview</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </p>
         </div>
-        <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
-      </div>
-
-      {/* Stats Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '20px',
-        marginBottom: '32px',
-      }}>
-        {statsArray.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <GlassCard
-              variant="card"
-              elevation="medium"
-              isDark={isDark}
-              style={{
-                textAlign: 'center',
-                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                borderRadius: '20px',
-              }}
-            >
-              <h3 style={{ 
-                fontSize: '14px', 
-                fontWeight: 500, 
-                margin: '0 0 12px 0',
-                opacity: 0.7,
-                color: isDark ? '#ffffff' : '#666666',
-              }}>
-                {stat.title}
-              </h3>
-              <div style={{ 
-                fontSize: '32px', 
-                fontWeight: 'bold', 
-                margin: '0 0 8px 0',
-                color: isDark ? '#ffffff' : '#000000',
-              }}>
-                {stat.value}
-              </div>
-              <div style={{ 
-                fontSize: '14px',
-                fontWeight: 500,
-                color: stat.trend === 'up' ? '#10B981' : '#EF4444',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-              }}>
-                <span>{stat.change}</span>
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '24px',
-      }}>
-        {/* Recent Activity */}
-        <GlassCard
-          variant="card"
-          elevation="medium"
+        <GlassButton
+          variant="ghost"
+          size="small"
           isDark={isDark}
-          style={{
-            border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-            borderRadius: '20px',
-          }}
+          onClick={handleExport}
+          style={{ borderRadius: '8px' }}
         >
-          <h2 style={{ 
-            fontSize: '20px', 
-            fontWeight: 600, 
-            margin: '0 0 20px 0',
-            color: isDark ? '#ffffff' : '#000000',
-          }}>
-            Recent Activity
-          </h2>
-          <div>
-            {activity.map((activityItem, index) => (
+          <Icon name="action-download" size="sm" />
+          Export Data
+        </GlassButton>
+      </div>
+
+      {/* Stats Cards */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                padding: '8px', 
+                borderRadius: '8px', 
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                color: '#ffffff'
+              }}>
+                <Icon name="cloud-server" size="sm" />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                  Active Resources
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: isDark ? '#ffffff' : '#000000' }}>
+                  {stats.activeResources}
+                </p>
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  fontSize: '12px', 
+                  color: stats.activeResourcesTrend === 'up' ? '#10B981' : '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Icon name={stats.activeResourcesTrend === 'up' ? 'monitor-trending-up' : 'monitor-trending-down'} size="xs" />
+                  {stats.activeResourcesChange}
+                </p>
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                padding: '8px', 
+                borderRadius: '8px', 
+                background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                color: '#ffffff'
+              }}>
+                <Icon name="action-upload" size="sm" />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                  Deployments
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: isDark ? '#ffffff' : '#000000' }}>
+                  {stats.deployments}
+                </p>
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  fontSize: '12px', 
+                  color: stats.deploymentsTrend === 'up' ? '#10B981' : '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Icon name={stats.deploymentsTrend === 'up' ? 'monitor-trending-up' : 'monitor-trending-down'} size="xs" />
+                  {stats.deploymentsChange}
+                </p>
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                padding: '8px', 
+                borderRadius: '8px', 
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                color: '#ffffff'
+              }}>
+                <Icon name="cost-dollar" size="sm" />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                  Monthly Cost
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: isDark ? '#ffffff' : '#000000' }}>
+                  ${stats.costThisMonth}
+                </p>
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  fontSize: '12px', 
+                  color: stats.costThisMonthTrend === 'down' ? '#10B981' : '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Icon name={stats.costThisMonthTrend === 'down' ? 'monitor-trending-down' : 'monitor-trending-up'} size="xs" />
+                  {stats.costThisMonthChange}
+                </p>
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                padding: '8px', 
+                borderRadius: '8px', 
+                background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                color: '#ffffff'
+              }}>
+                <Icon name="monitor-check" size="sm" />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                  Uptime
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: isDark ? '#ffffff' : '#000000' }}>
+                  {stats.uptime.toFixed(4)}%
+                </p>
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  fontSize: '12px', 
+                  color: stats.uptimeTrend === 'up' ? '#10B981' : '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Icon name={stats.uptimeTrend === 'up' ? 'monitor-trending-up' : 'monitor-trending-down'} size="xs" />
+                  {stats.uptimeChange}
+                </p>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Recent Activity */}
+      {activity.length > 0 && (
+        <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Recent Activity</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {activity.map((item, index) => (
               <div
-                key={activityItem.id}
+                key={index}
                 style={{
-                  padding: '16px 0',
-                  borderBottom: index < activity.length - 1 ? `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` : 'none',
-                  color: isDark ? '#ffffff' : '#000000',
-                  fontSize: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
                 }}
               >
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: '#7C3AED',
-                  flexShrink: 0,
-                }} />
-                <span style={{ 
-                  color: getActivityColor(activityItem.type, isDark),
-                  fontWeight: 500
+                <div style={{ 
+                  padding: '6px', 
+                  borderRadius: '6px', 
+                  background: getActivityColor(item.type),
+                  color: '#ffffff',
+                  fontSize: '12px'
                 }}>
-                  {activityItem.type.toUpperCase()}
-                </span>
-                {' '}
-                {activityItem.message}
-                <span style={{ 
-                  opacity: 0.6,
-                  fontSize: '12px',
-                  marginLeft: '8px'
-                }}>
-                  {formatRelativeTime(activityItem.timestamp)}
-                </span>
+                  <Icon name={getActivityIcon(item.type)} size="xs" />
+                </div>
+                                 <div style={{ flex: 1 }}>
+                   <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: isDark ? '#ffffff' : '#000000' }}>
+                     {item.message}
+                   </p>
+                   <p style={{ margin: 0, fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                     {new Date(item.timestamp).toLocaleString()}
+                   </p>
+                 </div>
+                 <div style={{ 
+                   padding: '4px 8px', 
+                   borderRadius: '4px', 
+                   background: getActivityColor(item.type),
+                   color: '#ffffff',
+                   fontSize: '10px',
+                   textTransform: 'uppercase'
+                 }}>
+                   {item.type}
+                 </div>
               </div>
             ))}
           </div>
         </GlassCard>
-
-        {/* Quick Actions */}
-        <GlassCard
-          variant="card"
-          elevation="medium"
-          isDark={isDark}
-          style={{
-            border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-            borderRadius: '20px',
-          }}
-        >
-          <h2 style={{ 
-            fontSize: '20px', 
-            fontWeight: 600, 
-            margin: '0 0 20px 0',
-            color: isDark ? '#ffffff' : '#000000',
-          }}>
-            Quick Actions
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {[
-              'Deploy New Application',
-              'Launch EC2 Instance',
-              'Create S3 Bucket',
-              'View Cost Report',
-              'Security Scan',
-            ].map((action, index) => (
-              <GlassButton
-                key={index}
-                variant="ghost"
-                size="small"
-                isDark={isDark}
-                style={{
-                  justifyContent: 'flex-start',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
-                }}
-              >
-                {action}
-              </GlassButton>
-            ))}
-          </div>
-        </GlassCard>
-      </div>
+      )}
     </div>
   );
 };
@@ -434,7 +435,7 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [timeRange, setTimeRange] = useState('24h');
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -448,65 +449,270 @@ const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
       }
     };
     fetchMetrics();
+  }, [timeRange]);
 
-    // Subscribe to real-time performance updates
-    const unsubscribe = dashboardService.subscribe('performance-updated', (newMetrics: PerformanceMetrics) => {
-      setMetrics(newMetrics);
-      setLastUpdated(new Date());
-    });
+  // Sample chart data for demonstration
+  const cpuChartData: ChartData = {
+    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+    datasets: [
+      {
+        label: 'CPU Usage',
+        data: [45, 52, 38, 67, 89, 76, 58],
+        fill: true,
+      },
+    ],
+  };
 
-    return () => {
-      unsubscribe();
+  const memoryChartData: ChartData = {
+    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+    datasets: [
+      {
+        label: 'Memory Usage',
+        data: [62, 58, 71, 85, 78, 82, 69],
+        fill: true,
+      },
+    ],
+  };
+
+  const networkChartData: ChartData = {
+    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+    datasets: [
+      {
+        label: 'Network In',
+        data: [120, 95, 180, 250, 320, 280, 150],
+        fill: false,
+      },
+      {
+        label: 'Network Out',
+        data: [80, 65, 140, 200, 280, 220, 100],
+        fill: false,
+      },
+    ],
+  };
+
+  const responseTimeChartData: ChartData = {
+    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+    datasets: [
+      {
+        label: 'Response Time (ms)',
+        data: [45, 52, 38, 67, 89, 76, 58],
+        fill: false,
+      },
+    ],
+  };
+
+  const resourceDistributionData: ChartData = {
+    labels: ['CPU', 'Memory', 'Storage', 'Network'],
+    datasets: [
+      {
+        label: 'Resource Usage',
+        data: [65, 78, 45, 32],
+      },
+    ],
+  };
+
+  const handleExport = () => {
+    const data = {
+      metrics,
+      timeRange,
+      exportDate: new Date().toISOString()
     };
-  }, []);
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `performance-metrics-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
-      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
-      </GlassCard>
+      <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+        Loading performance metrics...
+      </div>
     );
   }
 
   return (
-    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '20px'
-      }}>
-        <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Performance Metrics</h2>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontSize: '12px',
-          color: isDark ? '#ffffff' : '#666666',
-          opacity: 0.7
-        }}>
-          <div style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            background: '#10B981',
-            animation: 'pulse 2s infinite'
-          }} />
-          <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Time Range and Export */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Performance Metrics</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Real-time performance monitoring and analytics
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              color: isDark ? '#ffffff' : '#000000',
+              fontSize: '14px'
+            }}
+          >
+            <option value="1h">Last Hour</option>
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+          </select>
+          <GlassButton
+            variant="ghost"
+            size="small"
+            isDark={isDark}
+            onClick={handleExport}
+            style={{ borderRadius: '8px' }}
+          >
+            <Icon name="action-download" size="sm" />
+            Export
+          </GlassButton>
         </div>
       </div>
-      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-        <p>CPU Usage: {metrics?.cpuUsage || 0}%</p>
-        <p>Memory Usage: {metrics?.memoryUsage || 0}%</p>
-        <p>Network I/O: {metrics?.networkIO || 0} GB/s</p>
-        <p>Response Time: {metrics?.responseTime || 0}ms</p>
-        {metrics?.timestamp && (
-          <p style={{ marginTop: '16px', fontSize: '12px', opacity: 0.7 }}>
-            Last updated: {new Date(metrics.timestamp).toLocaleString()}
-          </p>
-        )}
+
+      {/* Key Metrics Cards */}
+      {metrics && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <MetricCard
+            title="CPU Usage"
+            value={`${metrics.cpuUsage}%`}
+            icon="monitor-clock"
+            isDark={isDark}
+          />
+          <MetricCard
+            title="Memory Usage"
+            value={`${metrics.memoryUsage}%`}
+            icon="monitor-memory"
+            isDark={isDark}
+          />
+          <MetricCard
+            title="Network I/O"
+            value={`${metrics.networkIO} MB/s`}
+            icon="monitor-network"
+            isDark={isDark}
+          />
+          <MetricCard
+            title="Response Time"
+            value={`${metrics.responseTime}ms`}
+            icon="monitor-speed"
+            isDark={isDark}
+          />
+        </div>
+      )}
+
+      {/* Charts Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+        <LineChart
+          data={cpuChartData}
+          title="CPU Usage Over Time"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <LineChart
+          data={memoryChartData}
+          title="Memory Usage Over Time"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <LineChart
+          data={networkChartData}
+          title="Network Traffic"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <LineChart
+          data={responseTimeChartData}
+          title="Response Time"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <DoughnutChart
+          data={resourceDistributionData}
+          title="Resource Distribution"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <BarChart
+          data={cpuChartData}
+          title="CPU Usage Comparison"
+          height={300}
+          isDark={isDark}
+        />
       </div>
-    </GlassCard>
+
+      {/* Performance Insights */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+        <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Performance Insights</h3>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            borderRadius: '8px',
+            background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+          }}>
+            <div style={{ 
+              padding: '6px', 
+              borderRadius: '6px', 
+              background: '#10B981',
+              color: '#ffffff',
+              fontSize: '12px'
+            }}>
+              <Icon name="monitor-check" size="xs" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: isDark ? '#ffffff' : '#000000' }}>
+                System performance is optimal
+              </p>
+              <p style={{ margin: 0, fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                All metrics are within normal ranges
+              </p>
+            </div>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            borderRadius: '8px',
+            background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+          }}>
+            <div style={{ 
+              padding: '6px', 
+              borderRadius: '6px', 
+              background: '#F59E0B',
+              color: '#ffffff',
+              fontSize: '12px'
+            }}>
+              <Icon name="monitor-alert" size="xs" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: isDark ? '#ffffff' : '#000000' }}>
+                Memory usage trending upward
+              </p>
+              <p style={{ margin: 0, fontSize: '12px', color: isDark ? '#ffffff' : '#666666' }}>
+                Consider scaling memory resources
+              </p>
+            </div>
+          </div>
+        </div>
+      </GlassCard>
+    </div>
   );
 };
 
@@ -667,7 +873,7 @@ const ReportsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 };
 
 // Helper functions
-const getActivityColor = (type: string, isDark: boolean) => {
+const getActivityColor = (type: string) => {
   const colors = {
     deployment: '#10B981',
     infrastructure: '#3B82F6',
@@ -675,7 +881,28 @@ const getActivityColor = (type: string, isDark: boolean) => {
     cost: '#EF4444',
     alert: '#8B5CF6'
   };
-  return colors[type as keyof typeof colors] || (isDark ? '#ffffff' : '#666666');
+  return colors[type as keyof typeof colors] || '#666666'; // Default color
+};
+
+const getActivityIcon = (type: string) => {
+  const icons = {
+    deployment: 'action-upload',
+    infrastructure: 'cloud-server',
+    security: 'security-shield',
+    cost: 'cost-dollar',
+    alert: 'alert-triangle'
+  };
+  return icons[type as keyof typeof icons] || 'activity'; // Default icon
+};
+
+const getStatusColor = (status: string) => {
+  const colors = {
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6'
+  };
+  return colors[status as keyof typeof colors] || '#666666'; // Default color
 };
 
 const formatRelativeTime = (timestamp: string) => {

@@ -41,6 +41,10 @@ import {
   AlertTriangle,
   Bell,
   Clock,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  Trash2,
   
   // Security icons
   Shield,
@@ -58,7 +62,6 @@ import {
   
   // Action icons
   Edit,
-  Trash2,
   Save,
   Copy,
   Download,
@@ -66,6 +69,10 @@ import {
   RefreshCw,
   Settings,
   MoreHorizontal,
+  Search as SearchIcon,
+  X as XIcon,
+  File,
+  GripVertical,
   
   // Status icons
   Check,
@@ -81,6 +88,7 @@ import {
   History,
   Play,
   Square,
+  MessageSquare,
 } from 'lucide-react';
 
 class IconRegistryImpl implements IconRegistry {
@@ -101,7 +109,11 @@ class IconRegistryImpl implements IconRegistry {
     ],
     monitoring: [
       'monitor-chart', 'monitor-line-chart', 'monitor-pie-chart', 'monitor-activity',
-      'monitor-pulse', 'monitor-alert', 'monitor-bell', 'monitor-clock'
+      'monitor-pulse', 'monitor-bell', 'monitor-clock', 'monitor-layout', 'monitor-trending',
+      'monitor-trending-up', 'monitor-trending-down', 'monitor-alert', 'monitor-settings', 'monitor-memory', 
+      'monitor-network', 'monitor-storage', 'monitor-dollar', 'monitor-check', 'monitor-speed', 
+      'alert-triangle', 'alert-circle', 'info-circle', 'spinner', 'plus', 'chevron-up', 
+      'chevron-down', 'trash', 'slack'
     ],
     security: [
       'security-shield', 'security-shield-check', 'security-lock', 'security-key',
@@ -114,7 +126,7 @@ class IconRegistryImpl implements IconRegistry {
     actions: [
       'action-edit', 'action-delete', 'action-save', 'action-copy',
       'action-download', 'action-upload', 'action-refresh', 'action-settings',
-      'action-more'
+      'action-more', 'action-search', 'action-clear', 'action-drag', 'action-file'
     ],
     status: [
       'status-check', 'status-check-circle', 'status-x', 'status-warning', 'status-info',
@@ -167,9 +179,36 @@ class IconRegistryImpl implements IconRegistry {
     this.register('monitor-pie-chart', PieChart);
     this.register('monitor-activity', Activity);
     this.register('monitor-pulse', Zap);
-    this.register('monitor-alert', AlertTriangle);
     this.register('monitor-bell', Bell);
     this.register('monitor-clock', Clock);
+    this.register('monitor-layout', LayoutDashboard);
+    this.register('monitor-trending', TrendingUp);
+    this.register('monitor-trending-up', TrendingUp);
+    this.register('monitor-trending-down', TrendingDown);
+    this.register('monitor-alert', AlertTriangle);
+    this.register('monitor-settings', Settings);
+    this.register('monitor-memory', HardDrive);
+    this.register('monitor-network', Network);
+    this.register('monitor-storage', HardDrive);
+    this.register('monitor-dollar', DollarSign);
+    this.register('monitor-check', CheckCircle);
+    this.register('monitor-speed', Zap);
+    
+    // Alert and status icons
+    this.register('alert-triangle', AlertTriangle);
+    this.register('alert-circle', AlertTriangle);
+    this.register('info-circle', Info);
+    this.register('spinner', Loader);
+    this.register('plus', Plus);
+    this.register('chevron-up', ChevronUp);
+    this.register('chevron-down', ChevronDown);
+    this.register('trash', Trash2);
+    this.register('slack', MessageSquare);
+    
+    // Simple name aliases for common icons
+    this.register('mail', Mail);
+    this.register('bell', Bell);
+    this.register('settings', Settings);
     
     // Security icons
     this.register('security-shield', Shield);
@@ -198,6 +237,10 @@ class IconRegistryImpl implements IconRegistry {
     this.register('action-refresh', RefreshCw);
     this.register('action-settings', Settings);
     this.register('action-more', MoreHorizontal);
+    this.register('action-search', SearchIcon);
+    this.register('action-clear', XIcon);
+    this.register('action-drag', GripVertical);
+    this.register('action-file', File);
     
     // Status icons
     this.register('status-check', Check);

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import { GlassInput } from '../../components/common/GlassInput';
 import { metricsService, type DashboardMetrics } from '../../services/metricsService';
 import { alertsService, type Alert, type AlertSummary } from '../../services/alertsService';
 
@@ -43,6 +44,24 @@ export const MonitoringPage: React.FC = () => {
       label: 'Performance',
       icon: <Icon name="monitor-pulse" size="md" />,
       content: <PerformanceTab isDark={isDark} />,
+    },
+    {
+      id: 'custom-dashboard',
+      label: 'Custom Dashboard',
+      icon: <Icon name="monitor-layout" size="md" />,
+      content: <CustomDashboardTab isDark={isDark} />,
+    },
+    {
+      id: 'correlation',
+      label: 'Correlation',
+      icon: <Icon name="monitor-trending" size="md" />,
+      content: <CorrelationTab isDark={isDark} />,
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <Icon name="monitor-settings" size="md" />,
+      content: <NotificationsTab isDark={isDark} />,
     },
   ];
 
@@ -759,5 +778,904 @@ const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
     </div>
   </GlassCard>
 );
+
+// Custom Dashboard Tab
+const CustomDashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [dashboards, setDashboards] = useState<any[]>([]);
+  const [selectedDashboard, setSelectedDashboard] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newDashboard, setNewDashboard] = useState({
+    name: '',
+    description: '',
+    layout: 'grid',
+    widgets: [] as any[]
+  });
+
+  const availableWidgets = [
+    { id: 'cpu-usage', name: 'CPU Usage', type: 'chart', icon: 'monitor-clock' },
+    { id: 'memory-usage', name: 'Memory Usage', type: 'chart', icon: 'monitor-memory' },
+    { id: 'network-traffic', name: 'Network Traffic', type: 'chart', icon: 'monitor-network' },
+    { id: 'disk-usage', name: 'Disk Usage', type: 'chart', icon: 'monitor-storage' },
+    { id: 'alerts-summary', name: 'Alerts Summary', type: 'summary', icon: 'monitor-bell' },
+    { id: 'cost-overview', name: 'Cost Overview', type: 'summary', icon: 'monitor-dollar' },
+    { id: 'uptime', name: 'Uptime', type: 'metric', icon: 'monitor-check' },
+    { id: 'response-time', name: 'Response Time', type: 'metric', icon: 'monitor-speed' },
+  ];
+
+  const handleCreateDashboard = () => {
+    if (newDashboard.name.trim()) {
+      const dashboard = {
+        id: Date.now().toString(),
+        ...newDashboard,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      setDashboards([...dashboards, dashboard]);
+      setNewDashboard({ name: '', description: '', layout: 'grid', widgets: [] });
+      setIsCreating(false);
+    }
+  };
+
+  const addWidgetToDashboard = (dashboardId: string, widgetId: string) => {
+    setDashboards(dashboards.map(dashboard => {
+      if (dashboard.id === dashboardId) {
+        const widget = availableWidgets.find(w => w.id === widgetId);
+        if (widget && !dashboard.widgets.find((w: any) => w.id === widgetId)) {
+          return {
+            ...dashboard,
+            widgets: [...dashboard.widgets, { ...widget, config: {} }],
+            updatedAt: new Date().toISOString()
+          };
+        }
+      }
+      return dashboard;
+    }));
+  };
+
+  const removeWidgetFromDashboard = (dashboardId: string, widgetId: string) => {
+    setDashboards(dashboards.map(dashboard => {
+      if (dashboard.id === dashboardId) {
+        return {
+          ...dashboard,
+          widgets: dashboard.widgets.filter((w: any) => w.id !== widgetId),
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return dashboard;
+    }));
+  };
+
+  return (
+    <div>
+      {/* Dashboard List */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Custom Dashboards</h2>
+          <GlassButton
+            variant="primary"
+            size="medium"
+            isDark={isDark}
+            onClick={() => setIsCreating(true)}
+            style={{ borderRadius: '12px' }}
+          >
+            <Icon name="plus" size="sm" />
+            Create Dashboard
+          </GlassButton>
+        </div>
+
+        {isCreating && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '20px',
+              marginBottom: '20px',
+              borderRadius: '12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+            }}
+          >
+            <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '16px' }}>Create New Dashboard</h3>
+            <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }}>
+              <GlassInput
+                label="Dashboard Name"
+                value={newDashboard.name}
+                onChange={(e) => setNewDashboard({ ...newDashboard, name: e.target.value })}
+                placeholder="Enter dashboard name"
+                isDark={isDark}
+              />
+              <GlassInput
+                label="Description"
+                value={newDashboard.description}
+                onChange={(e) => setNewDashboard({ ...newDashboard, description: e.target.value })}
+                placeholder="Enter dashboard description"
+                isDark={isDark}
+              />
+              <div>
+                <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block' }}>
+                  Layout
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['grid', 'list', 'compact'].map(layout => (
+                    <GlassButton
+                      key={layout}
+                      variant={newDashboard.layout === layout ? 'primary' : 'ghost'}
+                      size="small"
+                      isDark={isDark}
+                      onClick={() => setNewDashboard({ ...newDashboard, layout })}
+                      style={{ borderRadius: '8px', textTransform: 'capitalize' }}
+                    >
+                      {layout}
+                    </GlassButton>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <GlassButton
+                variant="primary"
+                size="medium"
+                isDark={isDark}
+                onClick={handleCreateDashboard}
+                style={{ borderRadius: '12px' }}
+              >
+                Create Dashboard
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="medium"
+                isDark={isDark}
+                onClick={() => setIsCreating(false)}
+                style={{ borderRadius: '12px' }}
+              >
+                Cancel
+              </GlassButton>
+            </div>
+          </motion.div>
+        )}
+
+        {dashboards.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+            <Icon name="monitor-layout" size="lg" />
+            <p style={{ marginTop: '16px' }}>No custom dashboards yet</p>
+            <p style={{ fontSize: '14px', marginTop: '8px' }}>Create your first dashboard to get started</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {dashboards.map((dashboard, index) => (
+              <motion.div
+                key={dashboard.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSelectedDashboard(selectedDashboard === dashboard.id ? null : dashboard.id)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0, fontSize: '16px', fontWeight: 600 }}>
+                      {dashboard.name}
+                    </h3>
+                    <p style={{ color: isDark ? '#ffffff' : '#666666', margin: '4px 0 0 0', fontSize: '14px', opacity: 0.7 }}>
+                      {dashboard.description}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                      {dashboard.widgets.length} widgets
+                    </span>
+                    <Icon name={selectedDashboard === dashboard.id ? 'chevron-up' : 'chevron-down'} size="sm" />
+                  </div>
+                </div>
+
+                {selectedDashboard === dashboard.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    style={{ marginTop: '16px' }}
+                  >
+                    <div style={{ marginBottom: '16px' }}>
+                      <h4 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '12px', fontSize: '14px' }}>
+                        Add Widgets
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+                        {availableWidgets.map(widget => (
+                          <GlassButton
+                            key={widget.id}
+                            variant="ghost"
+                            size="small"
+                            isDark={isDark}
+                            onClick={() => addWidgetToDashboard(dashboard.id, widget.id)}
+                            disabled={dashboard.widgets.find((w: any) => w.id === widget.id)}
+                            style={{
+                              borderRadius: '8px',
+                              justifyContent: 'flex-start',
+                              gap: '8px',
+                              opacity: dashboard.widgets.find((w: any) => w.id === widget.id) ? 0.5 : 1,
+                            }}
+                          >
+                            <Icon name={widget.icon} size="sm" />
+                            {widget.name}
+                          </GlassButton>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '12px', fontSize: '14px' }}>
+                        Current Widgets
+                      </h4>
+                      {dashboard.widgets.length === 0 ? (
+                        <p style={{ color: isDark ? '#ffffff' : '#666666', opacity: 0.7, fontSize: '14px' }}>
+                          No widgets added yet. Add widgets from above to customize your dashboard.
+                        </p>
+                      ) : (
+                        <div style={{ display: 'grid', gap: '8px' }}>
+                          {dashboard.widgets.map((widget: any) => (
+                            <div
+                              key={widget.id}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Icon name={widget.icon} size="sm" />
+                                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>
+                                  {widget.name}
+                                </span>
+                              </div>
+                              <GlassButton
+                                variant="ghost"
+                                size="small"
+                                isDark={isDark}
+                                onClick={() => removeWidgetFromDashboard(dashboard.id, widget.id)}
+                                style={{ borderRadius: '6px', color: '#EF4444' }}
+                              >
+                                <Icon name="trash" size="sm" />
+                              </GlassButton>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </GlassCard>
+    </div>
+  );
+};
+
+// Correlation Tab
+const CorrelationTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [correlations, setCorrelations] = useState<any[]>([]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [correlationStrength, setCorrelationStrength] = useState<'strong' | 'medium' | 'weak'>('strong');
+
+  const availableMetrics = [
+    { id: 'cpu-usage', name: 'CPU Usage', category: 'performance' },
+    { id: 'memory-usage', name: 'Memory Usage', category: 'performance' },
+    { id: 'network-traffic', name: 'Network Traffic', category: 'network' },
+    { id: 'disk-io', name: 'Disk I/O', category: 'storage' },
+    { id: 'response-time', name: 'Response Time', category: 'application' },
+    { id: 'error-rate', name: 'Error Rate', category: 'application' },
+    { id: 'cost', name: 'Cost', category: 'financial' },
+    { id: 'user-sessions', name: 'User Sessions', category: 'business' },
+  ];
+
+  const mockCorrelations = [
+    {
+      id: '1',
+      metric1: 'cpu-usage',
+      metric2: 'response-time',
+      strength: 0.85,
+      confidence: 0.92,
+      trend: 'positive',
+      description: 'High CPU usage correlates with increased response times'
+    },
+    {
+      id: '2',
+      metric1: 'memory-usage',
+      metric2: 'error-rate',
+      strength: 0.72,
+      confidence: 0.88,
+      trend: 'positive',
+      description: 'Memory pressure leads to higher error rates'
+    },
+    {
+      id: '3',
+      metric1: 'network-traffic',
+      metric2: 'cost',
+      strength: 0.68,
+      confidence: 0.85,
+      trend: 'positive',
+      description: 'Network usage correlates with cost increases'
+    }
+  ];
+
+  useEffect(() => {
+    setCorrelations(mockCorrelations);
+  }, []);
+
+  const getCorrelationColor = (strength: number) => {
+    if (strength >= 0.8) return '#EF4444'; // Red for strong
+    if (strength >= 0.6) return '#F59E0B'; // Amber for medium
+    return '#10B981'; // Green for weak
+  };
+
+  const getCorrelationLabel = (strength: number) => {
+    if (strength >= 0.8) return 'Strong';
+    if (strength >= 0.6) return 'Medium';
+    return 'Weak';
+  };
+
+  return (
+    <div>
+      {/* Correlation Analysis */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>
+          Metric Correlation Analysis
+        </h2>
+        <p style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '24px' }}>
+          Discover relationships between different metrics to identify patterns and optimize performance.
+        </p>
+
+        {/* Metric Selection */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '16px', fontSize: '16px' }}>
+            Select Metrics to Analyze
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+            {availableMetrics.map(metric => (
+              <GlassButton
+                key={metric.id}
+                variant={selectedMetrics.includes(metric.id) ? 'primary' : 'ghost'}
+                size="small"
+                isDark={isDark}
+                onClick={() => {
+                  if (selectedMetrics.includes(metric.id)) {
+                    setSelectedMetrics(selectedMetrics.filter(id => id !== metric.id));
+                  } else {
+                    setSelectedMetrics([...selectedMetrics, metric.id]);
+                  }
+                }}
+                style={{
+                  borderRadius: '12px',
+                  justifyContent: 'flex-start',
+                  gap: '8px',
+                  border: selectedMetrics.includes(metric.id) ? '1px solid #F59E0B' : 'none',
+                }}
+              >
+                <Icon name="monitor-chart" size="sm" />
+                {metric.name}
+              </GlassButton>
+            ))}
+          </div>
+        </div>
+
+        {/* Correlation Strength Filter */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '16px', fontSize: '16px' }}>
+            Correlation Strength
+          </h3>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['strong', 'medium', 'weak'].map(strength => (
+              <GlassButton
+                key={strength}
+                variant={correlationStrength === strength ? 'primary' : 'ghost'}
+                size="small"
+                isDark={isDark}
+                onClick={() => setCorrelationStrength(strength as any)}
+                style={{
+                  borderRadius: '12px',
+                  textTransform: 'capitalize',
+                  border: correlationStrength === strength ? '1px solid #F59E0B' : 'none',
+                }}
+              >
+                {strength}
+              </GlassButton>
+            ))}
+          </div>
+        </div>
+
+        {/* Correlation Results */}
+        <div>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '16px', fontSize: '16px' }}>
+            Discovered Correlations
+          </h3>
+          {correlations.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+              <Icon name="monitor-trending" size="lg" />
+              <p style={{ marginTop: '16px' }}>No correlations found</p>
+              <p style={{ fontSize: '14px', marginTop: '8px' }}>Select metrics and analyze to discover patterns</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {correlations.map((correlation, index) => (
+                <motion.div
+                  key={correlation.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `1px solid ${getCorrelationColor(correlation.strength)}20`,
+                    background: `${getCorrelationColor(correlation.strength)}05`,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div>
+                      <h4 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0', fontSize: '16px', fontWeight: 600 }}>
+                        {availableMetrics.find(m => m.id === correlation.metric1)?.name} ↔ {availableMetrics.find(m => m.id === correlation.metric2)?.name}
+                      </h4>
+                      <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                        {correlation.description}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        color: getCorrelationColor(correlation.strength),
+                        marginBottom: '4px',
+                      }}>
+                        {(correlation.strength * 100).toFixed(0)}%
+                      </div>
+                      <div style={{
+                        fontSize: '12px',
+                        color: getCorrelationColor(correlation.strength),
+                        fontWeight: 500,
+                      }}>
+                        {getCorrelationLabel(correlation.strength)}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                    <span>Confidence: {(correlation.confidence * 100).toFixed(0)}%</span>
+                    <span>Trend: {correlation.trend}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
+
+// Notifications Tab
+const NotificationsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: {
+      enabled: true,
+      alerts: true,
+      reports: true,
+      deployments: true,
+      security: true,
+      cost: true,
+    },
+    push: {
+      enabled: true,
+      alerts: true,
+      deployments: true,
+      security: true,
+    },
+    slack: {
+      enabled: false,
+      webhook: '',
+      channel: '#monitoring',
+      alerts: true,
+      deployments: true,
+    },
+    preferences: {
+      quietHours: {
+        enabled: false,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+      },
+      frequency: 'immediate', // immediate, hourly, daily
+      severity: ['critical', 'high'], // critical, high, medium, low, info
+    }
+  });
+
+  const handleSettingChange = (category: string, setting: string, value: any) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category as keyof typeof prev],
+        [setting]: value
+      }
+    }));
+  };
+
+  const handlePreferenceChange = (category: string, setting: string, value: any) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        [category]: {
+          ...prev.preferences[category as keyof typeof prev.preferences],
+          [setting]: value
+        }
+      }
+    }));
+  };
+
+  const handleSeverityChange = (severity: string) => {
+    const currentSeverities = notificationSettings.preferences.severity;
+    const newSeverities = currentSeverities.includes(severity)
+      ? currentSeverities.filter(s => s !== severity)
+      : [...currentSeverities, severity];
+    
+    handlePreferenceChange('severity', 'severity', newSeverities);
+  };
+
+  return (
+    <div>
+      {/* Email Notifications */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <Icon name="mail" size="lg" style={{ color: '#F59E0B' }} />
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Email Notifications</h2>
+        </div>
+
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                Enable Email Notifications
+              </h3>
+              <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                Receive notifications via email
+              </p>
+            </div>
+            <GlassButton
+              variant={notificationSettings.email.enabled ? 'primary' : 'ghost'}
+              size="small"
+              isDark={isDark}
+              onClick={() => handleSettingChange('email', 'enabled', !notificationSettings.email.enabled)}
+              style={{ borderRadius: '12px' }}
+            >
+              {notificationSettings.email.enabled ? 'Enabled' : 'Disabled'}
+            </GlassButton>
+          </div>
+
+          {notificationSettings.email.enabled && (
+            <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
+              {[
+                { key: 'alerts', label: 'Alerts', description: 'System and application alerts' },
+                { key: 'reports', label: 'Reports', description: 'Daily and weekly reports' },
+                { key: 'deployments', label: 'Deployments', description: 'Deployment status updates' },
+                { key: 'security', label: 'Security', description: 'Security events and vulnerabilities' },
+                { key: 'cost', label: 'Cost', description: 'Cost threshold alerts and reports' },
+              ].map(item => (
+                <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '14px' }}>
+                      {item.label}
+                    </h4>
+                    <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '12px' }}>
+                      {item.description}
+                    </p>
+                  </div>
+                  <GlassButton
+                    variant={notificationSettings.email[item.key as keyof typeof notificationSettings.email] ? 'primary' : 'ghost'}
+                    size="small"
+                    isDark={isDark}
+                    onClick={() => handleSettingChange('email', item.key, !notificationSettings.email[item.key as keyof typeof notificationSettings.email])}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    {notificationSettings.email[item.key as keyof typeof notificationSettings.email] ? 'On' : 'Off'}
+                  </GlassButton>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Push Notifications */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <Icon name="bell" size="lg" style={{ color: '#F59E0B' }} />
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Push Notifications</h2>
+        </div>
+
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                Enable Push Notifications
+              </h3>
+              <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                Receive real-time notifications in your browser
+              </p>
+            </div>
+            <GlassButton
+              variant={notificationSettings.push.enabled ? 'primary' : 'ghost'}
+              size="small"
+              isDark={isDark}
+              onClick={() => handleSettingChange('push', 'enabled', !notificationSettings.push.enabled)}
+              style={{ borderRadius: '12px' }}
+            >
+              {notificationSettings.push.enabled ? 'Enabled' : 'Disabled'}
+            </GlassButton>
+          </div>
+
+          {notificationSettings.push.enabled && (
+            <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
+              {[
+                { key: 'alerts', label: 'Alerts', description: 'Critical system alerts' },
+                { key: 'deployments', label: 'Deployments', description: 'Deployment status changes' },
+                { key: 'security', label: 'Security', description: 'Security events' },
+              ].map(item => (
+                <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '14px' }}>
+                      {item.label}
+                    </h4>
+                    <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '12px' }}>
+                      {item.description}
+                    </p>
+                  </div>
+                  <GlassButton
+                    variant={notificationSettings.push[item.key as keyof typeof notificationSettings.push] ? 'primary' : 'ghost'}
+                    size="small"
+                    isDark={isDark}
+                    onClick={() => handleSettingChange('push', item.key, !notificationSettings.push[item.key as keyof typeof notificationSettings.push])}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    {notificationSettings.push[item.key as keyof typeof notificationSettings.push] ? 'On' : 'Off'}
+                  </GlassButton>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Slack Integration */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <Icon name="slack" size="lg" style={{ color: '#F59E0B' }} />
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Slack Integration</h2>
+        </div>
+
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                Enable Slack Notifications
+              </h3>
+              <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                Send notifications to Slack channels
+              </p>
+            </div>
+            <GlassButton
+              variant={notificationSettings.slack.enabled ? 'primary' : 'ghost'}
+              size="small"
+              isDark={isDark}
+              onClick={() => handleSettingChange('slack', 'enabled', !notificationSettings.slack.enabled)}
+              style={{ borderRadius: '12px' }}
+            >
+              {notificationSettings.slack.enabled ? 'Enabled' : 'Disabled'}
+            </GlassButton>
+          </div>
+
+          {notificationSettings.slack.enabled && (
+            <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+              <GlassInput
+                label="Webhook URL"
+                value={notificationSettings.slack.webhook}
+                onChange={(e) => handleSettingChange('slack', 'webhook', e.target.value)}
+                placeholder="https://hooks.slack.com/services/..."
+                isDark={isDark}
+              />
+              <GlassInput
+                label="Channel"
+                value={notificationSettings.slack.channel}
+                onChange={(e) => handleSettingChange('slack', 'channel', e.target.value)}
+                placeholder="#monitoring"
+                isDark={isDark}
+              />
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {[
+                  { key: 'alerts', label: 'Alerts', description: 'System alerts' },
+                  { key: 'deployments', label: 'Deployments', description: 'Deployment updates' },
+                ].map(item => (
+                  <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '14px' }}>
+                        {item.label}
+                      </h4>
+                      <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '12px' }}>
+                        {item.description}
+                      </p>
+                    </div>
+                    <GlassButton
+                      variant={notificationSettings.slack[item.key as keyof typeof notificationSettings.slack] ? 'primary' : 'ghost'}
+                      size="small"
+                      isDark={isDark}
+                      onClick={() => handleSettingChange('slack', item.key, !notificationSettings.slack[item.key as keyof typeof notificationSettings.slack])}
+                      style={{ borderRadius: '8px' }}
+                    >
+                      {notificationSettings.slack[item.key as keyof typeof notificationSettings.slack] ? 'On' : 'Off'}
+                    </GlassButton>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Notification Preferences */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <Icon name="settings" size="lg" style={{ color: '#F59E0B' }} />
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Notification Preferences</h2>
+        </div>
+
+        <div style={{ display: 'grid', gap: '24px' }}>
+          {/* Severity Levels */}
+          <div>
+            <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0', fontSize: '16px' }}>
+              Alert Severity Levels
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+              {['critical', 'high', 'medium', 'low', 'info'].map(severity => (
+                <GlassButton
+                  key={severity}
+                  variant={notificationSettings.preferences.severity.includes(severity) ? 'primary' : 'ghost'}
+                  size="small"
+                  isDark={isDark}
+                  onClick={() => handleSeverityChange(severity)}
+                  style={{
+                    borderRadius: '12px',
+                    textTransform: 'capitalize',
+                    border: notificationSettings.preferences.severity.includes(severity) ? '1px solid #F59E0B' : 'none',
+                  }}
+                >
+                  {severity}
+                </GlassButton>
+              ))}
+            </div>
+          </div>
+
+          {/* Frequency */}
+          <div>
+            <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0', fontSize: '16px' }}>
+              Notification Frequency
+            </h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['immediate', 'hourly', 'daily'].map(frequency => (
+                <GlassButton
+                  key={frequency}
+                  variant={notificationSettings.preferences.frequency === frequency ? 'primary' : 'ghost'}
+                  size="small"
+                  isDark={isDark}
+                  onClick={() => handlePreferenceChange('frequency', 'frequency', frequency)}
+                  style={{
+                    borderRadius: '12px',
+                    textTransform: 'capitalize',
+                    border: notificationSettings.preferences.frequency === frequency ? '1px solid #F59E0B' : 'none',
+                  }}
+                >
+                  {frequency}
+                </GlassButton>
+              ))}
+            </div>
+          </div>
+
+          {/* Quiet Hours */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0, fontSize: '16px' }}>
+                Quiet Hours
+              </h3>
+              <GlassButton
+                variant={notificationSettings.preferences.quietHours.enabled ? 'primary' : 'ghost'}
+                size="small"
+                isDark={isDark}
+                onClick={() => handlePreferenceChange('quietHours', 'enabled', !notificationSettings.preferences.quietHours.enabled)}
+                style={{ borderRadius: '12px' }}
+              >
+                {notificationSettings.preferences.quietHours.enabled ? 'Enabled' : 'Disabled'}
+              </GlassButton>
+            </div>
+            {notificationSettings.preferences.quietHours.enabled && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <GlassInput
+                  label="Start Time"
+                  type="time"
+                  value={notificationSettings.preferences.quietHours.start}
+                  onChange={(e) => handlePreferenceChange('quietHours', 'start', e.target.value)}
+                  isDark={isDark}
+                />
+                <GlassInput
+                  label="End Time"
+                  type="time"
+                  value={notificationSettings.preferences.quietHours.end}
+                  onChange={(e) => handlePreferenceChange('quietHours', 'end', e.target.value)}
+                  isDark={isDark}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
 
 export default MonitoringPage;

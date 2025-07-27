@@ -777,17 +777,627 @@ const EnvironmentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
   </GlassCard>
 );
 
-// Helper functions
+// Deployments Tab Component
+const DeploymentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const [filters, setFilters] = useState({
+    environment: '',
+    status: '',
+    application: '',
+    search: ''
+  });
+
+  useEffect(() => {
+    const fetchDeployments = async () => {
+      try {
+        setLoading(true);
+        const data = await deploymentService.getDeployments();
+        setDeployments(data);
+      } catch (error) {
+        console.error('Failed to fetch deployments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeployments();
+  }, []);
+
+  const filteredDeployments = deployments.filter(deployment => {
+    if (filters.environment && deployment.environment !== filters.environment) return false;
+    if (filters.status && deployment.status !== filters.status) return false;
+    if (filters.application && deployment.application !== filters.application) return false;
+    if (filters.search && !deployment.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    return true;
+  });
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Create Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Deployments</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Manage your application deployments
+          </p>
+        </div>
+        <GlassButton
+          variant="primary"
+          size="medium"
+          isDark={isDark}
+          onClick={() => setShowCreateWizard(true)}
+          style={{ borderRadius: '12px' }}
+        >
+          <Icon name="action-plus" size="sm" />
+          New Deployment
+        </GlassButton>
+      </div>
+
+      {/* Filters */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Environment
+            </label>
+            <select
+              value={filters.environment}
+              onChange={(e) => setFilters({ ...filters, environment: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Environments</option>
+              <option value="development">Development</option>
+              <option value="staging">Staging</option>
+              <option value="production">Production</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Status
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="running">Running</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Application
+            </label>
+            <input
+              type="text"
+              placeholder="Search applications..."
+              value={filters.application}
+              onChange={(e) => setFilters({ ...filters, application: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Search deployments..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Deployments List */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+          Loading deployments...
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {filteredDeployments.map((deployment) => (
+            <GlassCard key={deployment.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div>
+                  <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                    {deployment.name}
+                  </h3>
+                  <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                    {deployment.application} • v{deployment.version} • {deployment.environment}
+                  </p>
+                </div>
+                <div style={{
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  background: getDeploymentStatusColor(deployment.status),
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  textTransform: 'uppercase'
+                }}>
+                  {deployment.status}
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              {deployment.status === 'running' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Progress</span>
+                    <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{deployment.progress}%</span>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${deployment.progress}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+                      borderRadius: '4px',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Started:</span>
+                  <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>
+                    {deployment.startedAt ? new Date(deployment.startedAt).toLocaleString() : 'Not started'}
+                  </span>
+                </div>
+                {deployment.completedAt && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Completed:</span>
+                    <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>
+                      {new Date(deployment.completedAt).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px', flex: 1 }}
+                >
+                  <Icon name="monitor-chart" size="sm" />
+                  View Logs
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px', flex: 1 }}
+                >
+                  <Icon name="action-edit" size="sm" />
+                  Details
+                </GlassButton>
+                {deployment.status === 'running' && (
+                  <GlassButton
+                    variant="ghost"
+                    size="small"
+                    isDark={isDark}
+                    style={{ borderRadius: '8px', flex: 1 }}
+                  >
+                    <Icon name="action-stop" size="sm" />
+                    Cancel
+                  </GlassButton>
+                )}
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      )}
+
+      {/* Deployment Creation Wizard Modal */}
+      {showCreateWizard && (
+        <DeploymentWizard isDark={isDark} onClose={() => setShowCreateWizard(false)} onSuccess={(newDeployment) => {
+          setDeployments([newDeployment, ...deployments]);
+          setShowCreateWizard(false);
+        }} />
+      )}
+    </div>
+  );
+};
+
+// Deployment Creation Wizard Component
+const DeploymentWizard: React.FC<{ 
+  isDark: boolean; 
+  onClose: () => void; 
+  onSuccess: (deployment: Deployment) => void;
+}> = ({ isDark, onClose, onSuccess }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    name: '',
+    application: '',
+    version: '',
+    environment: 'development',
+    configuration: {} as any
+  });
+  const [loading, setLoading] = useState(false);
+
+  const steps = [
+    { id: 1, title: 'Basic Info', description: 'Deployment name and application' },
+    { id: 2, title: 'Configuration', description: 'Environment and settings' },
+    { id: 3, title: 'Review', description: 'Review and deploy' }
+  ];
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    
+    try {
+      const newDeployment = await deploymentService.createDeployment(formData);
+      onSuccess(newDeployment);
+    } catch (error) {
+      console.error('Failed to create deployment:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <div>
+              <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+                Deployment Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter deployment name"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+                Application *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.application}
+                onChange={(e) => setFormData({ ...formData, application: e.target.value })}
+                placeholder="Enter application name"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+                Version *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.version}
+                onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                placeholder="e.g., 1.0.0"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <div>
+              <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+                Environment *
+              </label>
+              <select
+                required
+                value={formData.environment}
+                onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="development">Development</option>
+                <option value="staging">Staging</option>
+                <option value="production">Production</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+                Configuration (JSON)
+              </label>
+              <textarea
+                value={JSON.stringify(formData.configuration, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const config = JSON.parse(e.target.value);
+                    setFormData({ ...formData, configuration: config });
+                  } catch (error) {
+                    // Invalid JSON, keep the text but don't update config
+                  }
+                }}
+                placeholder="Enter configuration as JSON"
+                rows={6}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '14px',
+                  fontFamily: 'monospace',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Review Deployment</h3>
+            
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Name:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{formData.name}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Application:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{formData.application}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Version:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{formData.version}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Environment:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{formData.environment}</span>
+              </div>
+            </div>
+
+            <div style={{ 
+              padding: '12px', 
+              borderRadius: '8px', 
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+            }}>
+              <h4 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0', fontSize: '14px' }}>Configuration:</h4>
+              <pre style={{ 
+                color: isDark ? '#ffffff' : '#000000', 
+                fontSize: '12px', 
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
+              }}>
+                {JSON.stringify(formData.configuration, null, 2)}
+              </pre>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000
+    }}>
+      <GlassCard variant="card" elevation="high" isDark={isDark} style={{ 
+        borderRadius: '20px', 
+        maxWidth: '600px', 
+        width: '90%',
+        maxHeight: '90vh',
+        overflow: 'auto'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Create Deployment</h2>
+          <GlassButton
+            variant="ghost"
+            size="small"
+            isDark={isDark}
+            onClick={onClose}
+            style={{ borderRadius: '8px' }}
+          >
+            <Icon name="action-close" size="sm" />
+          </GlassButton>
+        </div>
+
+        {/* Step Indicator */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+          {steps.map((step, index) => (
+            <div
+              key={step.id}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '8px',
+                background: currentStep >= step.id 
+                  ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
+                  : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                border: `1px solid ${currentStep >= step.id 
+                  ? 'rgba(139, 92, 246, 0.3)' 
+                  : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                textAlign: 'center',
+                cursor: 'pointer'
+              }}
+              onClick={() => setCurrentStep(step.id)}
+            >
+              <div style={{ 
+                color: currentStep >= step.id ? '#ffffff' : isDark ? '#ffffff' : '#000000',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                marginBottom: '4px'
+              }}>
+                {step.title}
+              </div>
+              <div style={{ 
+                color: currentStep >= step.id ? 'rgba(255, 255, 255, 0.8)' : isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                fontSize: '10px'
+              }}>
+                {step.description}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Step Content */}
+        <div style={{ marginBottom: '24px' }}>
+          {renderStepContent()}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {currentStep > 1 && (
+            <GlassButton
+              type="button"
+              variant="ghost"
+              size="medium"
+              isDark={isDark}
+              onClick={() => setCurrentStep(currentStep - 1)}
+              style={{ borderRadius: '12px', flex: 1 }}
+            >
+              Previous
+            </GlassButton>
+          )}
+          
+          {currentStep < steps.length ? (
+            <GlassButton
+              type="button"
+              variant="primary"
+              size="medium"
+              isDark={isDark}
+              onClick={() => setCurrentStep(currentStep + 1)}
+              style={{ borderRadius: '12px', flex: 1 }}
+            >
+              Next
+            </GlassButton>
+          ) : (
+            <GlassButton
+              type="button"
+              variant="primary"
+              size="medium"
+              isDark={isDark}
+              onClick={handleSubmit}
+              disabled={loading}
+              style={{ borderRadius: '12px', flex: 1 }}
+            >
+              {loading ? 'Creating...' : 'Create Deployment'}
+            </GlassButton>
+          )}
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
+
+// Helper function for deployment status colors
 const getDeploymentStatusColor = (status: string) => {
   const colors = {
     pending: '#F59E0B',
     running: '#3B82F6',
     completed: '#10B981',
     failed: '#EF4444',
-    cancelled: '#6B7280',
-    rollback: '#8B5CF6'
+    cancelled: '#6B7280'
   };
-  return colors[status as keyof typeof colors] || '#6B7280';
+  return colors[status as keyof typeof colors] || '#666666';
 };
 
 const getEnvironmentStatusColor = (status: string) => {
