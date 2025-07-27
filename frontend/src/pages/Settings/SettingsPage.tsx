@@ -34,6 +34,12 @@ export const SettingsPage: React.FC = () => {
       content: <SecurityTab isDark={isDark} />,
     },
     {
+      id: 'cloud-accounts',
+      label: 'Cloud Accounts',
+      icon: <Icon name="cloud-server" size="md" />,
+      content: <CloudAccountsTab isDark={isDark} />,
+    },
+    {
       id: 'notifications',
       label: 'Notifications',
       icon: <Icon name="monitor-bell" size="md" />,
@@ -180,6 +186,165 @@ const SecurityTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
     </div>
   </GlassCard>
 );
+
+const CloudAccountsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [cloudAccounts, setCloudAccounts] = useState([
+    { id: '1', provider: 'aws', name: 'Production AWS', status: 'connected', region: 'us-east-1' },
+    { id: '2', provider: 'gcp', name: 'Development GCP', status: 'disconnected', region: 'us-central1' },
+  ]);
+
+  const handleConnectAccount = (provider: string) => {
+    console.log(`Connecting to ${provider}...`);
+    // This would typically open OAuth flow or configuration modal
+  };
+
+  const handleDisconnectAccount = (accountId: string) => {
+    setCloudAccounts(accounts => 
+      accounts.map(account => 
+        account.id === accountId 
+          ? { ...account, status: 'disconnected' }
+          : account
+      )
+    );
+  };
+
+  const getProviderIcon = (provider: string) => {
+    switch (provider) {
+      case 'aws': return 'aws';
+      case 'gcp': return 'gcp';
+      case 'azure': return 'azure';
+      default: return 'cloud';
+    }
+  };
+
+  const getProviderName = (provider: string) => {
+    switch (provider) {
+      case 'aws': return 'Amazon Web Services';
+      case 'gcp': return 'Google Cloud Platform';
+      case 'azure': return 'Microsoft Azure';
+      default: return provider.toUpperCase();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Cloud Provider Accounts
+        </h3>
+        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          Connect your cloud provider accounts to manage infrastructure and monitor costs.
+        </p>
+      </div>
+
+      {/* Connected Accounts */}
+      <div className="space-y-4">
+        <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Connected Accounts
+        </h4>
+        {cloudAccounts.filter(account => account.status === 'connected').map((account) => (
+          <GlassCard key={account.id} className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Icon name={getProviderIcon(account.provider)} size="md" />
+                <div>
+                  <h5 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {account.name}
+                  </h5>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {getProviderName(account.provider)} • {account.region}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Connected
+                </span>
+                <GlassButton
+                  variant="secondary"
+                  size="small"
+                  onClick={() => handleDisconnectAccount(account.id)}
+                >
+                  Disconnect
+                </GlassButton>
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Available Providers */}
+      <div className="space-y-4">
+        <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Add Cloud Account
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { provider: 'aws', name: 'Amazon Web Services', description: 'Connect your AWS account' },
+            { provider: 'gcp', name: 'Google Cloud', description: 'Connect your GCP project' },
+            { provider: 'azure', name: 'Microsoft Azure', description: 'Connect your Azure subscription' },
+          ].map((provider) => (
+            <GlassCard key={provider.provider} className="p-4 text-center">
+              <Icon name={getProviderIcon(provider.provider)} size="lg" className="mx-auto mb-3" />
+              <h5 className={`font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {provider.name}
+              </h5>
+              <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {provider.description}
+              </p>
+              <GlassButton
+                variant="primary"
+                size="small"
+                onClick={() => handleConnectAccount(provider.provider)}
+                className="w-full"
+              >
+                Connect
+              </GlassButton>
+            </GlassCard>
+          ))}
+        </div>
+      </div>
+
+      {/* Disconnected Accounts */}
+      {cloudAccounts.filter(account => account.status === 'disconnected').length > 0 && (
+        <div className="space-y-4">
+          <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Disconnected Accounts
+          </h4>
+          {cloudAccounts.filter(account => account.status === 'disconnected').map((account) => (
+            <GlassCard key={account.id} className="p-4 opacity-60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Icon name={getProviderIcon(account.provider)} size="md" />
+                  <div>
+                    <h5 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {account.name}
+                    </h5>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {getProviderName(account.provider)} • {account.region}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Disconnected
+                  </span>
+                  <GlassButton
+                    variant="primary"
+                    size="small"
+                    onClick={() => handleConnectAccount(account.provider)}
+                  >
+                    Reconnect
+                  </GlassButton>
+                </div>
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const NotificationsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
   <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
