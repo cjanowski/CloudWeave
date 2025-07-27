@@ -33,7 +33,7 @@ func (h *InfrastructureHandler) CreateInfrastructure(c *gin.Context) {
 	}
 
 	// Get organization ID from context (set by auth middleware)
-	orgID, exists := c.Get("organizationId")
+	orgID, exists := c.Get("organizationID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
 		return
