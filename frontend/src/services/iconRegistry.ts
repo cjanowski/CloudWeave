@@ -31,6 +31,9 @@ import {
   Package,
   Scale,
   Cloud,
+  CloudRain,
+  Layers,
+  Building,
   
   // Monitoring icons
   BarChart3,
@@ -93,6 +96,9 @@ import {
   Play,
   Square,
   MessageSquare,
+  
+  // Social provider icons
+  Github,
 } from 'lucide-react';
 
 class IconRegistryImpl implements IconRegistry {
@@ -109,14 +115,15 @@ class IconRegistryImpl implements IconRegistry {
     ],
     cloud: [
       'cloud-server', 'cloud-database', 'cloud-network', 'cloud-storage',
-      'cloud-compute', 'cloud-container', 'cloud-load-balancer', 'cloud-cdn'
+      'cloud-compute', 'cloud-container', 'cloud-load-balancer', 'cloud-cdn',
+      'aws', 'gcp', 'azure'
     ],
     monitoring: [
       'monitor-chart', 'monitor-line-chart', 'monitor-pie-chart', 'monitor-activity',
       'monitor-pulse', 'monitor-bell', 'monitor-clock', 'monitor-layout', 'monitor-trending',
-      'monitor-trending-up', 'monitor-trending-down', 'monitor-alert', 'monitor-settings', 'monitor-memory', 
-      'monitor-network', 'monitor-storage', 'monitor-dollar', 'monitor-check', 'monitor-speed', 
-      'alert-triangle', 'alert-circle', 'info-circle', 'spinner', 'plus', 'chevron-up', 
+      'monitor-trending-up', 'monitor-trending-down', 'monitor-alert', 'monitor-settings', 'monitor-memory',
+      'monitor-network', 'monitor-storage', 'monitor-dollar', 'monitor-check', 'monitor-speed',
+      'alert-triangle', 'alert-circle', 'info-circle', 'spinner', 'plus', 'chevron-up',
       'chevron-down', 'trash', 'slack'
     ],
     security: [
@@ -141,6 +148,9 @@ class IconRegistryImpl implements IconRegistry {
     ],
     deployment: [
       'deploy-rocket', 'deploy-pipeline', 'deploy-history', 'deploy-start', 'deploy-stop'
+    ],
+    social: [
+      'google', 'microsoft', 'github'
     ]
   };
 
@@ -179,6 +189,11 @@ class IconRegistryImpl implements IconRegistry {
     this.register('cloud-container', Package);
     this.register('cloud-load-balancer', Scale);
     this.register('cloud-cdn', Cloud);
+    
+    // Cloud provider icons
+    this.register('aws', Cloud);
+    this.register('gcp', CloudRain);
+    this.register('azure', Layers);
     
     // Monitoring icons
     this.register('monitor-chart', BarChart3);
@@ -271,6 +286,14 @@ class IconRegistryImpl implements IconRegistry {
     this.register('deploy-start', Play);
     this.register('deploy-stop', Square);
     this.register('action-deploy', Rocket);
+    
+    // Social provider icons
+    this.register('google', User); // Using User as placeholder for Google
+    this.register('microsoft', User); // Using User as placeholder for Microsoft
+    this.register('github', Github); // Using Github icon from Lucide
+    
+    // Building/Organization icon
+    this.register('building', Building);
   }
 
   public register(name: string, component: LucideIcon): void {

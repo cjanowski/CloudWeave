@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import type { RootState, AppDispatch } from '../../store';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 import { GlassInput } from '../../components/common/GlassInput';
+import AuthService from '../../services/authService';
 
 export const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,6 +22,31 @@ export const LoginPage: React.FC = () => {
     email?: string;
     password?: string;
   }>({});
+  const [ssoConfig, setSsoConfig] = useState<any>(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
+
+  useEffect(() => {
+    const loadSSOConfig = async () => {
+      try {
+        const config = await AuthService.getSSOConfig();
+        setSsoConfig(config);
+      } catch (error) {
+        console.error('Failed to load SSO config:', error);
+      }
+    };
+    loadSSOConfig();
+  }, []);
+
+  const handleSSOLogin = async (provider: string) => {
+    setSsoLoading(true);
+    try {
+      const { authUrl } = await AuthService.initiateOAuthLogin(provider);
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('SSO login failed:', error);
+      setSsoLoading(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const errors: { email?: string; password?: string } = {};
@@ -241,6 +267,110 @@ export const LoginPage: React.FC = () => {
                 Sign In
               </GlassButton>
             </motion.div>
+
+            {/* SSO Login Options */}
+            {ssoConfig && (ssoConfig.oauth?.enabled || ssoConfig.saml?.enabled) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.55 }}
+                style={{ marginBottom: '24px' }}
+              >
+                <div style={{
+                  position: 'relative',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    <div style={{
+                      width: '100%',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                  }}>
+                    <span style={{
+                      padding: '0 8px',
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                    }}>
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                {ssoConfig.oauth?.enabled && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px',
+                  }}>
+                    {ssoConfig.oauth.providers?.google?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('google')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="google" size="sm" />
+                        Continue with Google
+                      </GlassButton>
+                    )}
+                    {ssoConfig.oauth.providers?.microsoft?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('microsoft')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="microsoft" size="sm" />
+                        Continue with Microsoft
+                      </GlassButton>
+                    )}
+                    {ssoConfig.oauth.providers?.github?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('github')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="github" size="sm" />
+                        Continue with GitHub
+                      </GlassButton>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Additional Links */}
             <motion.div

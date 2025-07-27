@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import type { RootState, AppDispatch } from '../../store';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 import { GlassInput } from '../../components/common/GlassInput';
+import AuthService from '../../services/authService';
 
 export const RegisterPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +20,7 @@ export const RegisterPage: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    companyName: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,7 +29,33 @@ export const RegisterPage: React.FC = () => {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    companyName?: string;
   }>({});
+  const [ssoConfig, setSsoConfig] = useState<any>(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
+
+  useEffect(() => {
+    const loadSSOConfig = async () => {
+      try {
+        const config = await AuthService.getSSOConfig();
+        setSsoConfig(config);
+      } catch (error) {
+        console.error('Failed to load SSO config:', error);
+      }
+    };
+    loadSSOConfig();
+  }, []);
+
+  const handleSSOLogin = async (provider: string) => {
+    setSsoLoading(true);
+    try {
+      const { authUrl } = await AuthService.initiateOAuthLogin(provider);
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('SSO login failed:', error);
+      setSsoLoading(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const errors: {
@@ -35,6 +63,7 @@ export const RegisterPage: React.FC = () => {
       email?: string;
       password?: string;
       confirmPassword?: string;
+      companyName?: string;
     } = {};
 
     // Name validation
@@ -56,8 +85,8 @@ export const RegisterPage: React.FC = () => {
       errors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and number';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?])/.test(formData.password)) {
+      errors.password = 'Password must contain uppercase, lowercase, number, and special character';
     }
 
     // Confirm password validation
@@ -65,6 +94,13 @@ export const RegisterPage: React.FC = () => {
       errors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
+    }
+
+    // Company name validation
+    if (!formData.companyName.trim()) {
+      errors.companyName = 'Company name is required';
+    } else if (formData.companyName.trim().length < 2) {
+      errors.companyName = 'Company name must be at least 2 characters';
     }
 
     setValidationErrors(errors);
@@ -86,6 +122,7 @@ export const RegisterPage: React.FC = () => {
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
+        companyName: formData.companyName.trim(),
       })).unwrap();
       navigate('/dashboard');
     } catch (error) {
@@ -215,6 +252,26 @@ export const RegisterPage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+              style={{ marginBottom: '20px' }}
+            >
+              <GlassInput
+                type="text"
+                label="Company Name"
+                value={formData.companyName}
+                onChange={handleInputChange('companyName')}
+                error={validationErrors.companyName}
+                icon={<Icon name="building" size="sm" />}
+                iconPosition="left"
+                isDark={true}
+                required
+                autoComplete="organization"
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
               style={{ marginBottom: '20px' }}
             >
@@ -329,6 +386,110 @@ export const RegisterPage: React.FC = () => {
                 Create Account
               </GlassButton>
             </motion.div>
+
+            {/* SSO Login Options */}
+            {ssoConfig && (ssoConfig.oauth?.enabled || ssoConfig.saml?.enabled) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.75 }}
+                style={{ marginBottom: '24px' }}
+              >
+                <div style={{
+                  position: 'relative',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    <div style={{
+                      width: '100%',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                  }}>
+                    <span style={{
+                      padding: '0 8px',
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                    }}>
+                      Or sign up with
+                    </span>
+                  </div>
+                </div>
+
+                {ssoConfig.oauth?.enabled && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px',
+                  }}>
+                    {ssoConfig.oauth.providers?.google?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('google')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="google" size="sm" />
+                        Sign up with Google
+                      </GlassButton>
+                    )}
+                    {ssoConfig.oauth.providers?.microsoft?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('microsoft')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="microsoft" size="sm" />
+                        Sign up with Microsoft
+                      </GlassButton>
+                    )}
+                    {ssoConfig.oauth.providers?.github?.enabled && (
+                      <GlassButton
+                        onClick={() => handleSSOLogin('github')}
+                        disabled={ssoLoading}
+                        variant="secondary"
+                        isDark={true}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <Icon name="github" size="sm" />
+                        Sign up with GitHub
+                      </GlassButton>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Additional Links */}
             <motion.div

@@ -107,6 +107,7 @@ export class AuthService {
         email: credentials.email,
         password: credentials.password,
         name: credentials.name,
+        companyName: credentials.companyName,
       };
 
       const response = await apiService.post<RegisterResponse>('/auth/register', registerData, { skipAuth: true });
@@ -180,6 +181,52 @@ export class AuthService {
   static isAuthenticated(): boolean {
     const token = TokenManager.getToken();
     return token !== null && !TokenManager.isTokenExpired(token);
+  }
+
+  // SSO Methods
+  static async getSSOConfig(): Promise<any> {
+    try {
+      const response = await apiService.get('/auth/sso/config');
+      return response;
+    } catch (error: any) {
+      ErrorHandler.logError(error, 'AuthService.getSSOConfig');
+      throw this.handleError(error);
+    }
+  }
+
+  static async initiateOAuthLogin(provider: string, state?: string): Promise<{ authUrl: string }> {
+    try {
+      const response = await apiService.post('/auth/sso/oauth/login', {
+        provider,
+        state,
+      }, { skipAuth: true });
+      return response;
+    } catch (error: any) {
+      ErrorHandler.logError(error, 'AuthService.initiateOAuthLogin');
+      throw this.handleError(error);
+    }
+  }
+
+  static async handleOAuthCallback(provider: string, code: string, state?: string, organizationId?: string): Promise<AuthResponse> {
+    try {
+      const params = organizationId ? `?organizationId=${organizationId}` : '';
+      const response = await apiService.post<LoginResponse>(`/auth/sso/oauth/callback${params}`, {
+        provider,
+        code,
+        state,
+      }, { skipAuth: true });
+      
+      const { user, token, refreshToken } = response;
+      
+      // Store tokens and user data
+      TokenManager.setTokens(token, refreshToken);
+      TokenManager.setUser(user);
+      
+      return response;
+    } catch (error: any) {
+      ErrorHandler.logError(error, 'AuthService.handleOAuthCallback');
+      throw this.handleError(error);
+    }
   }
 
   private static handleError(error: any): ApiError {
