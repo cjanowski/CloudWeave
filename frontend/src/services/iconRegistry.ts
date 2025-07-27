@@ -245,6 +245,8 @@ class IconRegistryImpl implements IconRegistry {
     // Status icons
     this.register('status-check', Check);
     this.register('status-check-circle', CheckCircle);
+    this.register('status-success', CheckCircle);
+    this.register('status-error', X);
     this.register('status-x', X);
     this.register('status-warning', AlertTriangle);
     this.register('status-info', Info);
@@ -257,6 +259,7 @@ class IconRegistryImpl implements IconRegistry {
     this.register('deploy-history', History);
     this.register('deploy-start', Play);
     this.register('deploy-stop', Square);
+    this.register('action-deploy', Rocket);
   }
 
   public register(name: string, component: LucideIcon): void {

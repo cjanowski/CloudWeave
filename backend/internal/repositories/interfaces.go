@@ -89,6 +89,27 @@ type AuditLogRepositoryInterface interface {
 	DeleteOlderThan(ctx context.Context, cutoffTime string) error
 }
 
+// SecurityScanRepositoryInterface defines the contract for security scan data operations
+type SecurityScanRepositoryInterface interface {
+	Create(ctx context.Context, scan *models.SecurityScan) error
+	GetByID(ctx context.Context, orgID, id string) (*models.SecurityScan, error)
+	Update(ctx context.Context, scan *models.SecurityScan) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, orgID string, limit, offset int) ([]*models.SecurityScan, int, error)
+	GetRecentCount(ctx context.Context, orgID string, days int) (int, error)
+}
+
+// VulnerabilityRepositoryInterface defines the contract for vulnerability data operations
+type VulnerabilityRepositoryInterface interface {
+	Create(ctx context.Context, vulnerability *models.Vulnerability) error
+	GetByID(ctx context.Context, orgID, id string) (*models.Vulnerability, error)
+	Update(ctx context.Context, vulnerability *models.Vulnerability) error
+	Delete(ctx context.Context, id string) error
+	Query(ctx context.Context, orgID string, query models.VulnerabilityQuery) ([]*models.Vulnerability, int, error)
+	GetCountsBySeverity(ctx context.Context, orgID string) (map[models.VulnerabilitySeverity]int, error)
+	GetCountsByStatus(ctx context.Context, orgID string) (map[models.VulnerabilityStatus]int, error)
+}
+
 // TransactionManager provides transaction management capabilities
 type TransactionManager interface {
 	WithTransaction(ctx context.Context, fn func(tx *sql.Tx) error) error

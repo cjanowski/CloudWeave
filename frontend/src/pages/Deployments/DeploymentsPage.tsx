@@ -1302,7 +1302,7 @@ const DeploymentWizard: React.FC<{
 
         {/* Step Indicator */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div
               key={step.id}
               style={{
