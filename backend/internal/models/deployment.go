@@ -37,11 +37,11 @@ type UpdateDeploymentRequest struct {
 
 // Deployment status constants
 const (
-	DeploymentStatusPending    = "pending"
-	DeploymentStatusRunning    = "running"
-	DeploymentStatusCompleted  = "completed"
-	DeploymentStatusFailed     = "failed"
-	DeploymentStatusCancelled  = "cancelled"
+	DeploymentStatusPending     = "pending"
+	DeploymentStatusRunning     = "running"
+	DeploymentStatusCompleted   = "completed"
+	DeploymentStatusFailed      = "failed"
+	DeploymentStatusCancelled   = "cancelled"
 	DeploymentStatusRollingBack = "rolling_back"
 )
 

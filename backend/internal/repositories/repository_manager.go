@@ -2,28 +2,31 @@ package repositories
 
 import (
 	"database/sql"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // RepositoryManager provides centralized access to all repositories and transaction management
 type RepositoryManager struct {
 	// Repositories
-	User                    UserRepositoryInterface
-	Organization            OrganizationRepositoryInterface
-	Infrastructure          InfrastructureRepositoryInterface
-	Deployment              DeploymentRepositoryInterface
-	Metric                  MetricRepositoryInterface
-	Alert                   AlertRepositoryInterface
-	AuditLog                AuditLogRepositoryInterface
-	SecurityScan            SecurityScanRepositoryInterface
-	Vulnerability           VulnerabilityRepositoryInterface
-	ComplianceFramework     ComplianceFrameworkRepositoryInterface
-	ComplianceControl       ComplianceControlRepositoryInterface
-	ComplianceAssessment    ComplianceAssessmentRepositoryInterface
-	Role                    RoleRepositoryInterface
-	UserRole                UserRoleRepositoryInterface
-	ResourcePermission      ResourcePermissionRepositoryInterface
-	APIKey                  APIKeyRepositoryInterface
-	Session                 SessionRepositoryInterface
+	User                 UserRepositoryInterface
+	Organization         OrganizationRepositoryInterface
+	Infrastructure       InfrastructureRepositoryInterface
+	Deployment           DeploymentRepositoryInterface
+	Metric               MetricRepositoryInterface
+	Alert                AlertRepositoryInterface
+	AuditLog             AuditLogRepositoryInterface
+	SecurityScan         SecurityScanRepositoryInterface
+	Vulnerability        VulnerabilityRepositoryInterface
+	ComplianceFramework  ComplianceFrameworkRepositoryInterface
+	ComplianceControl    ComplianceControlRepositoryInterface
+	ComplianceAssessment ComplianceAssessmentRepositoryInterface
+	Role                 RoleRepositoryInterface
+	UserRole             UserRoleRepositoryInterface
+	ResourcePermission   ResourcePermissionRepositoryInterface
+	APIKey               APIKeyRepositoryInterface
+	Session              SessionRepositoryInterface
+	CloudCredentials     *CloudCredentialsRepository
 
 	// Transaction manager
 	Transaction TransactionManager
@@ -34,25 +37,28 @@ type RepositoryManager struct {
 
 // NewRepositoryManager creates a new repository manager with all repositories initialized
 func NewRepositoryManager(db *sql.DB) *RepositoryManager {
+	// Create sqlx.DB wrapper for repositories that need it
+	sqlxDB := sqlx.NewDb(db, "postgres")
 	return &RepositoryManager{
 		// Initialize repositories
-		User:                    NewUserRepository(db),
-		Organization:            NewOrganizationRepository(db),
-		Infrastructure:          NewInfrastructureRepository(db),
-		Deployment:              NewDeploymentRepository(db),
-		Metric:                  NewMetricRepository(db),
-		Alert:                   NewAlertRepository(db),
-		AuditLog:                NewAuditLogRepository(db),
-		SecurityScan:            NewSecurityScanRepository(db),
-		Vulnerability:           NewVulnerabilityRepository(db),
-		ComplianceFramework:     NewComplianceFrameworkRepository(db),
-		ComplianceControl:       NewComplianceControlRepository(db),
-		ComplianceAssessment:    NewComplianceAssessmentRepository(db),
-		Role:                    NewRoleRepository(db),
-		UserRole:                NewUserRoleRepository(db),
-		ResourcePermission:      nil, // TODO: Implement ResourcePermissionRepository
-		APIKey:                  nil, // TODO: Implement APIKeyRepository
-		Session:                 nil, // TODO: Implement SessionRepository
+		User:                 NewUserRepository(db),
+		Organization:         NewOrganizationRepository(db),
+		Infrastructure:       NewInfrastructureRepository(db),
+		Deployment:           NewDeploymentRepository(db),
+		Metric:               NewMetricRepository(db),
+		Alert:                NewAlertRepository(db),
+		AuditLog:             NewAuditLogRepository(db),
+		SecurityScan:         NewSecurityScanRepository(db),
+		Vulnerability:        NewVulnerabilityRepository(db),
+		ComplianceFramework:  NewComplianceFrameworkRepository(db),
+		ComplianceControl:    NewComplianceControlRepository(db),
+		ComplianceAssessment: NewComplianceAssessmentRepository(db),
+		Role:                 NewRoleRepository(db),
+		UserRole:             NewUserRoleRepository(db),
+		ResourcePermission:   nil, // TODO: Implement ResourcePermissionRepository
+		APIKey:               nil, // TODO: Implement APIKeyRepository
+		Session:              nil, // TODO: Implement SessionRepository
+		CloudCredentials:     NewCloudCredentialsRepository(sqlxDB),
 
 		// Initialize transaction manager
 		Transaction: NewTransactionManager(db),

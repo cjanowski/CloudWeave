@@ -16,17 +16,17 @@ import (
 )
 
 type JWTService struct {
-	config            *config.Config
-	blacklistService  *TokenBlacklistService
+	config           *config.Config
+	blacklistService *TokenBlacklistService
 }
 
 type Claims struct {
-	UserID         string  `json:"sub"`
-	Email          string  `json:"email"`
-	Name           string  `json:"name"`
-	Role           string  `json:"role"`
+	UserID         string `json:"sub"`
+	Email          string `json:"email"`
+	Name           string `json:"name"`
+	Role           string `json:"role"`
 	OrganizationID string `json:"organizationId"`
-	TokenID        string  `json:"jti"`
+	TokenID        string `json:"jti"`
 	jwt.RegisteredClaims
 }
 
@@ -52,7 +52,7 @@ func NewJWTService(cfg *config.Config, blacklistService *TokenBlacklistService) 
 // GenerateAccessToken creates a new JWT access token for the user
 func (j *JWTService) GenerateAccessToken(user models.User) (string, error) {
 	tokenID := uuid.New().String()
-	
+
 	claims := Claims{
 		UserID:         user.ID,
 		Email:          user.Email,
@@ -77,7 +77,7 @@ func (j *JWTService) GenerateAccessToken(user models.User) (string, error) {
 // GenerateRefreshToken creates a new JWT refresh token for the user
 func (j *JWTService) GenerateRefreshToken(userID string) (string, error) {
 	tokenID := uuid.New().String()
-	
+
 	claims := RefreshClaims{
 		UserID:  userID,
 		TokenID: tokenID,
@@ -192,7 +192,7 @@ func (j *JWTService) IsTokenExpired(tokenString string) bool {
 	if err != nil {
 		return true
 	}
-	
+
 	return claims.ExpiresAt.Before(time.Now())
 }
 

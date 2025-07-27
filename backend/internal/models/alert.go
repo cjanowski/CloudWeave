@@ -3,19 +3,19 @@ package models
 import "time"
 
 type Alert struct {
-	ID              string     `json:"id" db:"id"`
-	OrganizationID  string     `json:"organizationId" db:"organization_id"`
-	Type            string     `json:"type" db:"type"`
-	Severity        string     `json:"severity" db:"severity"`
-	Title           string     `json:"title" db:"title"`
-	Message         string     `json:"message" db:"message"`
-	ResourceID      *string    `json:"resourceId" db:"resource_id"`
-	ResourceType    *string    `json:"resourceType" db:"resource_type"`
-	Acknowledged    bool       `json:"acknowledged" db:"acknowledged"`
-	AcknowledgedBy  *string    `json:"acknowledgedBy" db:"acknowledged_by"`
-	AcknowledgedAt  *time.Time `json:"acknowledgedAt" db:"acknowledged_at"`
-	CreatedAt       time.Time  `json:"createdAt" db:"created_at"`
-	UpdatedAt       time.Time  `json:"updatedAt" db:"updated_at"`
+	ID             string     `json:"id" db:"id"`
+	OrganizationID string     `json:"organizationId" db:"organization_id"`
+	Type           string     `json:"type" db:"type"`
+	Severity       string     `json:"severity" db:"severity"`
+	Title          string     `json:"title" db:"title"`
+	Message        string     `json:"message" db:"message"`
+	ResourceID     *string    `json:"resourceId" db:"resource_id"`
+	ResourceType   *string    `json:"resourceType" db:"resource_type"`
+	Acknowledged   bool       `json:"acknowledged" db:"acknowledged"`
+	AcknowledgedBy *string    `json:"acknowledgedBy" db:"acknowledged_by"`
+	AcknowledgedAt *time.Time `json:"acknowledgedAt" db:"acknowledged_at"`
+	CreatedAt      time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt      time.Time  `json:"updatedAt" db:"updated_at"`
 }
 
 type CreateAlertRequest struct {
@@ -51,10 +51,10 @@ const (
 
 // Alert types
 const (
-	AlertTypeSystem       = "system"
-	AlertTypePerformance  = "performance"
-	AlertTypeSecurity     = "security"
-	AlertTypeDeployment   = "deployment"
+	AlertTypeSystem         = "system"
+	AlertTypePerformance    = "performance"
+	AlertTypeSecurity       = "security"
+	AlertTypeDeployment     = "deployment"
 	AlertTypeInfrastructure = "infrastructure"
-	AlertTypeCost         = "cost"
+	AlertTypeCost           = "cost"
 )

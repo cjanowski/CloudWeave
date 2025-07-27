@@ -121,7 +121,7 @@ func (r *AlertRepository) Update(ctx context.Context, alert *models.Alert) error
 // Delete deletes an alert by its ID
 func (r *AlertRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM alerts WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete alert: %w", err)
@@ -343,7 +343,7 @@ func (r *AlertRepository) Acknowledge(ctx context.Context, id, userID string) er
 		UPDATE alerts 
 		SET acknowledged = true, acknowledged_by = $2, acknowledged_at = NOW(), updated_at = NOW()
 		WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to acknowledge alert: %w", err)

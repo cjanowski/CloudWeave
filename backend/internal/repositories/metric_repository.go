@@ -210,7 +210,7 @@ func (r *MetricRepository) Query(ctx context.Context, query models.MetricQuery) 
 // Delete deletes a metric by its ID
 func (r *MetricRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM metrics WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete metric: %w", err)
@@ -236,7 +236,7 @@ func (r *MetricRepository) DeleteOlderThan(ctx context.Context, cutoffTime strin
 	}
 
 	query := `DELETE FROM metrics WHERE timestamp < $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, cutoff)
 	if err != nil {
 		return fmt.Errorf("failed to delete old metrics: %w", err)

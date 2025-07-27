@@ -45,10 +45,10 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 // GetWebSocketStatus returns the status of WebSocket service
 func (h *WebSocketHandler) GetWebSocketStatus(c *gin.Context) {
 	clientCount := h.wsService.GetConnectedClientsCount()
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"status": "running",
+		"status":           "running",
 		"connectedClients": clientCount,
-		"message": "WebSocket service is active",
+		"message":          "WebSocket service is active",
 	})
-} 
+}

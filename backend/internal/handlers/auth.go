@@ -18,6 +18,7 @@ import (
 var (
 	jwtService  *services.JWTService
 	authService *services.AuthService
+	ssoService  *services.SSOService
 )
 
 // InitializeAuthServices initializes the authentication services
@@ -27,8 +28,9 @@ func InitializeAuthServices(cfg *config.Config, db *database.Database) {
 	passwordService := services.NewPasswordService()
 	userRepo := repositories.NewUserRepository(db.DB)
 	orgRepo := repositories.NewOrganizationRepository(db.DB)
-	
+
 	authService = services.NewAuthService(userRepo, orgRepo, jwtService, passwordService, blacklistService)
+	ssoService = services.NewSSOService(cfg, userRepo, orgRepo, authService, jwtService)
 }
 
 // GetJWTService returns the initialized JWT service
@@ -55,7 +57,7 @@ func HealthCheckWithDB(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		status := "healthy"
 		statusCode := http.StatusOK
-		
+
 		// Check database health
 		dbStatus := "healthy"
 		if err := db.Health(); err != nil {
@@ -116,12 +118,12 @@ func Login(c *gin.Context) {
 	response, err := authService.Login(c.Request.Context(), req)
 	if err != nil {
 		log.Printf("Login failed for user %s: %v", req.Email, err)
-		
+
 		// Determine appropriate status code based on error
 		statusCode := http.StatusUnauthorized
 		errorCode := "LOGIN_FAILED"
 		errorMessage := "Invalid email or password"
-		
+
 		if strings.Contains(err.Error(), "validation") {
 			statusCode = http.StatusBadRequest
 			errorCode = "VALIDATION_ERROR"
@@ -176,12 +178,12 @@ func Register(c *gin.Context) {
 	response, err := authService.Register(c.Request.Context(), req)
 	if err != nil {
 		log.Printf("Registration failed for user %s: %v", req.Email, err)
-		
+
 		// Determine appropriate status code based on error
 		statusCode := http.StatusBadRequest
 		errorCode := "REGISTRATION_FAILED"
 		errorMessage := err.Error()
-		
+
 		if strings.Contains(err.Error(), "already exists") {
 			statusCode = http.StatusConflict
 			errorCode = "EMAIL_ALREADY_EXISTS"
@@ -239,12 +241,12 @@ func RefreshToken(c *gin.Context) {
 	response, err := authService.RefreshToken(c.Request.Context(), req)
 	if err != nil {
 		log.Printf("Token refresh failed: %v", err)
-		
+
 		// Determine appropriate status code based on error
 		statusCode := http.StatusUnauthorized
 		errorCode := "INVALID_REFRESH_TOKEN"
 		errorMessage := "Invalid or expired refresh token"
-		
+
 		if strings.Contains(err.Error(), "user not found") {
 			errorCode = "USER_NOT_FOUND"
 			errorMessage = "User associated with token no longer exists"
@@ -279,11 +281,11 @@ func RefreshToken(c *gin.Context) {
 func Logout(c *gin.Context) {
 	// Get tokens from request
 	accessToken := c.GetString("token") // Set by auth middleware
-	
+
 	var req struct {
 		RefreshToken string `json:"refreshToken"`
 	}
-	
+
 	// Try to get refresh token from request body (optional)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// If no refresh token provided, just blacklist access token
@@ -411,7 +413,7 @@ func ChangePassword(c *gin.Context) {
 	userIDStr := userID.(string)
 	if err := authService.ChangePassword(c.Request.Context(), userIDStr, req.CurrentPassword, req.NewPassword); err != nil {
 		log.Printf("Password change failed for user %s: %v", userIDStr, err)
-		
+
 		statusCode := http.StatusBadRequest
 		errorCode := "PASSWORD_CHANGE_FAILED"
 		if strings.Contains(err.Error(), "current password is incorrect") {
@@ -482,6 +484,99 @@ func LogoutAllDevices(c *gin.Context) {
 		Data: map[string]interface{}{
 			"message": "Logged out from all devices successfully",
 		},
+		RequestID: c.GetString("requestID"),
+	})
+}
+
+// GetSSOConfig returns the SSO configuration
+func GetSSOConfig(c *gin.Context) {
+	config := ssoService.GetSSOConfig()
+	c.JSON(http.StatusOK, models.ApiResponse{
+		Success:   true,
+		Data:      config,
+		RequestID: c.GetString("requestID"),
+	})
+}
+
+// InitiateOAuthLogin initiates OAuth login flow
+func InitiateOAuthLogin(c *gin.Context) {
+	var req models.SSOLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "INVALID_REQUEST",
+				Message:   "Invalid request format",
+				Details:   err.Error(),
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
+		return
+	}
+
+	authURL, err := ssoService.GetOAuthAuthURL(req.Provider, req.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "SSO_ERROR",
+				Message:   "Failed to generate OAuth URL",
+				Details:   err.Error(),
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.ApiResponse{
+		Success: true,
+		Data: map[string]string{
+			"authUrl": authURL,
+		},
+		RequestID: c.GetString("requestID"),
+	})
+}
+
+// HandleOAuthCallback handles OAuth callback
+func HandleOAuthCallback(c *gin.Context) {
+	var req models.SSOCallbackRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "INVALID_REQUEST",
+				Message:   "Invalid request format",
+				Details:   err.Error(),
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
+		return
+	}
+
+	// Get organization ID from query params or use default
+	organizationID := c.Query("organizationId")
+
+	response, err := ssoService.HandleOAuthCallback(c.Request.Context(), req.Provider, req.Code, req.State, organizationID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "SSO_LOGIN_FAILED",
+				Message:   "SSO login failed",
+				Details:   err.Error(),
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.ApiResponse{
+		Success:   true,
+		Data:      response,
 		RequestID: c.GetString("requestID"),
 	})
 }

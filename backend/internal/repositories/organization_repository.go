@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -26,11 +27,17 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *models.Organiz
 		VALUES ($1, $2, $3, $4)
 		RETURNING created_at, updated_at`
 
-	err := r.db.QueryRowContext(ctx, query,
+	// Marshal settings to JSON
+	settingsJSON, err := json.Marshal(org.Settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal settings: %w", err)
+	}
+
+	err = r.db.QueryRowContext(ctx, query,
 		org.ID,
 		org.Name,
 		org.Slug,
-		org.Settings,
+		settingsJSON,
 	).Scan(&org.CreatedAt, &org.UpdatedAt)
 
 	if err != nil {
@@ -51,6 +58,7 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *models.Organiz
 // GetByID retrieves an organization by its ID
 func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
 	org := &models.Organization{}
+	var settingsJSON []byte
 	query := `
 		SELECT id, name, slug, settings, created_at, updated_at
 		FROM organizations 
@@ -60,7 +68,7 @@ func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model
 		&org.ID,
 		&org.Name,
 		&org.Slug,
-		&org.Settings,
+		&settingsJSON,
 		&org.CreatedAt,
 		&org.UpdatedAt,
 	)
@@ -70,6 +78,11 @@ func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model
 			return nil, fmt.Errorf("organization with id %s not found", id)
 		}
 		return nil, fmt.Errorf("failed to get organization by id: %w", err)
+	}
+
+	// Unmarshal settings from JSON
+	if err := json.Unmarshal(settingsJSON, &org.Settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal settings: %w", err)
 	}
 
 	return org, nil
@@ -138,7 +151,7 @@ func (r *OrganizationRepository) Update(ctx context.Context, org *models.Organiz
 // Delete deletes an organization by its ID
 func (r *OrganizationRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM organizations WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete organization: %w", err)
@@ -236,7 +249,7 @@ func (r *OrganizationRepository) List(ctx context.Context, params ListParams) ([
 func (r *OrganizationRepository) SlugExists(ctx context.Context, slug string) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM organizations WHERE slug = $1)`
-	
+
 	err := r.db.QueryRowContext(ctx, query, slug).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if slug exists: %w", err)
@@ -249,11 +262,11 @@ func (r *OrganizationRepository) SlugExists(ctx context.Context, slug string) (b
 func GenerateSlug(name string) string {
 	// Convert to lowercase
 	slug := strings.ToLower(name)
-	
+
 	// Replace spaces and special characters with hyphens
 	slug = strings.ReplaceAll(slug, " ", "-")
 	slug = strings.ReplaceAll(slug, "_", "-")
-	
+
 	// Remove any characters that aren't alphanumeric or hyphens
 	var result strings.Builder
 	for _, char := range slug {
@@ -261,15 +274,15 @@ func GenerateSlug(name string) string {
 			result.WriteRune(char)
 		}
 	}
-	
+
 	// Remove multiple consecutive hyphens
 	slug = result.String()
 	for strings.Contains(slug, "--") {
 		slug = strings.ReplaceAll(slug, "--", "-")
 	}
-	
+
 	// Trim hyphens from start and end
 	slug = strings.Trim(slug, "-")
-	
+
 	return slug
 }

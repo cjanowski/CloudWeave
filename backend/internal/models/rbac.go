@@ -140,14 +140,14 @@ const (
 
 // System roles
 const (
-	RoleSystemAdmin      = "system_admin"
-	RoleOrganizationAdmin = "organization_admin"
+	RoleSystemAdmin           = "system_admin"
+	RoleOrganizationAdmin     = "organization_admin"
 	RoleInfrastructureManager = "infrastructure_manager"
-	RoleDeploymentManager = "deployment_manager"
-	RoleSecurityManager  = "security_manager"
-	RoleComplianceManager = "compliance_manager"
-	RoleDeveloper        = "developer"
-	RoleViewer           = "viewer"
+	RoleDeploymentManager     = "deployment_manager"
+	RoleSecurityManager       = "security_manager"
+	RoleComplianceManager     = "compliance_manager"
+	RoleDeveloper             = "developer"
+	RoleViewer                = "viewer"
 )
 
 // Resource types for RBAC
@@ -163,13 +163,13 @@ const (
 
 // UserPermissions represents the effective permissions for a user
 type UserPermissions struct {
-	UserID         string                            `json:"userId"`
-	OrganizationID string                            `json:"organizationId"`
-	Roles          []Role                            `json:"roles"`
-	Permissions    []string                          `json:"permissions"`
-	ResourcePerms  map[string]map[string][]string    `json:"resourcePermissions"` // resourceType -> resourceId -> permissions
-	IsAdmin        bool                              `json:"isAdmin"`
-	LastUpdated    time.Time                         `json:"lastUpdated"`
+	UserID         string                         `json:"userId"`
+	OrganizationID string                         `json:"organizationId"`
+	Roles          []Role                         `json:"roles"`
+	Permissions    []string                       `json:"permissions"`
+	ResourcePerms  map[string]map[string][]string `json:"resourcePermissions"` // resourceType -> resourceId -> permissions
+	IsAdmin        bool                           `json:"isAdmin"`
+	LastUpdated    time.Time                      `json:"lastUpdated"`
 }
 
 // PermissionCheck represents a permission check request
@@ -183,8 +183,8 @@ type PermissionCheck struct {
 
 // PermissionResult represents the result of a permission check
 type PermissionResult struct {
-	Allowed    bool   `json:"allowed"`
-	Reason     string `json:"reason,omitempty"`
-	GrantedBy  string `json:"grantedBy,omitempty"`
-	ExpiresAt  *time.Time `json:"expiresAt,omitempty"`
+	Allowed   bool       `json:"allowed"`
+	Reason    string     `json:"reason,omitempty"`
+	GrantedBy string     `json:"grantedBy,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 }

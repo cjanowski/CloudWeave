@@ -57,7 +57,7 @@ func (s *AlertService) GetAlerts(ctx context.Context, orgID string, filters Aler
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to []models.Alert
 	result := make([]models.Alert, len(alerts))
 	for i, alert := range alerts {
@@ -82,7 +82,7 @@ func (s *AlertService) UpdateAlertStatus(ctx context.Context, alertID string, st
 		alert.Acknowledged = false
 		alert.AcknowledgedAt = nil
 	}
-	
+
 	alert.UpdatedAt = time.Now()
 
 	return s.repoManager.Alert.Update(ctx, alert)
@@ -111,7 +111,7 @@ func (s *AlertService) GetActiveAlerts(ctx context.Context, orgID string) ([]mod
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to []models.Alert
 	result := make([]models.Alert, len(alerts))
 	for i, alert := range alerts {
@@ -129,15 +129,15 @@ func (s *AlertService) GetAlertSummary(ctx context.Context, orgID string) (*Aler
 	}
 
 	summary := &AlertSummary{
-		TotalAlerts:     len(alerts),
-		ActiveAlerts:    0,
+		TotalAlerts:        len(alerts),
+		ActiveAlerts:       0,
 		AcknowledgedAlerts: 0,
-		ResolvedAlerts:  0,
-		CriticalAlerts:  0,
-		WarningAlerts:   0,
-		InfoAlerts:      0,
-		AlertsByType:    make(map[string]int),
-		AlertsBySeverity: make(map[string]int),
+		ResolvedAlerts:     0,
+		CriticalAlerts:     0,
+		WarningAlerts:      0,
+		InfoAlerts:         0,
+		AlertsByType:       make(map[string]int),
+		AlertsBySeverity:   make(map[string]int),
 	}
 
 	for _, alert := range alerts {
@@ -195,43 +195,43 @@ func (s *AlertService) CreateAlertRule(ctx context.Context, rule *AlertRule) err
 
 // AlertFilters represents filters for alert queries
 type AlertFilters struct {
-	Status   string    `json:"status"`
-	Severity string    `json:"severity"`
-	Type     string    `json:"type"`
-	ResourceID string  `json:"resourceId"`
-	StartTime *time.Time `json:"startTime"`
-	EndTime   *time.Time `json:"endTime"`
-	Limit     int       `json:"limit"`
-	Offset    int       `json:"offset"`
+	Status     string     `json:"status"`
+	Severity   string     `json:"severity"`
+	Type       string     `json:"type"`
+	ResourceID string     `json:"resourceId"`
+	StartTime  *time.Time `json:"startTime"`
+	EndTime    *time.Time `json:"endTime"`
+	Limit      int        `json:"limit"`
+	Offset     int        `json:"offset"`
 }
 
 // AlertSummary represents alert summary statistics
 type AlertSummary struct {
-	TotalAlerts       int            `json:"totalAlerts"`
-	ActiveAlerts      int            `json:"activeAlerts"`
-	AcknowledgedAlerts int           `json:"acknowledgedAlerts"`
-	ResolvedAlerts    int            `json:"resolvedAlerts"`
-	CriticalAlerts    int            `json:"criticalAlerts"`
-	WarningAlerts     int            `json:"warningAlerts"`
-	InfoAlerts        int            `json:"infoAlerts"`
-	AlertsByType      map[string]int `json:"alertsByType"`
-	AlertsBySeverity  map[string]int `json:"alertsBySeverity"`
+	TotalAlerts        int            `json:"totalAlerts"`
+	ActiveAlerts       int            `json:"activeAlerts"`
+	AcknowledgedAlerts int            `json:"acknowledgedAlerts"`
+	ResolvedAlerts     int            `json:"resolvedAlerts"`
+	CriticalAlerts     int            `json:"criticalAlerts"`
+	WarningAlerts      int            `json:"warningAlerts"`
+	InfoAlerts         int            `json:"infoAlerts"`
+	AlertsByType       map[string]int `json:"alertsByType"`
+	AlertsBySeverity   map[string]int `json:"alertsBySeverity"`
 }
 
 // AlertRule represents an alert rule configuration
 type AlertRule struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Condition   string                 `json:"condition"`
-	Severity    string                 `json:"severity"`
-	Message     string                 `json:"message"`
-	ResourceType string                `json:"resourceType"`
-	Provider    string                 `json:"provider"`
-	Enabled     bool                   `json:"enabled"`
-	Parameters  map[string]interface{} `json:"parameters"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	UpdatedAt   time.Time              `json:"updatedAt"`
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	Condition    string                 `json:"condition"`
+	Severity     string                 `json:"severity"`
+	Message      string                 `json:"message"`
+	ResourceType string                 `json:"resourceType"`
+	Provider     string                 `json:"provider"`
+	Enabled      bool                   `json:"enabled"`
+	Parameters   map[string]interface{} `json:"parameters"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
 // NotificationService handles alert notifications
@@ -297,4 +297,4 @@ func (s *NotificationService) sendWebhookNotification(ctx context.Context, alert
 	// For now, we'll just log the notification
 	fmt.Printf("Webhook notification sent for alert %s: %s\n", alert.ID, alert.Message)
 	return nil
-} 
+}

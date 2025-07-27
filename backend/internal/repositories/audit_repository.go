@@ -190,7 +190,7 @@ func (r *AuditLogRepository) Query(ctx context.Context, orgID string, query mode
 // Delete deletes an audit log entry by its ID
 func (r *AuditLogRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM audit_logs WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete audit log: %w", err)
@@ -216,7 +216,7 @@ func (r *AuditLogRepository) DeleteOlderThan(ctx context.Context, cutoffTime str
 	}
 
 	query := `DELETE FROM audit_logs WHERE created_at < $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, cutoff)
 	if err != nil {
 		return fmt.Errorf("failed to delete old audit logs: %w", err)

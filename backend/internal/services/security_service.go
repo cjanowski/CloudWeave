@@ -14,9 +14,9 @@ import (
 
 // SecurityService provides security-related operations
 type SecurityService struct {
-	scanRepo            repositories.SecurityScanRepositoryInterface
-	vulnerabilityRepo   repositories.VulnerabilityRepositoryInterface
-	auditRepo           repositories.AuditLogRepositoryInterface
+	scanRepo             repositories.SecurityScanRepositoryInterface
+	vulnerabilityRepo    repositories.VulnerabilityRepositoryInterface
+	auditRepo            repositories.AuditLogRepositoryInterface
 	vulnerabilityScanner *VulnerabilityScanner
 }
 
@@ -27,9 +27,9 @@ func NewSecurityService(
 	auditRepo repositories.AuditLogRepositoryInterface,
 ) *SecurityService {
 	return &SecurityService{
-		scanRepo:            scanRepo,
-		vulnerabilityRepo:   vulnerabilityRepo,
-		auditRepo:           auditRepo,
+		scanRepo:             scanRepo,
+		vulnerabilityRepo:    vulnerabilityRepo,
+		auditRepo:            auditRepo,
 		vulnerabilityScanner: NewVulnerabilityScanner(),
 	}
 }
@@ -199,7 +199,7 @@ func (s *SecurityService) executeScan(ctx context.Context, scan *models.Security
 	now := time.Now()
 	scan.StartedAt = &now
 	scan.UpdatedAt = time.Now()
-	
+
 	if err := s.scanRepo.Update(ctx, scan); err != nil {
 		log.Printf("Failed to update scan status: %v", err)
 		return
@@ -230,7 +230,7 @@ func (s *SecurityService) executeScan(ctx context.Context, scan *models.Security
 		scan.Progress = 0
 	} else {
 		log.Printf("Scan completed successfully: %s", scan.ID)
-		
+
 		// Save vulnerabilities
 		for _, vuln := range vulnerabilities {
 			if err := s.vulnerabilityRepo.Create(ctx, vuln); err != nil {
@@ -271,7 +271,7 @@ func (s *SecurityService) generateScanSummary(vulnerabilities []*models.Vulnerab
 
 	for _, vuln := range vulnerabilities {
 		summary.VulnerabilitiesBySeverity[vuln.Severity]++
-		
+
 		// Update highest severity
 		if s.severityLevel(vuln.Severity) > s.severityLevel(summary.HighestSeverity) {
 			summary.HighestSeverity = vuln.Severity
@@ -332,7 +332,7 @@ func (s *SecurityService) getSecurityTrends(ctx context.Context, organizationID 
 	// This would typically query historical data
 	// For now, return mock trend data
 	trends := []models.SecurityTrendPoint{}
-	
+
 	for i := days; i >= 0; i-- {
 		date := time.Now().AddDate(0, 0, -i)
 		trends = append(trends, models.SecurityTrendPoint{
@@ -343,7 +343,7 @@ func (s *SecurityService) getSecurityTrends(ctx context.Context, organizationID 
 			ComplianceScore:    85.0 + float64(i%10),
 		})
 	}
-	
+
 	return trends, nil
 }
 
