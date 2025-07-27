@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"cloudweave/internal/models"
@@ -22,10 +23,39 @@ func NewInfrastructureService(repoManager *repositories.RepositoryManager) *Infr
 		metricsCollector: NewMetricsCollector(repoManager),
 	}
 
-	// Initialize cloud providers
-	service.cloudProviders[models.ProviderAWS] = NewAWSProvider()
-	service.cloudProviders[models.ProviderGCP] = NewGCPProvider()
-	service.cloudProviders[models.ProviderAzure] = NewAzureProvider()
+	// Initialize cloud providers with real implementations
+	ctx := context.Background()
+	
+	// AWS Provider (already has real implementation)
+	awsProvider, err := NewRealAWSProvider(ctx)
+	if err != nil {
+		// Fallback to mock provider if real provider fails
+		service.cloudProviders[models.ProviderAWS] = NewAWSProvider()
+	} else {
+		service.cloudProviders[models.ProviderAWS] = awsProvider
+	}
+
+	// GCP Provider
+	gcpProjectID := getEnvOrDefault("GCP_PROJECT_ID", "cloudweave-demo")
+	gcpProvider, err := NewRealGCPProvider(ctx, gcpProjectID)
+	if err != nil {
+		// Fallback to mock provider if real provider fails
+		service.cloudProviders[models.ProviderGCP] = NewGCPProvider()
+	} else {
+		service.cloudProviders[models.ProviderGCP] = gcpProvider
+	}
+
+	// Azure Provider
+	azureSubscriptionID := getEnvOrDefault("AZURE_SUBSCRIPTION_ID", "demo-subscription")
+	azureResourceGroup := getEnvOrDefault("AZURE_RESOURCE_GROUP", "cloudweave-rg")
+	azureLocation := getEnvOrDefault("AZURE_LOCATION", "eastus")
+	azureProvider, err := NewRealAzureProvider(ctx, azureSubscriptionID, azureResourceGroup, azureLocation)
+	if err != nil {
+		// Fallback to mock provider if real provider fails
+		service.cloudProviders[models.ProviderAzure] = NewAzureProvider()
+	} else {
+		service.cloudProviders[models.ProviderAzure] = azureProvider
+	}
 
 	return service
 }
@@ -185,4 +215,17 @@ func (mc *MetricsCollector) StartCollection(ctx context.Context, infra *models.I
 			mc.repoManager.Metric.Create(ctx, metric)
 		}
 	}
+}
+
+// GetProviders returns the cloud providers map
+func (s *InfrastructureService) GetProviders() map[string]CloudProvider {
+	return s.cloudProviders
+}
+
+// getEnvOrDefault gets an environment variable or returns a default value
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
