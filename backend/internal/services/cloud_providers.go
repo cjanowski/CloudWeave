@@ -20,10 +20,10 @@ func (p *AWSProvider) CreateResource(ctx context.Context, infra *models.Infrastr
 	// Simulate AWS resource creation
 	// In a real implementation, this would use AWS SDK
 	externalID := fmt.Sprintf("aws-%s-%d", infra.Type, time.Now().Unix())
-	
+
 	// Simulate creation delay
 	time.Sleep(100 * time.Millisecond)
-	
+
 	return externalID, nil
 }
 
@@ -51,15 +51,15 @@ func (p *AWSProvider) GetResourceDetails(ctx context.Context, externalID string)
 	return map[string]interface{}{
 		"status": models.InfraStatusRunning,
 		"specifications": map[string]interface{}{
-			"instance_type": "t3.medium",
-			"vpc_id":        "vpc-12345678",
-			"subnet_id":     "subnet-87654321",
+			"instance_type":   "t3.medium",
+			"vpc_id":          "vpc-12345678",
+			"subnet_id":       "subnet-87654321",
 			"security_groups": []string{"sg-11111111", "sg-22222222"},
 		},
 		"costInfo": map[string]interface{}{
-			"hourly_cost":   0.0416,
-			"monthly_cost":  30.0,
-			"currency":      "USD",
+			"hourly_cost":  0.0416,
+			"monthly_cost": 30.0,
+			"currency":     "USD",
 		},
 	}, nil
 }
@@ -92,13 +92,13 @@ func (p *GCPProvider) GetResourceStatus(ctx context.Context, externalID string) 
 func (p *GCPProvider) GetResourceMetrics(ctx context.Context, externalID string) (map[string]interface{}, error) {
 	// Simulate GCP Monitoring metrics
 	return map[string]interface{}{
-		"cpu_utilization":     rand.Float64() * 100,
-		"memory_utilization":  rand.Float64() * 100,
-		"network_bytes_in":    rand.Float64() * 1000000,
-		"network_bytes_out":   rand.Float64() * 1000000,
-		"disk_read_bytes":     rand.Float64() * 1000000,
-		"disk_write_bytes":    rand.Float64() * 1000000,
-		"timestamp":           time.Now().Unix(),
+		"cpu_utilization":    rand.Float64() * 100,
+		"memory_utilization": rand.Float64() * 100,
+		"network_bytes_in":   rand.Float64() * 1000000,
+		"network_bytes_out":  rand.Float64() * 1000000,
+		"disk_read_bytes":    rand.Float64() * 1000000,
+		"disk_write_bytes":   rand.Float64() * 1000000,
+		"timestamp":          time.Now().Unix(),
 	}, nil
 }
 
@@ -146,13 +146,13 @@ func (p *AzureProvider) GetResourceStatus(ctx context.Context, externalID string
 func (p *AzureProvider) GetResourceMetrics(ctx context.Context, externalID string) (map[string]interface{}, error) {
 	// Simulate Azure Monitor metrics
 	return map[string]interface{}{
-		"percentage_cpu":       rand.Float64() * 100,
-		"available_memory":     rand.Float64() * 8000000000, // 8GB in bytes
-		"network_in_total":     rand.Float64() * 1000000,
-		"network_out_total":    rand.Float64() * 1000000,
-		"disk_read_bytes":      rand.Float64() * 1000000,
-		"disk_write_bytes":     rand.Float64() * 1000000,
-		"timestamp":            time.Now().Unix(),
+		"percentage_cpu":    rand.Float64() * 100,
+		"available_memory":  rand.Float64() * 8000000000, // 8GB in bytes
+		"network_in_total":  rand.Float64() * 1000000,
+		"network_out_total": rand.Float64() * 1000000,
+		"disk_read_bytes":   rand.Float64() * 1000000,
+		"disk_write_bytes":  rand.Float64() * 1000000,
+		"timestamp":         time.Now().Unix(),
 	}, nil
 }
 
@@ -160,10 +160,10 @@ func (p *AzureProvider) GetResourceDetails(ctx context.Context, externalID strin
 	return map[string]interface{}{
 		"status": models.InfraStatusRunning,
 		"specifications": map[string]interface{}{
-			"vm_size":           "Standard_B2s",
-			"resource_group":    "rg-cloudweave",
-			"virtual_network":   "vnet-cloudweave",
-			"subnet":            "subnet-default",
+			"vm_size":                "Standard_B2s",
+			"resource_group":         "rg-cloudweave",
+			"virtual_network":        "vnet-cloudweave",
+			"subnet":                 "subnet-default",
 			"network_security_group": "nsg-cloudweave",
 		},
 		"costInfo": map[string]interface{}{

@@ -55,7 +55,7 @@ func (s *ComplianceService) CreateFramework(ctx context.Context, framework *mode
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, framework.OrganizationID, userID, "compliance_framework_created", 
+	s.logAuditEvent(ctx, framework.OrganizationID, userID, "compliance_framework_created",
 		fmt.Sprintf("Created compliance framework: %s", framework.Name), framework.ID)
 
 	return nil
@@ -95,7 +95,7 @@ func (s *ComplianceService) UpdateFramework(ctx context.Context, framework *mode
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, framework.OrganizationID, userID, "compliance_framework_updated", 
+	s.logAuditEvent(ctx, framework.OrganizationID, userID, "compliance_framework_updated",
 		fmt.Sprintf("Updated compliance framework: %s", framework.Name), framework.ID)
 
 	return nil
@@ -115,7 +115,7 @@ func (s *ComplianceService) DeleteFramework(ctx context.Context, organizationID,
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, organizationID, userID, "compliance_framework_deleted", 
+	s.logAuditEvent(ctx, organizationID, userID, "compliance_framework_deleted",
 		fmt.Sprintf("Deleted compliance framework: %s", framework.Name), frameworkID)
 
 	return nil
@@ -141,7 +141,7 @@ func (s *ComplianceService) CreateControl(ctx context.Context, control *models.C
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, "", userID, "compliance_control_created", 
+	s.logAuditEvent(ctx, "", userID, "compliance_control_created",
 		fmt.Sprintf("Created compliance control: %s", control.Title), control.ID)
 
 	return nil
@@ -181,7 +181,7 @@ func (s *ComplianceService) UpdateControl(ctx context.Context, control *models.C
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, "", userID, "compliance_control_updated", 
+	s.logAuditEvent(ctx, "", userID, "compliance_control_updated",
 		fmt.Sprintf("Updated compliance control: %s", control.Title), control.ID)
 
 	return nil
@@ -242,7 +242,7 @@ func (s *ComplianceService) CreateAssessment(ctx context.Context, assessment *mo
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, assessment.OrganizationID, userID, "compliance_assessment_created", 
+	s.logAuditEvent(ctx, assessment.OrganizationID, userID, "compliance_assessment_created",
 		fmt.Sprintf("Created compliance assessment: %s", assessment.Name), assessment.ID)
 
 	return nil
@@ -282,7 +282,7 @@ func (s *ComplianceService) UpdateAssessment(ctx context.Context, assessment *mo
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, assessment.OrganizationID, userID, "compliance_assessment_updated", 
+	s.logAuditEvent(ctx, assessment.OrganizationID, userID, "compliance_assessment_updated",
 		fmt.Sprintf("Updated compliance assessment: %s", assessment.Name), assessment.ID)
 
 	return nil
@@ -307,7 +307,7 @@ func (s *ComplianceService) RunAssessment(ctx context.Context, organizationID, a
 	}
 
 	// Log audit event
-	s.logAuditEvent(ctx, organizationID, userID, "compliance_assessment_started", 
+	s.logAuditEvent(ctx, organizationID, userID, "compliance_assessment_started",
 		fmt.Sprintf("Started compliance assessment: %s", assessment.Name), assessmentID)
 
 	// TODO: Implement actual assessment logic here
@@ -364,7 +364,7 @@ func (s *ComplianceService) logAuditEvent(ctx context.Context, orgID, userID, ac
 	detailsMap := map[string]interface{}{
 		"message": details,
 	}
-	
+
 	auditLog := &models.AuditLog{
 		OrganizationID: orgID,
 		UserID:         &userID,

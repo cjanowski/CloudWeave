@@ -64,7 +64,7 @@ func NewWebSocketService() *WebSocketService {
 // Start starts the WebSocket service
 func (ws *WebSocketService) Start() {
 	log.Println("Starting WebSocket service...")
-	
+
 	for {
 		select {
 		case client := <-ws.register:
@@ -72,7 +72,7 @@ func (ws *WebSocketService) Start() {
 			ws.clients[client] = true
 			ws.mutex.Unlock()
 			log.Printf("Client registered: %s (User: %s)", client.ID, client.UserID)
-			
+
 			// Send welcome message
 			welcomeMsg := &WebSocketMessage{
 				Type:      MessageTypeSystem,
@@ -115,22 +115,22 @@ func (ws *WebSocketService) shouldSendToClient(message *WebSocketMessage, client
 	if message.Type == MessageTypeSystem {
 		return true
 	}
-	
+
 	// User-specific messages
 	if message.UserID != "" && message.UserID == client.UserID {
 		return true
 	}
-	
+
 	// Broadcast messages
 	if message.Target == "all" {
 		return true
 	}
-	
+
 	// Organization-specific messages (future implementation)
 	// if message.Target == "organization" && client.OrganizationID == message.OrganizationID {
 	//     return true
 	// }
-	
+
 	return false
 }
 
@@ -211,10 +211,10 @@ func (ws *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		CheckOrigin: func(r *http.Request) bool {
 			// Allow connections from frontend origins
 			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:5173" || 
-				   origin == "http://localhost:5176" || 
-				   origin == "http://localhost:3000" ||
-				   origin == "" // Allow empty origin for testing
+			return origin == "http://localhost:5173" ||
+				origin == "http://localhost:5176" ||
+				origin == "http://localhost:3000" ||
+				origin == "" // Allow empty origin for testing
 		},
 	}
 
@@ -322,11 +322,11 @@ func (c *Client) handleIncomingMessage(message []byte) {
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		}
 		c.Send <- c.Service.marshalMessage(pongMsg)
-		
+
 	case MessageTypePong:
 		// Handle pong response
 		log.Printf("Received pong from client %s", c.ID)
-		
+
 	default:
 		log.Printf("Received message from client %s: %s", c.ID, msg.Type)
 	}
@@ -345,4 +345,4 @@ func randomString(length int) string {
 		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
 	}
 	return string(b)
-} 
+}

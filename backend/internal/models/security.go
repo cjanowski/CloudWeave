@@ -40,11 +40,11 @@ const (
 type ScanStatus string
 
 const (
-	ScanStatusPending    ScanStatus = "pending"
-	ScanStatusRunning    ScanStatus = "running"
-	ScanStatusCompleted  ScanStatus = "completed"
-	ScanStatusFailed     ScanStatus = "failed"
-	ScanStatusCancelled  ScanStatus = "cancelled"
+	ScanStatusPending   ScanStatus = "pending"
+	ScanStatusRunning   ScanStatus = "running"
+	ScanStatusCompleted ScanStatus = "completed"
+	ScanStatusFailed    ScanStatus = "failed"
+	ScanStatusCancelled ScanStatus = "cancelled"
 )
 
 // Vulnerability represents a security vulnerability
@@ -95,11 +95,11 @@ type SecurityScan struct {
 
 // ScanSummary represents a summary of scan results
 type ScanSummary struct {
-	TotalVulnerabilities int                              `json:"totalVulnerabilities"`
+	TotalVulnerabilities      int                           `json:"totalVulnerabilities"`
 	VulnerabilitiesBySeverity map[VulnerabilitySeverity]int `json:"vulnerabilitiesBySeverity"`
-	ResourcesScanned     int                              `json:"resourcesScanned"`
-	HighestSeverity      VulnerabilitySeverity            `json:"highestSeverity"`
-	ComplianceScore      *float64                         `json:"complianceScore,omitempty"`
+	ResourcesScanned          int                           `json:"resourcesScanned"`
+	HighestSeverity           VulnerabilitySeverity         `json:"highestSeverity"`
+	ComplianceScore           *float64                      `json:"complianceScore,omitempty"`
 }
 
 // CreateScanRequest represents a request to create a new security scan
@@ -135,20 +135,20 @@ type VulnerabilityQuery struct {
 
 // SecurityMetrics represents security-related metrics
 type SecurityMetrics struct {
-	TotalVulnerabilities      int                              `json:"totalVulnerabilities"`
-	OpenVulnerabilities       int                              `json:"openVulnerabilities"`
-	VulnerabilitiesBySeverity map[VulnerabilitySeverity]int    `json:"vulnerabilitiesBySeverity"`
-	VulnerabilitiesByStatus   map[VulnerabilityStatus]int      `json:"vulnerabilitiesByStatus"`
-	RecentScans               int                              `json:"recentScans"`
-	ComplianceScore           float64                          `json:"complianceScore"`
-	SecurityTrends            []SecurityTrendPoint             `json:"securityTrends"`
+	TotalVulnerabilities      int                           `json:"totalVulnerabilities"`
+	OpenVulnerabilities       int                           `json:"openVulnerabilities"`
+	VulnerabilitiesBySeverity map[VulnerabilitySeverity]int `json:"vulnerabilitiesBySeverity"`
+	VulnerabilitiesByStatus   map[VulnerabilityStatus]int   `json:"vulnerabilitiesByStatus"`
+	RecentScans               int                           `json:"recentScans"`
+	ComplianceScore           float64                       `json:"complianceScore"`
+	SecurityTrends            []SecurityTrendPoint          `json:"securityTrends"`
 }
 
 // SecurityTrendPoint represents a point in security trend data
 type SecurityTrendPoint struct {
-	Date                 time.Time `json:"date"`
-	VulnerabilityCount   int       `json:"vulnerabilityCount"`
-	CriticalCount        int       `json:"criticalCount"`
-	HighCount            int       `json:"highCount"`
-	ComplianceScore      float64   `json:"complianceScore"`
+	Date               time.Time `json:"date"`
+	VulnerabilityCount int       `json:"vulnerabilityCount"`
+	CriticalCount      int       `json:"criticalCount"`
+	HighCount          int       `json:"highCount"`
+	ComplianceScore    float64   `json:"complianceScore"`
 }

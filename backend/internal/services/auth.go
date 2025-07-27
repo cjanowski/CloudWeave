@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"cloudweave/internal/models"
 	"cloudweave/internal/repositories"
@@ -37,14 +39,14 @@ func NewAuthService(
 // Login authenticates a user with email and password
 func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
 	fmt.Printf("DEBUG: Login attempt for email: %s\n", req.Email)
-	
+
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		fmt.Printf("DEBUG: User not found for email %s: %v\n", req.Email, err)
 		return nil, fmt.Errorf("invalid email or password")
 	}
-	
+
 	fmt.Printf("DEBUG: Found user %s with hash: %s\n", user.Email, user.PasswordHash)
 	fmt.Printf("DEBUG: Attempting to verify password: %s\n", req.Password)
 
@@ -53,7 +55,7 @@ func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		fmt.Printf("DEBUG: Password verification failed: %v\n", err)
 		return nil, fmt.Errorf("invalid email or password")
 	}
-	
+
 	fmt.Printf("DEBUG: Password verification successful for user %s\n", user.Email)
 
 	// Update last login timestamp
@@ -86,6 +88,11 @@ func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*mode
 
 // Register creates a new user account
 func (s *AuthService) Register(ctx context.Context, req models.RegisterRequest) (*models.RegisterResponse, error) {
+	// Validate that passwords match
+	if req.Password != req.ConfirmPassword {
+		return nil, fmt.Errorf("passwords do not match")
+	}
+
 	// Validate password strength
 	if err := s.passwordService.IsValidPassword(req.Password); err != nil {
 		return nil, fmt.Errorf("password validation failed: %w", err)
@@ -100,10 +107,40 @@ func (s *AuthService) Register(ctx context.Context, req models.RegisterRequest) 
 		return nil, fmt.Errorf("user with email %s already exists", req.Email)
 	}
 
-	// Verify organization exists
-	org, err := s.orgRepo.GetByID(ctx, req.OrganizationID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid organization ID: %w", err)
+	var org *models.Organization
+
+	// If organization ID is provided, verify it exists
+	if req.OrganizationID != "" {
+		org, err = s.orgRepo.GetByID(ctx, req.OrganizationID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid organization ID: %w", err)
+		}
+	} else {
+		// Create a new organization for the user
+		companyName := req.CompanyName
+		if companyName == "" {
+			companyName = fmt.Sprintf("%s's Organization", req.Name)
+		}
+
+		// Generate a slug from the company name
+		slug := generateSlugFromName(companyName)
+
+		// Ensure slug is unique
+		slug, err = s.ensureUniqueSlug(ctx, slug)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate unique organization slug: %w", err)
+		}
+
+		org = &models.Organization{
+			ID:       uuid.New().String(),
+			Name:     companyName,
+			Slug:     slug,
+			Settings: map[string]interface{}{},
+		}
+
+		if err := s.orgRepo.Create(ctx, org); err != nil {
+			return nil, fmt.Errorf("failed to create organization: %w", err)
+		}
 	}
 
 	// Hash password
@@ -260,4 +297,51 @@ func (s *AuthService) LogoutAllDevices(ctx context.Context, userID string) error
 	}
 
 	return s.blacklistService.BlacklistAllUserTokens(ctx, userID, "logout_all_devices")
+}
+
+// Helper function to generate slug from name
+func generateSlugFromName(name string) string {
+	// Convert to lowercase
+	slug := strings.ToLower(name)
+
+	// Replace spaces and special characters with hyphens
+	reg := regexp.MustCompile(`[^a-z0-9]+`)
+	slug = reg.ReplaceAllString(slug, "-")
+
+	// Remove leading/trailing hyphens
+	slug = strings.Trim(slug, "-")
+
+	// Limit length
+	if len(slug) > 50 {
+		slug = slug[:50]
+	}
+
+	return slug
+}
+
+// Helper function to ensure slug uniqueness
+func (s *AuthService) ensureUniqueSlug(ctx context.Context, baseSlug string) (string, error) {
+	slug := baseSlug
+	counter := 1
+
+	for {
+		// Check if slug exists
+		exists, err := s.orgRepo.SlugExists(ctx, slug)
+		if err != nil {
+			return "", err
+		}
+
+		if !exists {
+			return slug, nil
+		}
+
+		// Try with counter
+		slug = fmt.Sprintf("%s-%d", baseSlug, counter)
+		counter++
+
+		// Prevent infinite loop
+		if counter > 1000 {
+			return "", fmt.Errorf("unable to generate unique slug")
+		}
+	}
 }

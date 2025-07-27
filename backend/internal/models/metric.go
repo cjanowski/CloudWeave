@@ -48,9 +48,9 @@ const (
 
 // Common resource types for metrics
 const (
-	ResourceTypeServer     = "server"
-	ResourceTypeDatabase   = "database"
+	ResourceTypeServer      = "server"
+	ResourceTypeDatabase    = "database"
 	ResourceTypeApplication = "application"
-	ResourceTypeService    = "service"
-	ResourceTypeContainer  = "container"
+	ResourceTypeService     = "service"
+	ResourceTypeContainer   = "container"
 )

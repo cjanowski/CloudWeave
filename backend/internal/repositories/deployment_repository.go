@@ -124,7 +124,7 @@ func (r *DeploymentRepository) Update(ctx context.Context, deployment *models.De
 // Delete deletes a deployment by its ID
 func (r *DeploymentRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM deployments WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete deployment: %w", err)
@@ -171,15 +171,15 @@ func (r *DeploymentRepository) List(ctx context.Context, orgID string, params Li
 
 	// Validate sort column
 	validSortColumns := map[string]bool{
-		"name":        true,
-		"application": true,
-		"version":     true,
-		"environment": true,
-		"status":      true,
-		"progress":    true,
-		"created_at":  true,
-		"updated_at":  true,
-		"started_at":  true,
+		"name":         true,
+		"application":  true,
+		"version":      true,
+		"environment":  true,
+		"status":       true,
+		"progress":     true,
+		"created_at":   true,
+		"updated_at":   true,
+		"started_at":   true,
 		"completed_at": true,
 	}
 	if !validSortColumns[params.SortBy] {
@@ -335,7 +335,7 @@ func (r *DeploymentRepository) ListByStatus(ctx context.Context, orgID, status s
 // UpdateStatus updates the status of a deployment
 func (r *DeploymentRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	query := `UPDATE deployments SET status = $2, updated_at = NOW() WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id, status)
 	if err != nil {
 		return fmt.Errorf("failed to update deployment status: %w", err)
@@ -356,7 +356,7 @@ func (r *DeploymentRepository) UpdateStatus(ctx context.Context, id, status stri
 // UpdateProgress updates the progress of a deployment
 func (r *DeploymentRepository) UpdateProgress(ctx context.Context, id string, progress int) error {
 	query := `UPDATE deployments SET progress = $2, updated_at = NOW() WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id, progress)
 	if err != nil {
 		return fmt.Errorf("failed to update deployment progress: %w", err)

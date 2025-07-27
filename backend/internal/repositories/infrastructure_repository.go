@@ -126,7 +126,7 @@ func (r *InfrastructureRepository) Update(ctx context.Context, infra *models.Inf
 // Delete deletes an infrastructure resource by its ID
 func (r *InfrastructureRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM infrastructure WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete infrastructure: %w", err)
@@ -331,7 +331,7 @@ func (r *InfrastructureRepository) ListByStatus(ctx context.Context, orgID, stat
 // UpdateStatus updates the status of an infrastructure resource
 func (r *InfrastructureRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	query := `UPDATE infrastructure SET status = $2, updated_at = NOW() WHERE id = $1`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id, status)
 	if err != nil {
 		return fmt.Errorf("failed to update infrastructure status: %w", err)

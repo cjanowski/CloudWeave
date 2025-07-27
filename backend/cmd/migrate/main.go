@@ -20,8 +20,8 @@ func main() {
 
 	// Parse command line flags
 	var (
-		action = flag.String("action", "up", "Migration action: up, down, version, force")
-		steps  = flag.Int("steps", 1, "Number of migration steps (for down action)")
+		action  = flag.String("action", "up", "Migration action: up, down, version, force")
+		steps   = flag.Int("steps", 1, "Number of migration steps (for down action)")
 		version = flag.Uint("version", 0, "Force migration to specific version")
 	)
 	flag.Parse()

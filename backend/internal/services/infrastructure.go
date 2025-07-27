@@ -11,21 +11,21 @@ import (
 )
 
 type InfrastructureService struct {
-	repoManager     *repositories.RepositoryManager
-	cloudProviders  map[string]CloudProvider
+	repoManager      *repositories.RepositoryManager
+	cloudProviders   map[string]CloudProvider
 	metricsCollector *MetricsCollector
 }
 
 func NewInfrastructureService(repoManager *repositories.RepositoryManager) *InfrastructureService {
 	service := &InfrastructureService{
-		repoManager:     repoManager,
-		cloudProviders:  make(map[string]CloudProvider),
+		repoManager:      repoManager,
+		cloudProviders:   make(map[string]CloudProvider),
 		metricsCollector: NewMetricsCollector(repoManager),
 	}
 
 	// Initialize cloud providers with real implementations
 	ctx := context.Background()
-	
+
 	// AWS Provider (already has real implementation)
 	awsProvider, err := NewRealAWSProvider(ctx)
 	if err != nil {
@@ -211,7 +211,7 @@ func (mc *MetricsCollector) StartCollection(ctx context.Context, infra *models.I
 				Unit:         &[]string{"status"}[0],
 				Timestamp:    time.Now(),
 			}
-			
+
 			mc.repoManager.Metric.Create(ctx, metric)
 		}
 	}

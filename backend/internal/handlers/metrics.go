@@ -28,18 +28,18 @@ func (h *MetricsHandler) GetDashboardMetrics(c *gin.Context) {
 
 	// For now, return mock data until the metrics service is fully implemented
 	mockMetrics := map[string]interface{}{
-		"totalResources":      12,
-		"runningResources":    10,
-		"stoppedResources":    2,
-		"errorResources":      0,
-		"totalCost":           245.67,
-		"averageCpuUsage":     65.4,
-		"averageMemoryUsage":  78.2,
+		"totalResources":     12,
+		"runningResources":   10,
+		"stoppedResources":   2,
+		"errorResources":     0,
+		"totalCost":          245.67,
+		"averageCpuUsage":    65.4,
+		"averageMemoryUsage": 78.2,
 		"resourceBreakdown": map[string]int{
-			"ec2":       5,
-			"rds":       2,
-			"lambda":    3,
-			"s3":        2,
+			"ec2":    5,
+			"rds":    2,
+			"lambda": 3,
+			"s3":     2,
 		},
 		"providerBreakdown": map[string]int{
 			"aws":   8,

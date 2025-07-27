@@ -13,7 +13,7 @@ import (
 )
 
 type InfrastructureHandler struct {
-	repoManager *repositories.RepositoryManager
+	repoManager  *repositories.RepositoryManager
 	infraService *services.InfrastructureService
 }
 
@@ -309,7 +309,7 @@ func (h *InfrastructureHandler) GetCostBreakdown(c *gin.Context) {
 	}
 
 	period := c.DefaultQuery("period", "monthly")
-	
+
 	costService := services.NewCostManagementService(h.repoManager, h.infraService.GetProviders())
 	breakdown, err := costService.GetCostBreakdown(c.Request.Context(), orgID.(string), period)
 	if err != nil {

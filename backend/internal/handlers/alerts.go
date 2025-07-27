@@ -85,13 +85,13 @@ func (h *AlertsHandler) GetAlertSummary(c *gin.Context) {
 
 	// For now, return mock data until the alerts service is fully implemented
 	mockSummary := map[string]interface{}{
-		"activeAlerts":        3,
-		"criticalAlerts":      1,
-		"warningAlerts":       2,
-		"infoAlerts":          0,
-		"acknowledgedAlerts":  5,
-		"totalAlerts":         8,
-		"lastUpdated":         "2025-07-26T20:30:00Z",
+		"activeAlerts":       3,
+		"criticalAlerts":     1,
+		"warningAlerts":      2,
+		"infoAlerts":         0,
+		"acknowledgedAlerts": 5,
+		"totalAlerts":        8,
+		"lastUpdated":        "2025-07-26T20:30:00Z",
 	}
 
 	c.JSON(http.StatusOK, mockSummary)

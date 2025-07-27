@@ -20,15 +20,15 @@ type DeploymentOrchestrator struct {
 
 // DeploymentExecution tracks a running deployment
 type DeploymentExecution struct {
-	ID           string
-	Deployment   *models.Deployment
-	Context      context.Context
-	CancelFunc   context.CancelFunc
-	Status       string
-	Progress     int
-	CurrentStep  string
-	StartTime    time.Time
-	Logger       *DeploymentLogger
+	ID          string
+	Deployment  *models.Deployment
+	Context     context.Context
+	CancelFunc  context.CancelFunc
+	Status      string
+	Progress    int
+	CurrentStep string
+	StartTime   time.Time
+	Logger      *DeploymentLogger
 }
 
 func NewDeploymentOrchestrator(repoManager *repositories.RepositoryManager) *DeploymentOrchestrator {
@@ -42,7 +42,7 @@ func NewDeploymentOrchestrator(repoManager *repositories.RepositoryManager) *Dep
 func (do *DeploymentOrchestrator) StartDeployment(ctx context.Context, deployment *models.Deployment) {
 	// Create cancellable context for this deployment
 	deployCtx, cancel := context.WithCancel(ctx)
-	
+
 	execution := &DeploymentExecution{
 		ID:          deployment.ID,
 		Deployment:  deployment,
@@ -152,7 +152,7 @@ func (do *DeploymentOrchestrator) executeStep(execution *DeploymentExecution, st
 			return fmt.Errorf("step cancelled")
 		case <-time.After(updateInterval):
 			execution.Progress++
-			
+
 			// Update deployment progress in database
 			deployment := execution.Deployment
 			deployment.Progress = execution.Progress
@@ -177,7 +177,7 @@ func (do *DeploymentOrchestrator) executeStep(execution *DeploymentExecution, st
 func (do *DeploymentOrchestrator) updateDeploymentStatus(deployment *models.Deployment, status string, progress int) {
 	deployment.Status = status
 	deployment.Progress = progress
-	
+
 	if status == models.DeploymentStatusCompleted || status == models.DeploymentStatusFailed || status == models.DeploymentStatusCancelled {
 		now := time.Now()
 		deployment.CompletedAt = &now

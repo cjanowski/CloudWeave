@@ -71,9 +71,13 @@ func main() {
 
 	// Initialize authentication services
 	handlers.InitializeAuthServices(cfg, db)
-	
+
 	// Initialize security service
 	handlers.InitializeSecurityService(securityService)
+
+	// Initialize cloud credentials service
+	cloudCredentialsService := services.NewCloudCredentialsService(repoManager.CloudCredentials, repoManager.Organization)
+	handlers.InitializeCloudCredentialsService(cloudCredentialsService)
 
 	// Start WebSocket service in background
 	go wsService.Start()
@@ -131,6 +135,14 @@ func main() {
 			auth.POST("/refresh", handlers.RefreshToken)
 			auth.POST("/logout", handlers.Logout)
 			auth.GET("/me", middleware.AuthRequired(handlers.GetJWTService()), handlers.GetCurrentUser)
+
+			// SSO routes
+			sso := auth.Group("/sso")
+			{
+				sso.GET("/config", handlers.GetSSOConfig)
+				sso.POST("/oauth/login", handlers.InitiateOAuthLogin)
+				sso.POST("/oauth/callback", handlers.HandleOAuthCallback)
+			}
 		}
 
 		// Protected routes
@@ -276,13 +288,28 @@ func main() {
 				// System routes
 				rbac.POST("/system/initialize", rbacHandler.InitializeSystemRoles)
 			}
+
+			// Cloud credentials routes
+			cloudCredentials := protected.Group("/cloud-credentials")
+			{
+				cloudCredentials.GET("/", handlers.GetCloudCredentials)
+				cloudCredentials.DELETE("/:id", handlers.DeleteCloudCredentials)
+
+				// AWS specific routes
+				aws := cloudCredentials.Group("/aws")
+				{
+					aws.POST("/root", handlers.SetupAWSRootCredentials)
+					aws.POST("/access-key", handlers.SetupAWSAccessKey)
+					aws.POST("/test", handlers.TestAWSConnection)
+				}
+			}
 		}
 	}
 
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3001"
+		port = "3002"
 	}
 
 	log.Printf("Starting CloudWeave server on port %s", port)
