@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,50 +24,30 @@ const navigationItems: NavItem[] = [
     label: 'Infrastructure',
     icon: 'cloud-server',
     path: '/infrastructure',
-    children: [
-      { id: 'resources', label: 'Resources', icon: 'cloud-storage', path: '/infrastructure/resources' },
-      { id: 'templates', label: 'Templates', icon: 'cloud-container', path: '/infrastructure/templates' },
-    ],
   },
   {
     id: 'deployments',
     label: 'Deployments',
     icon: 'action-upload',
     path: '/deployments',
-    children: [
-      { id: 'pipelines', label: 'Pipelines', icon: 'monitor-activity', path: '/deployments/pipelines' },
-      { id: 'history', label: 'History', icon: 'monitor-clock', path: '/deployments/history' },
-    ],
   },
   {
     id: 'monitoring',
     label: 'Monitoring',
     icon: 'monitor-chart',
     path: '/monitoring',
-    children: [
-      { id: 'metrics', label: 'Metrics', icon: 'monitor-line-chart', path: '/monitoring/metrics' },
-      { id: 'alerts', label: 'Alerts', icon: 'monitor-alert', path: '/monitoring/alerts' },
-    ],
   },
   {
     id: 'security',
     label: 'Security',
     icon: 'security-shield',
     path: '/security',
-    children: [
-      { id: 'policies', label: 'Policies', icon: 'security-key', path: '/security/policies' },
-      { id: 'compliance', label: 'Compliance', icon: 'security-shield-check', path: '/security/compliance' },
-    ],
   },
   {
     id: 'cost-management',
     label: 'Cost Management',
     icon: 'cost-dollar',
     path: '/cost-management',
-    children: [
-      { id: 'overview', label: 'Overview', icon: 'cost-chart', path: '/cost-management/overview' },
-      { id: 'optimization', label: 'Optimization', icon: 'cost-savings', path: '/cost-management/optimization' },
-    ],
   },
   {
     id: 'settings',
@@ -88,22 +68,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, sidebarOpen } = useSelector((state: any) => state.ui);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const { theme } = useSelector((state: any) => state.ui);
+  const [isHovered, setIsHovered] = React.useState(false);
   
   const isDark = theme === 'dark';
   
-  // Sidebar should only be expanded when explicitly opened via Redux state (no hover behavior)
-  const isExpanded = sidebarOpen;
+  // Sidebar expands on hover
+  const isExpanded = isHovered;
 
   const handleItemClick = (item: NavItem) => {
-    if (item.children && isExpanded) {
-      setExpandedItems(prev =>
-        prev.includes(item.id)
-          ? prev.filter(id => id !== item.id)
-          : [...prev, item.id]
-      );
-    } else if (item.path) {
+    if (item.path) {
       navigate(item.path);
     }
   };
@@ -134,7 +108,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       initial={{ x: -width }}
       animate={{ x: 0 }}
       transition={{ duration: 0.3 }}
-      // Removed hover behavior - sidebar only responds to Redux state now
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div
         style={{
@@ -197,7 +172,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div style={{ flex: 1, padding: '16px 8px', overflowY: 'auto' }}>
           {navigationItems.map((item, index) => {
             const isActive = item.path ? isItemActive(item.path) : false;
-            const isExpanded = expandedItems.includes(item.id);
 
             return (
               <motion.div
@@ -241,6 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center',
+                    justifyContent: 'center',
                     minWidth: '24px',
                     marginRight: isExpanded ? '12px' : 0,
                   }}>
@@ -262,68 +237,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {item.children && isExpanded && (
-                    <motion.div
-                      animate={{ rotate: expandedItems.includes(item.id) ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Icon name={expandedItems.includes(item.id) ? 'nav-up' : 'nav-down'} size="xs" />
-                    </motion.div>
-                  )}
                 </div>
 
-                {/* Sub-items */}
-                <AnimatePresence>
-                  {item.children && isExpanded && expandedItems.includes(item.id) && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      style={{ marginLeft: '16px', marginTop: '4px' }}
-                    >
-                      {item.children.map((child) => {
-                        const isChildActive = child.path ? isItemActive(child.path) : false;
-                        return (
-                          <div
-                            key={child.id}
-                            onClick={() => child.path && navigate(child.path)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              padding: '8px 16px',
-                              margin: '4px 8px',
-                              borderRadius: '8px',
-                              color: isChildActive ? '#7C3AED' : isDark ? '#ffffff' : '#000000',
-                              fontSize: '14px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease-in-out',
-                              background: isChildActive 
-                                ? (isDark ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)')
-                                : 'rgba(0, 0, 0, 0)',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isChildActive) {
-                                e.currentTarget.style.background = isDark 
-                                  ? 'rgba(139, 92, 246, 0.1)' 
-                                  : 'rgba(255, 255, 255, 0.15)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!isChildActive) {
-                                e.currentTarget.style.background = 'rgba(0, 0, 0, 0)';
-                              }
-                            }}
-                          >
-                            <div style={{ marginRight: '8px' }}>
-                              <Icon name={child.icon} size="xs" />
-                            </div>
-                            {child.label}
-                          </div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             );
           })}

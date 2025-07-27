@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { setSidebarOpen, toggleTheme } from '../../store/slices/uiSlice';
+import { toggleTheme } from '../../store/slices/uiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { GlassButton } from '../common/GlassButton';
 import { Icon } from '../common/Icon';
@@ -16,12 +16,12 @@ export const Header: React.FC<HeaderProps> = ({
   collapsedSidebarWidth,
 }) => {
   const dispatch = useDispatch();
-  const { theme, sidebarOpen } = useSelector((state: any) => state.ui);
+  const { theme } = useSelector((state: any) => state.ui);
   const { user } = useSelector((state: any) => state.auth);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const isDark = theme === 'dark';
-  const currentSidebarWidth = sidebarOpen ? sidebarWidth : collapsedSidebarWidth;
+  const currentSidebarWidth = collapsedSidebarWidth;
 
   const headerStyle: React.CSSProperties = {
     position: 'fixed',
@@ -60,16 +60,6 @@ export const Header: React.FC<HeaderProps> = ({
           gap: '16px',
         }}
       >
-        {/* Menu Toggle */}
-        <GlassButton
-          variant="ghost"
-          size="small"
-          isDark={isDark}
-          onClick={() => dispatch(setSidebarOpen(!sidebarOpen))}
-          icon={<Icon name="nav-menu" size="sm" />}
-          style={{ minWidth: '40px', padding: '8px' }}
-        >
-        </GlassButton>
 
         {/* Left Spacer */}
         <div style={{ flex: 1 }} />
@@ -119,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           size="small"
           isDark={isDark}
           onClick={() => dispatch(toggleTheme())}
-          icon={<Icon name={isDark ? 'status-check' : 'monitor-clock'} size="sm" />}
+          icon={<Icon name={isDark ? 'theme-sun' : 'theme-moon'} size="sm" />}
           style={{ minWidth: '40px', padding: '8px' }}
         >
         </GlassButton>
