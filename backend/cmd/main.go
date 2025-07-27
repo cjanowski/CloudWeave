@@ -36,7 +36,7 @@ func main() {
 		SSLMode:  cfg.DatabaseSSLMode,
 	}
 
-	log.Printf("DEBUG: Connecting to database: host=%s port=%s user=%s dbname=%s sslmode=%s", 
+	log.Printf("DEBUG: Connecting to database: host=%s port=%s user=%s dbname=%s sslmode=%s",
 		cfg.DatabaseHost, cfg.DatabasePort, cfg.DatabaseUser, cfg.DatabaseName, cfg.DatabaseSSLMode)
 
 	db, err := database.NewDatabase(dbConfig)
@@ -53,13 +53,23 @@ func main() {
 	log.Println("Repository layer initialized successfully")
 
 	// Initialize services
-	infraService := services.NewInfrastructureService(repoManager)
-	deploymentService := services.NewDeploymentService(repoManager)
-	log.Println("Infrastructure service initialized successfully")
-	log.Println("Deployment service initialized successfully")
+	wsService := services.NewWebSocketService()
+	// infraService := services.NewInfrastructureService(repoManager) // Temporarily disabled
+	// deploymentService := services.NewDeploymentService(repoManager, wsService) // Temporarily disabled
+	
+	// Initialize metrics and alerts services
+	providers := make(map[string]services.CloudProvider) // Empty for now, will be populated when provider services are enabled
+	metricsService := services.NewMetricsService(repoManager, providers)
+	alertService := services.NewAlertService(repoManager)
+	
+	log.Println("WebSocket service initialized successfully")
+	log.Println("Metrics and alerts services initialized successfully")
 
 	// Initialize authentication services
 	handlers.InitializeAuthServices(cfg, db)
+
+	// Start WebSocket service in background
+	go wsService.Start()
 
 	// Set Gin mode
 	if cfg.Environment == "production" {
@@ -101,6 +111,11 @@ func main() {
 			})
 		})
 
+		// WebSocket routes
+		wsHandler := handlers.NewWebSocketHandler(wsService)
+		api.GET("/ws/status", wsHandler.GetWebSocketStatus)
+		api.GET("/ws", middleware.WebSocketAuthRequired(handlers.GetJWTService()), wsHandler.HandleWebSocket)
+
 		// Auth routes
 		auth := api.Group("/auth")
 		{
@@ -115,35 +130,59 @@ func main() {
 		protected := api.Group("/")
 		protected.Use(middleware.AuthRequired(handlers.GetJWTService()))
 		{
-			// Infrastructure routes
-			infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
-			infrastructure := protected.Group("/infrastructure")
+			// Infrastructure routes - temporarily disabled
+			// infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
+			// infrastructure := protected.Group("/infrastructure")
+			// {
+			// 	infrastructure.GET("/providers", infraHandler.GetProviders)
+			// 	infrastructure.POST("/", infraHandler.CreateInfrastructure)
+			// 	infrastructure.GET("/", infraHandler.ListInfrastructure)
+			// 	infrastructure.GET("/:id", infraHandler.GetInfrastructure)
+			// 	infrastructure.PUT("/:id", infraHandler.UpdateInfrastructure)
+			// 	infrastructure.DELETE("/:id", infraHandler.DeleteInfrastructure)
+			// 	infrastructure.GET("/:id/metrics", infraHandler.GetInfrastructureMetrics)
+			// 	infrastructure.POST("/:id/sync", infraHandler.SyncInfrastructure)
+			// }
+
+			// Deployment routes - temporarily disabled
+			// deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
+			// deployments := protected.Group("/deployments")
+			// {
+			// 	deployments.GET("/environments", deploymentHandler.GetEnvironments)
+			// 	deployments.POST("/", deploymentHandler.CreateDeployment)
+			// 	deployments.GET("/", deploymentHandler.ListDeployments)
+			// 	deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
+			// 	deployments.GET("/:id", deploymentHandler.GetDeployment)
+			// 	deployments.PUT("/:id", deploymentHandler.UpdateDeployment)
+			// 	deployments.DELETE("/:id", deploymentHandler.DeleteDeployment)
+			// 	deployments.GET("/:id/status", deploymentHandler.GetDeploymentStatus)
+			// 	deployments.GET("/:id/logs", deploymentHandler.GetDeploymentLogs)
+			// 	deployments.POST("/:id/rollback", deploymentHandler.RollbackDeployment)
+			// 	deployments.POST("/:id/cancel", deploymentHandler.CancelDeployment)
+			// }
+
+			// Metrics routes
+			metricsHandler := handlers.NewMetricsHandler(metricsService)
+			metrics := protected.Group("/metrics")
 			{
-				infrastructure.GET("/providers", infraHandler.GetProviders)
-				infrastructure.POST("/", infraHandler.CreateInfrastructure)
-				infrastructure.GET("/", infraHandler.ListInfrastructure)
-				infrastructure.GET("/:id", infraHandler.GetInfrastructure)
-				infrastructure.PUT("/:id", infraHandler.UpdateInfrastructure)
-				infrastructure.DELETE("/:id", infraHandler.DeleteInfrastructure)
-				infrastructure.GET("/:id/metrics", infraHandler.GetInfrastructureMetrics)
-				infrastructure.POST("/:id/sync", infraHandler.SyncInfrastructure)
+				metrics.GET("/dashboard", metricsHandler.GetDashboardMetrics)
+				metrics.GET("/aggregated", metricsHandler.GetAggregatedMetrics)
+				metrics.GET("/definitions", metricsHandler.GetMetricDefinitions)
+				metrics.GET("/resources/:id", metricsHandler.GetResourceMetrics)
+				metrics.POST("/collect", metricsHandler.CollectMetrics)
+				metrics.GET("/stream", metricsHandler.StreamMetrics)
 			}
 
-			// Deployment routes
-			deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
-			deployments := protected.Group("/deployments")
+			// Alerts routes
+			alertsHandler := handlers.NewAlertsHandler(alertService)
+			alerts := protected.Group("/alerts")
 			{
-				deployments.GET("/environments", deploymentHandler.GetEnvironments)
-				deployments.POST("/", deploymentHandler.CreateDeployment)
-				deployments.GET("/", deploymentHandler.ListDeployments)
-				deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
-				deployments.GET("/:id", deploymentHandler.GetDeployment)
-				deployments.PUT("/:id", deploymentHandler.UpdateDeployment)
-				deployments.DELETE("/:id", deploymentHandler.DeleteDeployment)
-				deployments.GET("/:id/status", deploymentHandler.GetDeploymentStatus)
-				deployments.GET("/:id/logs", deploymentHandler.GetDeploymentLogs)
-				deployments.POST("/:id/rollback", deploymentHandler.RollbackDeployment)
-				deployments.POST("/:id/cancel", deploymentHandler.CancelDeployment)
+				alerts.GET("/", alertsHandler.GetAlerts)
+				alerts.GET("/active", alertsHandler.GetActiveAlerts)
+				alerts.GET("/summary", alertsHandler.GetAlertSummary)
+				alerts.POST("/:id/acknowledge", alertsHandler.AcknowledgeAlert)
+				alerts.PUT("/:id/status", alertsHandler.UpdateAlertStatus)
+				alerts.POST("/rules", alertsHandler.CreateAlertRule)
 			}
 		}
 	}
@@ -156,7 +195,7 @@ func main() {
 
 	log.Printf("Starting CloudWeave server on port %s", port)
 	log.Printf("Environment: %s", cfg.Environment)
-	
+
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
