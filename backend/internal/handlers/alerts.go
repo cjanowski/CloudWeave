@@ -21,7 +21,7 @@ func NewAlertsHandler(alertService *services.AlertService) *AlertsHandler {
 
 // GetAlerts retrieves alerts with filtering options
 func (h *AlertsHandler) GetAlerts(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
@@ -60,7 +60,7 @@ func (h *AlertsHandler) GetAlerts(c *gin.Context) {
 
 // GetActiveAlerts retrieves active alerts for an organization
 func (h *AlertsHandler) GetActiveAlerts(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
@@ -77,7 +77,7 @@ func (h *AlertsHandler) GetActiveAlerts(c *gin.Context) {
 
 // GetAlertSummary retrieves alert summary statistics
 func (h *AlertsHandler) GetAlertSummary(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return

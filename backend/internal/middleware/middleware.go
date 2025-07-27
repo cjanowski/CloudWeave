@@ -116,7 +116,7 @@ func AuthRequired(jwtService *services.JWTService) gin.HandlerFunc {
 		c.Set("userEmail", claims.Email)
 		c.Set("userName", claims.Name)
 		c.Set("userRole", claims.Role)
-		c.Set("organizationID", claims.OrganizationID)
+		c.Set("organizationId", claims.OrganizationID)
 		c.Set("tokenID", claims.TokenID)
 		c.Set("token", tokenString)
 
@@ -185,7 +185,7 @@ func WebSocketAuthRequired(jwtService *services.JWTService) gin.HandlerFunc {
 		c.Set("userEmail", claims.Email)
 		c.Set("userName", claims.Name)
 		c.Set("userRole", claims.Role)
-		c.Set("organizationID", claims.OrganizationID)
+		c.Set("organizationId", claims.OrganizationID)
 		c.Set("tokenID", claims.TokenID)
 		c.Set("token", tokenString)
 

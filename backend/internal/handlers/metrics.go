@@ -20,7 +20,7 @@ func NewMetricsHandler(metricsService *services.MetricsService) *MetricsHandler 
 
 // GetDashboardMetrics retrieves metrics for dashboard display
 func (h *MetricsHandler) GetDashboardMetrics(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
@@ -94,7 +94,7 @@ func (h *MetricsHandler) GetResourceMetrics(c *gin.Context) {
 
 // GetAggregatedMetrics retrieves aggregated metrics for an organization
 func (h *MetricsHandler) GetAggregatedMetrics(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
@@ -111,7 +111,7 @@ func (h *MetricsHandler) GetAggregatedMetrics(c *gin.Context) {
 
 // CollectMetrics triggers metrics collection for an organization
 func (h *MetricsHandler) CollectMetrics(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
@@ -127,7 +127,7 @@ func (h *MetricsHandler) CollectMetrics(c *gin.Context) {
 
 // GetMetricDefinitions retrieves custom metric definitions
 func (h *MetricsHandler) GetMetricDefinitions(c *gin.Context) {
-	orgID := c.GetString("organization_id")
+	orgID := c.GetString("organizationId")
 	if orgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
 		return
