@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useSelector, useDispatch } from 'react-redux';
 import { AuthService, TokenManager } from '../../services/authService';
 import type { User, ForgotPasswordRequest } from '../../types/api';
 import type { LoginCredentials, RegisterCredentials, ApiError } from '../../services/authService';
+import type { RootState } from '../index';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -253,5 +255,21 @@ export const {
   loginFailure, 
   logout 
 } = authSlice.actions;
+
+// Custom hook to access auth state and actions
+export const useAuth = () => {
+  const dispatch = useDispatch();
+  const auth = useSelector((state: RootState) => state.auth);
+
+  return {
+    ...auth,
+    login: (credentials: LoginCredentials) => dispatch(loginAsync(credentials)),
+    register: (credentials: RegisterCredentials) => dispatch(registerAsync(credentials)),
+    forgotPassword: (request: ForgotPasswordRequest) => dispatch(forgotPasswordAsync(request)),
+    logout: () => dispatch(logoutAsync()),
+    getCurrentUser: () => dispatch(getCurrentUserAsync()),
+    clearError: () => dispatch(clearError()),
+  };
+};
 
 export default authSlice.reducer;

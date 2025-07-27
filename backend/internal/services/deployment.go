@@ -13,13 +13,15 @@ type DeploymentService struct {
 	repoManager  *repositories.RepositoryManager
 	orchestrator *DeploymentOrchestrator
 	logger       *DeploymentLogger
+	wsService    *WebSocketService
 }
 
-func NewDeploymentService(repoManager *repositories.RepositoryManager) *DeploymentService {
+func NewDeploymentService(repoManager *repositories.RepositoryManager, wsService *WebSocketService) *DeploymentService {
 	service := &DeploymentService{
 		repoManager:  repoManager,
 		orchestrator: NewDeploymentOrchestrator(repoManager),
 		logger:       NewDeploymentLogger(repoManager),
+		wsService:    wsService,
 	}
 
 	return service
@@ -30,6 +32,11 @@ func (s *DeploymentService) CreateDeployment(ctx context.Context, deployment *mo
 	// Create deployment in database
 	if err := s.repoManager.Deployment.Create(ctx, deployment); err != nil {
 		return fmt.Errorf("failed to create deployment: %w", err)
+	}
+
+	// Send WebSocket notification
+	if s.wsService != nil && deployment.CreatedBy != nil {
+		s.wsService.SendDeploymentStatus(*deployment.CreatedBy, deployment.ID, deployment.Status, deployment.Progress, "Deployment created successfully")
 	}
 
 	// Start deployment orchestration in background
@@ -48,7 +55,7 @@ func (s *DeploymentService) GetDeploymentHistory(ctx context.Context, orgID, app
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Filter by application
 		for _, d := range allDeployments {
 			if d.Application == application {
@@ -61,7 +68,7 @@ func (s *DeploymentService) GetDeploymentHistory(ctx context.Context, orgID, app
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Filter by application
 		for _, d := range allDeployments {
 			if d.Application == application {
@@ -176,12 +183,12 @@ func (s *DeploymentService) GetRealTimeStatus(ctx context.Context, deploymentID 
 
 // DeploymentLog represents a deployment log entry
 type DeploymentLog struct {
-	ID           string    `json:"id"`
-	DeploymentID string    `json:"deploymentId"`
-	Level        string    `json:"level"`
-	Message      string    `json:"message"`
-	Timestamp    time.Time `json:"timestamp"`
-	Source       string    `json:"source"`
+	ID           string                 `json:"id"`
+	DeploymentID string                 `json:"deploymentId"`
+	Level        string                 `json:"level"`
+	Message      string                 `json:"message"`
+	Timestamp    time.Time              `json:"timestamp"`
+	Source       string                 `json:"source"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -222,12 +229,12 @@ func (dl *DeploymentLogger) log(ctx context.Context, deploymentID, level, messag
 	// Store in audit log for now
 	auditLog := &models.AuditLog{
 		ID:             log.ID,
-		OrganizationID: "", // Will be set by repository if needed
+		OrganizationID: "",  // Will be set by repository if needed
 		UserID:         nil, // System generated
 		Action:         fmt.Sprintf("deployment.%s", level),
 		ResourceType:   &[]string{"deployment"}[0],
 		ResourceID:     &deploymentID,
-		Details:        map[string]interface{}{
+		Details: map[string]interface{}{
 			"message":  message,
 			"metadata": metadata,
 		},
@@ -249,7 +256,7 @@ func (dl *DeploymentLogger) GetLogs(ctx context.Context, deploymentID string) ([
 		Limit:        1000,
 		Offset:       0,
 	}
-	
+
 	auditLogs, err := dl.repoManager.AuditLog.Query(ctx, "", query)
 	if err != nil {
 		return nil, err

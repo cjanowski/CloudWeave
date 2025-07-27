@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import { infrastructureService } from '../../services/infrastructureService';
+import type { InfrastructureStats, ResourceDistribution, RecentChange, Infrastructure, InfrastructureFilters } from '../../services/infrastructureService';
 
 interface TabItem {
   id: string;
@@ -160,11 +162,97 @@ export const InfrastructurePage: React.FC = () => {
 
 // Tab Content Components
 const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-  const stats = [
-    { title: 'Total Resources', value: '156', change: '+12', trend: 'up', icon: <Icon name="cloud-storage" size="lg" /> },
-    { title: 'Active Instances', value: '24', change: '+3', trend: 'up', icon: <Icon name="cloud-compute" size="lg" /> },
-    { title: 'Networks', value: '8', change: '0', trend: 'stable', icon: <Icon name="cloud-network" size="lg" /> },
-    { title: 'Compliance Score', value: '94%', change: '+2%', trend: 'up', icon: <Icon name="monitor-chart" size="lg" /> },
+  const [stats, setStats] = useState<InfrastructureStats | null>(null);
+  const [distribution, setDistribution] = useState<ResourceDistribution | null>(null);
+  const [recentChanges, setRecentChanges] = useState<RecentChange[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOverviewData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [statsData, distributionData, changesData] = await Promise.all([
+          infrastructureService.getInfrastructureStats(),
+          infrastructureService.getResourceDistribution(),
+          infrastructureService.getRecentChanges()
+        ]);
+        setStats(statsData);
+        setDistribution(distributionData);
+        setRecentChanges(changesData);
+      } catch (err) {
+        console.error('Failed to fetch infrastructure overview:', err);
+        setError('Failed to load infrastructure data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOverviewData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '200px',
+        color: isDark ? '#ffffff' : '#666666'
+      }}>
+        Loading infrastructure data...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '200px',
+        color: '#EF4444'
+      }}>
+        {error}
+      </div>
+    );
+  }
+
+  if (!stats || !distribution) {
+    return null;
+  }
+
+  const statsArray = [
+    { 
+      title: 'Total Resources', 
+      value: stats.totalResources.toString(), 
+      change: stats.totalResourcesChange, 
+      trend: stats.totalResourcesTrend, 
+      icon: <Icon name="cloud-storage" size="lg" /> 
+    },
+    { 
+      title: 'Active Instances', 
+      value: stats.activeInstances.toString(), 
+      change: stats.activeInstancesChange, 
+      trend: stats.activeInstancesTrend, 
+      icon: <Icon name="cloud-compute" size="lg" /> 
+    },
+    { 
+      title: 'Networks', 
+      value: stats.networks.toString(), 
+      change: stats.networksChange, 
+      trend: stats.networksTrend, 
+      icon: <Icon name="cloud-network" size="lg" /> 
+    },
+    { 
+      title: 'Compliance Score', 
+      value: `${stats.complianceScore}%`, 
+      change: stats.complianceScoreChange, 
+      trend: stats.complianceScoreTrend, 
+      icon: <Icon name="monitor-chart" size="lg" /> 
+    },
   ];
 
   return (
@@ -175,7 +263,7 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         gap: '20px',
         marginBottom: '32px',
       }}>
-        {stats.map((stat, index) => (
+        {statsArray.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -232,20 +320,41 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
           <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Resource Distribution</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            <p>EC2 Instances: 24 (15%)</p>
-            <p>S3 Buckets: 45 (29%)</p>
-            <p>RDS Databases: 8 (5%)</p>
-            <p>Lambda Functions: 79 (51%)</p>
+            <p>EC2 Instances: {distribution.ec2Instances} ({Math.round((distribution.ec2Instances / distribution.totalCount) * 100)}%)</p>
+            <p>S3 Buckets: {distribution.s3Buckets} ({Math.round((distribution.s3Buckets / distribution.totalCount) * 100)}%)</p>
+            <p>RDS Databases: {distribution.rdsDatabases} ({Math.round((distribution.rdsDatabases / distribution.totalCount) * 100)}%)</p>
+            <p>Lambda Functions: {distribution.lambdaFunctions} ({Math.round((distribution.lambdaFunctions / distribution.totalCount) * 100)}%)</p>
           </div>
         </GlassCard>
 
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
           <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Recent Changes</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            <p>• New EC2 instance launched in us-west-2</p>
-            <p>• S3 bucket policy updated</p>
-            <p>• RDS backup completed successfully</p>
-            <p>• Lambda function deployed</p>
+            {recentChanges.map((change, index) => (
+              <div key={change.id} style={{ 
+                marginBottom: index < recentChanges.length - 1 ? '12px' : '0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  color: getChangeTypeColor(change.type),
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  textTransform: 'uppercase'
+                }}>
+                  {change.type}
+                </span>
+                <span>• {change.message}</span>
+                <span style={{ 
+                  opacity: 0.6,
+                  fontSize: '12px',
+                  marginLeft: 'auto'
+                }}>
+                  {formatRelativeTime(change.timestamp)}
+                </span>
+              </div>
+            ))}
           </div>
         </GlassCard>
       </div>
@@ -253,18 +362,289 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
-const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Resource Management</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Manage your cloud resources across all providers</p>
-      <p>• View resource inventory</p>
-      <p>• Monitor resource utilization</p>
-      <p>• Optimize resource allocation</p>
-      <p>• Track resource costs</p>
+const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [resources, setResources] = useState<Infrastructure[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<InfrastructureFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [, setHasMore] = useState(false);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await infrastructureService.listInfrastructure(currentPage, 10, filters);
+        setResources(response.data);
+        setTotalPages(Math.ceil(response.total / 10));
+        setHasMore(response.hasMore);
+      } catch (err) {
+        console.error('Failed to fetch infrastructure resources:', err);
+        setError('Failed to load resources');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResources();
+  }, [currentPage, filters]);
+
+  const handleFilterChange = (key: keyof InfrastructureFilters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value || undefined }));
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      running: '#10B981',
+      stopped: '#6B7280',
+      pending: '#F59E0B',
+      error: '#EF4444',
+      terminated: '#EF4444'
+    };
+    return colors[status as keyof typeof colors] || '#6B7280';
+  };
+
+  const getProviderIcon = (provider: string) => {
+    const icons = {
+      aws: 'cloud-compute',
+      azure: 'cloud-storage',
+      gcp: 'cloud-network'
+    };
+    return icons[provider as keyof typeof icons] || 'cloud-compute';
+  };
+
+  if (loading) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+          Loading resources...
+        </div>
+      </GlassCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#EF4444' }}>
+          {error}
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <div>
+      {/* Filters */}
+      <GlassCard variant="card" elevation="low" isDark={isDark} style={{ marginBottom: '20px', borderRadius: '16px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ color: isDark ? '#ffffff' : '#000000', fontWeight: 500 }}>Filters:</div>
+          
+          <select 
+            value={filters.provider || ''} 
+            onChange={(e) => handleFilterChange('provider', e.target.value)}
+            style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              borderRadius: '8px',
+              padding: '8px 12px',
+              color: isDark ? '#ffffff' : '#000000',
+              fontSize: '14px'
+            }}
+          >
+            <option value="">All Providers</option>
+            <option value="aws">AWS</option>
+            <option value="azure">Azure</option>
+            <option value="gcp">Google Cloud</option>
+          </select>
+
+          <select 
+            value={filters.type || ''} 
+            onChange={(e) => handleFilterChange('type', e.target.value)}
+            style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              borderRadius: '8px',
+              padding: '8px 12px',
+              color: isDark ? '#ffffff' : '#000000',
+              fontSize: '14px'
+            }}
+          >
+            <option value="">All Types</option>
+            <option value="compute">Compute</option>
+            <option value="storage">Storage</option>
+            <option value="database">Database</option>
+            <option value="network">Network</option>
+            <option value="security">Security</option>
+          </select>
+
+          <select 
+            value={filters.status || ''} 
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              borderRadius: '8px',
+              padding: '8px 12px',
+              color: isDark ? '#ffffff' : '#000000',
+              fontSize: '14px'
+            }}
+          >
+            <option value="">All Statuses</option>
+            <option value="running">Running</option>
+            <option value="stopped">Stopped</option>
+            <option value="pending">Pending</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+      </GlassCard>
+
+      {/* Resources List */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Infrastructure Resources</h2>
+          <GlassButton
+            variant="primary"
+            size="small"
+            isDark={isDark}
+            icon={<Icon name="cloud-compute" size="sm" />}
+            style={{ borderRadius: '12px' }}
+          >
+            Add Resource
+          </GlassButton>
+        </div>
+
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {resources.map((resource) => (
+            <motion.div
+              key={resource.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer'
+              }}
+              whileHover={{ 
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                transform: 'translateY(-1px)'
+              }}
+            >
+              <div style={{ color: '#10B981', fontSize: '20px' }}>
+                <Icon name={getProviderIcon(resource.provider)} size="md" />
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <div style={{ 
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  marginBottom: '4px'
+                }}>
+                  {resource.name}
+                </div>
+                <div style={{ 
+                  color: isDark ? '#ffffff' : '#666666',
+                  fontSize: '14px',
+                  opacity: 0.8
+                }}>
+                  {resource.provider.toUpperCase()} • {resource.type} • {resource.region}
+                </div>
+              </div>
+
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 12px',
+                background: `${getStatusColor(resource.status)}20`,
+                borderRadius: '20px',
+                border: `1px solid ${getStatusColor(resource.status)}40`
+              }}>
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: getStatusColor(resource.status)
+                }} />
+                <span style={{
+                  color: getStatusColor(resource.status),
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  textTransform: 'capitalize'
+                }}>
+                  {resource.status}
+                </span>
+              </div>
+
+              <div style={{ 
+                color: isDark ? '#ffffff' : '#000000',
+                fontWeight: 600,
+                fontSize: '14px',
+                textAlign: 'right'
+              }}>
+                ${resource.cost.monthly.toFixed(2)}/mo
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '8px', 
+            marginTop: '24px',
+            paddingTop: '20px',
+            borderTop: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`
+          }}>
+            <GlassButton
+              variant="ghost"
+              size="small"
+              isDark={isDark}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              style={{ borderRadius: '8px' }}
+            >
+              Previous
+            </GlassButton>
+            
+            <span style={{ 
+              color: isDark ? '#ffffff' : '#666666',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              fontSize: '14px'
+            }}>
+              Page {currentPage} of {totalPages}
+            </span>
+            
+            <GlassButton
+              variant="ghost"
+              size="small"
+              isDark={isDark}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              style={{ borderRadius: '8px' }}
+            >
+              Next
+            </GlassButton>
+          </div>
+        )}
+      </GlassCard>
     </div>
-  </GlassCard>
-);
+  );
+};
 
 const TemplatesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
   <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
@@ -304,5 +684,35 @@ const ComplianceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
     </div>
   </GlassCard>
 );
+
+// Helper functions
+const getChangeTypeColor = (type: string) => {
+  const colors = {
+    created: '#10B981',
+    updated: '#3B82F6',
+    deleted: '#EF4444',
+    deployed: '#8B5CF6'
+  };
+  return colors[type as keyof typeof colors] || '#6B7280';
+};
+
+const formatRelativeTime = (timestamp: string) => {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffMs = now.getTime() - time.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) {
+    return 'just now';
+  } else if (diffMins < 60) {
+    return `${diffMins}m ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else {
+    return `${diffDays}d ago`;
+  }
+};
 
 export default InfrastructurePage;

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import { metricsService, type DashboardMetrics } from '../../services/metricsService';
+import { alertsService, type Alert, type AlertSummary } from '../../services/alertsService';
 
 interface TabItem {
   id: string;
@@ -141,11 +143,84 @@ export const MonitoringPage: React.FC = () => {
 
 // Tab Content Components
 const MonitoringOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [alertSummary, setAlertSummary] = useState<AlertSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [metricsData, alertsData] = await Promise.all([
+          metricsService.getDashboardMetrics(),
+          alertsService.getAlertSummary()
+        ]);
+        setDashboardMetrics(metricsData);
+        setAlertSummary(alertsData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch monitoring data:', err);
+        setError('Failed to load monitoring data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+        <Icon name="spinner" size="lg" />
+        <p style={{ marginTop: '16px' }}>Loading monitoring data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: '#EF4444' }}>
+        <Icon name="alert-triangle" size="lg" />
+        <p style={{ marginTop: '16px' }}>{error}</p>
+      </div>
+    );
+  }
+
+  const totalResources = dashboardMetrics?.totalResources || 0;
+  const runningResources = dashboardMetrics?.runningResources || 0;
+  const systemHealth = totalResources > 0 ? Math.round((runningResources / totalResources) * 100) : 0;
+
   const stats = [
-    { title: 'System Health', value: '98.5%', change: '+0.2%', trend: 'up', icon: <Icon name="monitor-pulse" size="lg" /> },
-    { title: 'Active Alerts', value: '3', change: '-2', trend: 'down', icon: <Icon name="monitor-bell" size="lg" /> },
-    { title: 'Response Time', value: '245ms', change: '-15ms', trend: 'up', icon: <Icon name="monitor-clock" size="lg" /> },
-    { title: 'Uptime', value: '99.9%', change: '0%', trend: 'stable', icon: <Icon name="monitor-line-chart" size="lg" /> },
+    { 
+      title: 'System Health', 
+      value: `${systemHealth}%`, 
+      change: '+0.2%', 
+      trend: 'up' as const, 
+      icon: <Icon name="monitor-pulse" size="lg" /> 
+    },
+    { 
+      title: 'Active Alerts', 
+      value: String(alertSummary?.activeAlerts || 0), 
+      change: '-2', 
+      trend: 'down' as const, 
+      icon: <Icon name="monitor-bell" size="lg" /> 
+    },
+    { 
+      title: 'CPU Usage', 
+      value: `${Math.round(dashboardMetrics?.averageCpuUsage || 0)}%`, 
+      change: '-5%', 
+      trend: 'up' as const, 
+      icon: <Icon name="monitor-clock" size="lg" /> 
+    },
+    { 
+      title: 'Total Resources', 
+      value: String(totalResources), 
+      change: '+2', 
+      trend: 'stable' as const, 
+      icon: <Icon name="monitor-line-chart" size="lg" /> 
+    },
   ];
 
   return (
@@ -213,20 +288,29 @@ const MonitoringOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
           <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>System Performance</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            <p>CPU Usage: 45% (Normal)</p>
-            <p>Memory Usage: 62% (Normal)</p>
-            <p>Disk I/O: 23% (Low)</p>
-            <p>Network Traffic: 1.2 GB/s (Normal)</p>
+            <p>CPU Usage: {Math.round(dashboardMetrics?.averageCpuUsage || 0)}% ({dashboardMetrics?.averageCpuUsage && dashboardMetrics.averageCpuUsage > 80 ? 'High' : 'Normal'})</p>
+            <p>Memory Usage: {Math.round(dashboardMetrics?.averageMemoryUsage || 0)}% ({dashboardMetrics?.averageMemoryUsage && dashboardMetrics.averageMemoryUsage > 80 ? 'High' : 'Normal'})</p>
+            <p>Running Resources: {dashboardMetrics?.runningResources || 0}</p>
+            <p>Stopped Resources: {dashboardMetrics?.stoppedResources || 0}</p>
+            <p>Error Resources: {dashboardMetrics?.errorResources || 0}</p>
+            <p>Total Cost: ${dashboardMetrics?.totalCost?.toFixed(2) || '0.00'}/month</p>
           </div>
         </GlassCard>
 
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-          <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Recent Alerts</h2>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Alert Summary</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            <p>• High memory usage on web-server-01</p>
-            <p>• SSL certificate expires in 30 days</p>
-            <p>• Database connection pool at 80%</p>
-            <p>• Disk space warning on backup server</p>
+            {alertSummary ? (
+              <>
+                <p>• Critical: {alertSummary.criticalAlerts} alerts</p>
+                <p>• Warning: {alertSummary.warningAlerts} alerts</p>
+                <p>• Info: {alertSummary.infoAlerts} alerts</p>
+                <p>• Active: {alertSummary.activeAlerts} total</p>
+                <p>• Acknowledged: {alertSummary.acknowledgedAlerts} alerts</p>
+              </>
+            ) : (
+              <p>No alert data available</p>
+            )}
           </div>
         </GlassCard>
       </div>
@@ -234,31 +318,434 @@ const MonitoringOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
-const MetricsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>System Metrics</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>View detailed system and application metrics</p>
-      <p>• CPU and memory utilization</p>
-      <p>• Network and disk I/O</p>
-      <p>• Application performance metrics</p>
-      <p>• Custom business metrics</p>
-    </div>
-  </GlassCard>
-);
+const MetricsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [aggregatedMetrics, setAggregatedMetrics] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDuration, setSelectedDuration] = useState('24h');
 
-const AlertsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Alert Management</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Configure and manage system alerts</p>
-      <p>• Critical: 1 active alert</p>
-      <p>• Warning: 2 active alerts</p>
-      <p>• Info: 5 notifications</p>
-      <p>• Resolved: 23 alerts today</p>
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        const metricsData = await metricsService.getAggregatedMetrics();
+        setAggregatedMetrics(metricsData);
+      } catch (error) {
+        console.error('Failed to fetch metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+        <Icon name="spinner" size="lg" />
+        <p style={{ marginTop: '16px' }}>Loading metrics...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Duration Filter */}
+      <GlassCard
+        variant="card"
+        elevation="low"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          padding: '16px',
+          borderRadius: '16px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ color: isDark ? '#ffffff' : '#666666', marginRight: '8px' }}>Time Range:</span>
+          {['1h', '6h', '24h', '7d', '30d'].map(duration => (
+            <GlassButton
+              key={duration}
+              variant={selectedDuration === duration ? 'primary' : 'ghost'}
+              size="small"
+              isDark={isDark}
+              onClick={() => setSelectedDuration(duration)}
+              style={{
+                borderRadius: '12px',
+                border: selectedDuration === duration ? '1px solid #F59E0B' : 'none',
+              }}
+            >
+              {duration}
+            </GlassButton>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Metrics Overview */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+          marginBottom: '24px',
+        }}
+      >
+        <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>
+          System Metrics Overview
+        </h2>
+        {aggregatedMetrics.length === 0 ? (
+          <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+            <p>No metrics data available yet. Metrics will appear as infrastructure resources are monitored.</p>
+            <div style={{ marginTop: '16px' }}>
+              <p>• CPU and memory utilization</p>
+              <p>• Network and disk I/O</p>
+              <p>• Application performance metrics</p>
+              <p>• Custom business metrics</p>
+            </div>
+            <GlassButton
+              variant="primary"
+              size="medium"
+              isDark={isDark}
+              onClick={() => metricsService.collectMetrics()}
+              style={{
+                marginTop: '20px',
+                borderRadius: '12px',
+              }}
+            >
+              Collect Metrics Now
+            </GlassButton>
+          </div>
+        ) : (
+          <div>
+            {aggregatedMetrics.map((resource, index) => (
+              <motion.div
+                key={resource.resourceId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  padding: '16px',
+                  marginBottom: '16px',
+                  borderRadius: '12px',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0, fontSize: '16px', fontWeight: 600 }}>
+                      {resource.resourceName}
+                    </h3>
+                    <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px', opacity: 0.7 }}>
+                      {resource.resourceType} • {resource.provider}
+                    </p>
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    color: resource.status === 'running' ? '#10B981' : '#EF4444',
+                    background: resource.status === 'running' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    border: `1px solid ${resource.status === 'running' ? '#10B981' : '#EF4444'}20`,
+                    textTransform: 'capitalize',
+                  }}>
+                    {resource.status}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                  {Object.entries(resource.metrics || {}).map(([metricName, stats]: [string, any]) => (
+                    <div key={metricName} style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                    }}>
+                      <div style={{ fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7, marginBottom: '4px' }}>
+                        {metricName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </div>
+                      <div style={{ fontSize: '18px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000', marginBottom: '4px' }}>
+                        {stats.current?.toFixed(1) || '0'}
+                      </div>
+                      <div style={{ fontSize: '10px', color: stats.trend === 'up' ? '#10B981' : stats.trend === 'down' ? '#EF4444' : '#6B7280' }}>
+                        {stats.trend === 'up' ? '↗ Trending up' : stats.trend === 'down' ? '↘ Trending down' : '→ Stable'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </GlassCard>
     </div>
-  </GlassCard>
-);
+  );
+};
+
+const AlertsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertSummary, setAlertSummary] = useState<AlertSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'active' | 'acknowledged'>('all');
+  const [severityFilter, setSeverityFilter] = useState<string>('all');
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        setLoading(true);
+        const [alertsData, summaryData] = await Promise.all([
+          alertsService.getAlerts({ limit: 50 }),
+          alertsService.getAlertSummary()
+        ]);
+        setAlerts(alertsData);
+        setAlertSummary(summaryData);
+      } catch (error) {
+        console.error('Failed to fetch alerts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+  }, []);
+
+  const handleAcknowledgeAlert = async (alertId: string) => {
+    try {
+      await alertsService.acknowledgeAlert(alertId);
+      setAlerts(alerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, acknowledged: true, acknowledgedAt: new Date().toISOString() }
+          : alert
+      ));
+    } catch (error) {
+      console.error('Failed to acknowledge alert:', error);
+    }
+  };
+
+  const filteredAlerts = alerts.filter(alert => {
+    if (filter === 'active' && alert.acknowledged) return false;
+    if (filter === 'acknowledged' && !alert.acknowledged) return false;
+    if (severityFilter !== 'all' && alert.severity !== severityFilter) return false;
+    return true;
+  });
+
+  const sortedAlerts = alertsService.sortAlerts(filteredAlerts);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
+        <Icon name="spinner" size="lg" />
+        <p style={{ marginTop: '16px' }}>Loading alerts...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Alert Summary */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px',
+      }}>
+        {alertSummary && [
+          { label: 'Total', value: alertSummary.totalAlerts, color: '#6B7280' },
+          { label: 'Active', value: alertSummary.activeAlerts, color: '#EF4444' },
+          { label: 'Critical', value: alertSummary.criticalAlerts, color: '#DC2626' },
+          { label: 'Warning', value: alertSummary.warningAlerts, color: '#F59E0B' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <GlassCard
+        variant="card"
+        elevation="low"
+        isDark={isDark}
+        style={{
+          marginBottom: '24px',
+          padding: '16px',
+          borderRadius: '16px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['all', 'active', 'acknowledged'].map(filterOption => (
+              <GlassButton
+                key={filterOption}
+                variant={filter === filterOption ? 'primary' : 'ghost'}
+                size="small"
+                isDark={isDark}
+                onClick={() => setFilter(filterOption as any)}
+                style={{
+                  borderRadius: '12px',
+                  textTransform: 'capitalize',
+                  border: filter === filterOption ? '1px solid #F59E0B' : 'none',
+                }}
+              >
+                {filterOption}
+              </GlassButton>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['all', 'critical', 'high', 'medium', 'low', 'info'].map(severity => (
+              <GlassButton
+                key={severity}
+                variant={severityFilter === severity ? 'primary' : 'ghost'}
+                size="small"
+                isDark={isDark}
+                onClick={() => setSeverityFilter(severity)}
+                style={{
+                  borderRadius: '12px',
+                  textTransform: 'capitalize',
+                  border: severityFilter === severity ? '1px solid #F59E0B' : 'none',
+                }}
+              >
+                {severity}
+              </GlassButton>
+            ))}
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Alerts List */}
+      <GlassCard
+        variant="card"
+        elevation="medium"
+        isDark={isDark}
+        style={{
+          borderRadius: '20px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+        }}
+      >
+        <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>
+          Alerts ({sortedAlerts.length})
+        </h2>
+        {sortedAlerts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+            <Icon name="check-circle" size="lg" />
+            <p style={{ marginTop: '16px' }}>No alerts found</p>
+          </div>
+        ) : (
+          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            {sortedAlerts.map((alert, index) => {
+              const formattedAlert = alertsService.formatAlertForDisplay(alert);
+              return (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  style={{
+                    padding: '16px',
+                    marginBottom: '12px',
+                    borderRadius: '12px',
+                    border: `1px solid ${formattedAlert.severityColor}20`,
+                    background: `${formattedAlert.severityColor}05`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <div style={{ color: formattedAlert.severityColor }}>
+                        <Icon name={formattedAlert.severityIcon} size="md" />
+                      </div>
+                      <div>
+                        <div style={{ 
+                          fontSize: '16px', 
+                          fontWeight: 600, 
+                          color: isDark ? '#ffffff' : '#000000' 
+                        }}>
+                          {formattedAlert.typeDisplayName}
+                        </div>
+                        <div style={{ 
+                          fontSize: '12px', 
+                          color: formattedAlert.severityColor,
+                          textTransform: 'uppercase',
+                          fontWeight: 500,
+                        }}>
+                          {alert.severity}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: isDark ? '#ffffff' : '#666666',
+                      marginBottom: '8px',
+                    }}>
+                      {alert.message}
+                    </div>
+                    <div style={{ 
+                      fontSize: '12px', 
+                      color: isDark ? '#ffffff' : '#666666',
+                      opacity: 0.7,
+                    }}>
+                      {formattedAlert.timeAgo} • {alert.resourceName || 'Unknown Resource'}
+                    </div>
+                  </div>
+                  {!alert.acknowledged && (
+                    <GlassButton
+                      variant="ghost"
+                      size="small"
+                      isDark={isDark}
+                      onClick={() => handleAcknowledgeAlert(alert.id)}
+                      style={{
+                        borderRadius: '8px',
+                        color: '#10B981',
+                        border: '1px solid #10B981',
+                      }}
+                    >
+                      Acknowledge
+                    </GlassButton>
+                  )}
+                  {alert.acknowledged && (
+                    <div style={{ 
+                      fontSize: '12px', 
+                      color: '#10B981',
+                      fontWeight: 500,
+                    }}>
+                      ✓ Acknowledged
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </GlassCard>
+    </div>
+  );
+};
 
 const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
   <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
