@@ -45,13 +45,21 @@ sleep 3
 
 # Test backend
 echo "🔍 Testing backend health..."
-if curl -s http://localhost:3001/api/v1/health > /dev/null; then
-    echo "✅ Backend is healthy"
-else
-    echo "❌ Backend failed to start"
-    echo "📝 Check backend.log for errors"
-    exit 1
-fi
+for i in {1..10}; do
+    if curl -s http://localhost:3001/api/v1/health > /dev/null; then
+        echo "✅ Backend is healthy"
+        break
+    else
+        if [ $i -eq 10 ]; then
+            echo "❌ Backend failed to start after 10 attempts"
+            echo "📝 Check backend.log for errors:"
+            tail -20 backend.log
+            exit 1
+        fi
+        echo "⏳ Waiting for backend to start (attempt $i/10)..."
+        sleep 2
+    fi
+done
 
 # Start frontend
 echo "🎨 Starting React frontend on port 5173..."

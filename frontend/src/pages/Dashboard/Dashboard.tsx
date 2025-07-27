@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { DashboardTabs } from './DashboardTabs';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import { RealTimeNotification, RealTimeNotification as NotificationType } from '../../components/common/RealTimeNotification';
+import { RealTimeNotification as RealTimeNotificationComponent, RealTimeNotification as NotificationType } from '../../components/common/RealTimeNotification';
 import './Dashboard.css';
 
 export const Dashboard: React.FC = () => {
@@ -139,12 +139,13 @@ export const Dashboard: React.FC = () => {
       <DashboardTabs />
       
       {/* Real-time Notifications */}
-      <RealTimeNotification
+      <RealTimeNotificationComponent
         notifications={notifications}
         onDismiss={(id) => {
           setNotifications(prev => prev.filter(n => n.id !== id));
         }}
         maxNotifications={5}
+        isDark={isDark}
       />
     </div>
   );

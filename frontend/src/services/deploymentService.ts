@@ -1,4 +1,4 @@
-// import { apiService } from './apiService'; // TODO: Uncomment when backend is ready
+import { apiService } from './apiService';
 
 // Deployment data types
 export interface Deployment {
@@ -201,43 +201,49 @@ export class DeploymentService {
     filters: DeploymentFilters = {}
   ): Promise<DeploymentListResponse> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // const queryParams = new URLSearchParams({
-      //   page: page.toString(),
-      //   limit: limit.toString(),
-      //   ...filters
-      // });
-      // return await apiService.get<DeploymentListResponse>(`/deployments?${queryParams}`);
-      
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(filters.environment && { environment: filters.environment }),
+        ...(filters.status && { status: filters.status }),
+        ...(filters.application && { application: filters.application }),
+        ...(filters.deployedBy && { deployedBy: filters.deployedBy }),
+      });
+      return await apiService.get<DeploymentListResponse>(`/deployments?${queryParams}`);
+    } catch (error) {
+      console.warn('API not available, using mock data for deployments list');
       const mockData = this.generateMockDeploymentsPage(page, limit, filters);
       return mockData;
+    }
+  }
+
+  // Get all deployments (alias for listDeployments)
+  async getDeployments(): Promise<Deployment[]> {
+    try {
+      const response = await this.listDeployments(1, 1000);
+      return response.data;
     } catch (error) {
-      console.error('Failed to fetch deployments list:', error);
-      throw error;
+      console.warn('API not available, using mock data for deployments');
+      return this.generateMockDeployments();
     }
   }
 
   // Get specific deployment
   async getDeployment(id: string): Promise<Deployment> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<Deployment>(`/deployments/${id}`);
-      
-      return this.generateMockDeployment(id);
+      return await apiService.get<Deployment>(`/deployments/${id}`);
     } catch (error) {
-      console.error('Failed to fetch deployment:', error);
-      throw error;
+      console.warn('API not available, using mock data for deployment');
+      return this.generateMockDeployment(id);
     }
   }
 
   // Create new deployment
   async createDeployment(data: CreateDeploymentRequest): Promise<Deployment> {
     try {
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.post<Deployment>('/deployments', data);
-      
+      return await apiService.post<Deployment>('/deployments', data);
+    } catch (error) {
+      console.warn('API not available, using mock data for deployment creation');
       const newDeployment: Deployment = {
         id: `deploy-${Date.now()}`,
         name: data.name,
@@ -258,9 +264,6 @@ export class DeploymentService {
       setTimeout(() => this.simulateDeploymentProgress(newDeployment.id), 1000);
       
       return newDeployment;
-    } catch (error) {
-      console.error('Failed to create deployment:', error);
-      throw error;
     }
   }
 

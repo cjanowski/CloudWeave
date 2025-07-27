@@ -14,6 +14,8 @@ type RepositoryManager struct {
 	Metric         MetricRepositoryInterface
 	Alert          AlertRepositoryInterface
 	AuditLog       AuditLogRepositoryInterface
+	SecurityScan   SecurityScanRepositoryInterface
+	Vulnerability  VulnerabilityRepositoryInterface
 
 	// Transaction manager
 	Transaction TransactionManager
@@ -33,6 +35,8 @@ func NewRepositoryManager(db *sql.DB) *RepositoryManager {
 		Metric:         NewMetricRepository(db),
 		Alert:          NewAlertRepository(db),
 		AuditLog:       NewAuditLogRepository(db),
+		SecurityScan:   NewSecurityScanRepository(db),
+		Vulnerability:  NewVulnerabilityRepository(db),
 
 		// Initialize transaction manager
 		Transaction: NewTransactionManager(db),

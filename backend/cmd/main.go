@@ -54,19 +54,24 @@ func main() {
 
 	// Initialize services
 	wsService := services.NewWebSocketService()
-	// infraService := services.NewInfrastructureService(repoManager) // Temporarily disabled
-	// deploymentService := services.NewDeploymentService(repoManager, wsService) // Temporarily disabled
-	
-	// Initialize metrics and alerts services
-	providers := make(map[string]services.CloudProvider) // Empty for now, will be populated when provider services are enabled
+	infraService := services.NewInfrastructureService(repoManager)
+	deploymentService := services.NewDeploymentService(repoManager, wsService)
+
+	// Initialize metrics and alerts services with cloud providers from infrastructure service
+	providers := infraService.GetProviders()
 	metricsService := services.NewMetricsService(repoManager, providers)
 	alertService := services.NewAlertService(repoManager)
-	
+	costService := services.NewCostManagementService(repoManager, providers)
+	securityService := services.NewSecurityService(repoManager.SecurityScan, repoManager.Vulnerability, repoManager.AuditLog)
+
 	log.Println("WebSocket service initialized successfully")
 	log.Println("Metrics and alerts services initialized successfully")
 
 	// Initialize authentication services
 	handlers.InitializeAuthServices(cfg, db)
+	
+	// Initialize security service
+	handlers.InitializeSecurityService(securityService)
 
 	// Start WebSocket service in background
 	go wsService.Start()
@@ -81,7 +86,7 @@ func main() {
 
 	// CORS middleware
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:5173", "http://localhost:5176", "http://localhost:3000"}
+	corsConfig.AllowOrigins = []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5176", "http://localhost:3000"}
 	corsConfig.AllowCredentials = true
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Request-ID"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
@@ -130,36 +135,50 @@ func main() {
 		protected := api.Group("/")
 		protected.Use(middleware.AuthRequired(handlers.GetJWTService()))
 		{
-			// Infrastructure routes - temporarily disabled
-			// infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
-			// infrastructure := protected.Group("/infrastructure")
-			// {
-			// 	infrastructure.GET("/providers", infraHandler.GetProviders)
-			// 	infrastructure.POST("/", infraHandler.CreateInfrastructure)
-			// 	infrastructure.GET("/", infraHandler.ListInfrastructure)
-			// 	infrastructure.GET("/:id", infraHandler.GetInfrastructure)
-			// 	infrastructure.PUT("/:id", infraHandler.UpdateInfrastructure)
-			// 	infrastructure.DELETE("/:id", infraHandler.DeleteInfrastructure)
-			// 	infrastructure.GET("/:id/metrics", infraHandler.GetInfrastructureMetrics)
-			// 	infrastructure.POST("/:id/sync", infraHandler.SyncInfrastructure)
-			// }
+			// Dashboard routes
+			dashboardHandler := handlers.NewDashboardHandler(repoManager, metricsService, alertService)
+			dashboard := protected.Group("/dashboard")
+			{
+				dashboard.GET("/overview", dashboardHandler.GetDashboardOverview)
+				dashboard.GET("/stats", dashboardHandler.GetDashboardStats)
+				dashboard.GET("/activity", dashboardHandler.GetDashboardActivity)
+				dashboard.GET("/performance", dashboardHandler.GetPerformanceMetrics)
+				dashboard.GET("/costs", dashboardHandler.GetCostMetrics)
+				dashboard.GET("/security", dashboardHandler.GetSecurityMetrics)
+				dashboard.GET("/infrastructure", dashboardHandler.GetInfrastructureMetrics)
+				dashboard.GET("/reports", dashboardHandler.GetReportsMetrics)
+			}
 
-			// Deployment routes - temporarily disabled
-			// deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
-			// deployments := protected.Group("/deployments")
-			// {
-			// 	deployments.GET("/environments", deploymentHandler.GetEnvironments)
-			// 	deployments.POST("/", deploymentHandler.CreateDeployment)
-			// 	deployments.GET("/", deploymentHandler.ListDeployments)
-			// 	deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
-			// 	deployments.GET("/:id", deploymentHandler.GetDeployment)
-			// 	deployments.PUT("/:id", deploymentHandler.UpdateDeployment)
-			// 	deployments.DELETE("/:id", deploymentHandler.DeleteDeployment)
-			// 	deployments.GET("/:id/status", deploymentHandler.GetDeploymentStatus)
-			// 	deployments.GET("/:id/logs", deploymentHandler.GetDeploymentLogs)
-			// 	deployments.POST("/:id/rollback", deploymentHandler.RollbackDeployment)
-			// 	deployments.POST("/:id/cancel", deploymentHandler.CancelDeployment)
-			// }
+			// Infrastructure routes
+			infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
+			infrastructure := protected.Group("/infrastructure")
+			{
+				infrastructure.GET("/providers", infraHandler.GetProviders)
+				infrastructure.POST("/", infraHandler.CreateInfrastructure)
+				infrastructure.GET("/", infraHandler.ListInfrastructure)
+				infrastructure.GET("/:id", infraHandler.GetInfrastructure)
+				infrastructure.PUT("/:id", infraHandler.UpdateInfrastructure)
+				infrastructure.DELETE("/:id", infraHandler.DeleteInfrastructure)
+				infrastructure.GET("/:id/metrics", infraHandler.GetInfrastructureMetrics)
+				infrastructure.POST("/:id/sync", infraHandler.SyncInfrastructure)
+			}
+
+			// Deployment routes
+			deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
+			deployments := protected.Group("/deployments")
+			{
+				deployments.GET("/environments", deploymentHandler.GetEnvironments)
+				deployments.POST("/", deploymentHandler.CreateDeployment)
+				deployments.GET("/", deploymentHandler.ListDeployments)
+				deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
+				deployments.GET("/:id", deploymentHandler.GetDeployment)
+				deployments.PUT("/:id", deploymentHandler.UpdateDeployment)
+				deployments.DELETE("/:id", deploymentHandler.DeleteDeployment)
+				deployments.GET("/:id/status", deploymentHandler.GetDeploymentStatus)
+				deployments.GET("/:id/logs", deploymentHandler.GetDeploymentLogs)
+				deployments.POST("/:id/rollback", deploymentHandler.RollbackDeployment)
+				deployments.POST("/:id/cancel", deploymentHandler.CancelDeployment)
+			}
 
 			// Metrics routes
 			metricsHandler := handlers.NewMetricsHandler(metricsService)
@@ -183,6 +202,31 @@ func main() {
 				alerts.POST("/:id/acknowledge", alertsHandler.AcknowledgeAlert)
 				alerts.PUT("/:id/status", alertsHandler.UpdateAlertStatus)
 				alerts.POST("/rules", alertsHandler.CreateAlertRule)
+			}
+
+			// Cost Management routes
+			costHandler := handlers.NewCostManagementHandler(repoManager, costService)
+			costs := protected.Group("/costs")
+			{
+				costs.GET("/overview", costHandler.GetCostOverview)
+				costs.GET("/breakdown", costHandler.GetCostBreakdown)
+				costs.GET("/optimization", costHandler.GetCostOptimization)
+				costs.GET("/billing", costHandler.GetBillingHistory)
+				costs.GET("/alerts", costHandler.GetBudgetAlerts)
+				costs.POST("/budgets", costHandler.CreateBudget)
+				costs.GET("/budgets", costHandler.GetBudgets)
+			}
+
+			// Security routes
+			security := protected.Group("/security")
+			{
+				security.POST("/scans", handlers.CreateSecurityScan)
+				security.GET("/scans", handlers.ListSecurityScans)
+				security.GET("/scans/:id", handlers.GetSecurityScan)
+				security.GET("/vulnerabilities", handlers.GetVulnerabilities)
+				security.GET("/vulnerabilities/:id", handlers.GetVulnerability)
+				security.PUT("/vulnerabilities/:id", handlers.UpdateVulnerability)
+				security.GET("/metrics", handlers.GetSecurityMetrics)
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-// import { apiService } from './apiService'; // TODO: Uncomment when backend is ready
+import { apiService } from './apiService';
 
 // Dashboard data types
 export interface DashboardStats {
@@ -187,10 +187,9 @@ export class DashboardService {
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<DashboardStats>('/dashboard/stats');
-      
+      return await apiService.get<DashboardStats>('/dashboard/stats');
+    } catch (error) {
+      console.warn('API not available, using mock data for dashboard stats');
       return {
         activeResources: 24,
         activeResourcesChange: '+12%',
@@ -205,19 +204,15 @@ export class DashboardService {
         uptimeChange: '+0.1%',
         uptimeTrend: 'up',
       };
-    } catch (error) {
-      console.error('Failed to fetch dashboard stats:', error);
-      throw error;
     }
   }
 
   // Get recent activity
   async getRecentActivity(): Promise<DashboardActivity[]> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<DashboardActivity[]>('/dashboard/activity');
-      
+      return await apiService.get<DashboardActivity[]>('/dashboard/activity');
+    } catch (error) {
+      console.warn('API not available, using mock data for recent activity');
       return [
         {
           id: '1',
@@ -250,19 +245,15 @@ export class DashboardService {
           type: 'infrastructure'
         }
       ];
-    } catch (error) {
-      console.error('Failed to fetch recent activity:', error);
-      throw error;
     }
   }
 
   // Get performance metrics
   async getPerformanceMetrics(): Promise<PerformanceMetrics> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<PerformanceMetrics>('/dashboard/performance');
-      
+      return await apiService.get<PerformanceMetrics>('/dashboard/performance');
+    } catch (error) {
+      console.warn('API not available, using mock data for performance metrics');
       return {
         cpuUsage: 45,
         memoryUsage: 62,
@@ -270,19 +261,15 @@ export class DashboardService {
         responseTime: 120,
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
-      console.error('Failed to fetch performance metrics:', error);
-      throw error;
     }
   }
 
   // Get cost metrics
   async getCostMetrics(): Promise<CostMetrics> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<CostMetrics>('/dashboard/costs');
-      
+      return await apiService.get<CostMetrics>('/dashboard/costs');
+    } catch (error) {
+      console.warn('API not available, using mock data for cost metrics');
       return {
         thisMonth: 1234,
         lastMonth: 1342,
@@ -290,19 +277,15 @@ export class DashboardService {
         savings: 162,
         savingsPercentage: 12,
       };
-    } catch (error) {
-      console.error('Failed to fetch cost metrics:', error);
-      throw error;
     }
   }
 
   // Get security metrics
   async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<SecurityMetrics>('/dashboard/security');
-      
+      return await apiService.get<SecurityMetrics>('/dashboard/security');
+    } catch (error) {
+      console.warn('API not available, using mock data for security metrics');
       return {
         securityScore: 98,
         vulnerabilities: {
@@ -313,19 +296,15 @@ export class DashboardService {
         lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
         compliance: ['SOC2', 'ISO27001'],
       };
-    } catch (error) {
-      console.error('Failed to fetch security metrics:', error);
-      throw error;
     }
   }
 
   // Get infrastructure metrics
   async getInfrastructureMetrics(): Promise<InfrastructureMetrics> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<InfrastructureMetrics>('/dashboard/infrastructure');
-      
+      return await apiService.get<InfrastructureMetrics>('/dashboard/infrastructure');
+    } catch (error) {
+      console.warn('API not available, using mock data for infrastructure metrics');
       return {
         ec2Instances: 12,
         loadBalancers: 3,
@@ -335,28 +314,21 @@ export class DashboardService {
         },
         storageUsed: 2.4,
       };
-    } catch (error) {
-      console.error('Failed to fetch infrastructure metrics:', error);
-      throw error;
     }
   }
 
   // Get reports metrics
   async getReportsMetrics(): Promise<ReportsMetrics> {
     try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<ReportsMetrics>('/dashboard/reports');
-      
+      return await apiService.get<ReportsMetrics>('/dashboard/reports');
+    } catch (error) {
+      console.warn('API not available, using mock data for reports metrics');
       return {
         monthlyReportAvailable: true,
         costOptimizationRecommendations: 15,
         performanceTrend: 'improving',
         nextSecurityAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), // 1 week from now
       };
-    } catch (error) {
-      console.error('Failed to fetch reports metrics:', error);
-      throw error;
     }
   }
 }

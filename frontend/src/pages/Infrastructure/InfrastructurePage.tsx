@@ -6,7 +6,7 @@ import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 import { infrastructureService } from '../../services/infrastructureService';
-import type { InfrastructureStats, ResourceDistribution, RecentChange, Infrastructure, InfrastructureFilters } from '../../services/infrastructureService';
+import type { InfrastructureStats, ResourceDistribution, RecentChange, Infrastructure } from '../../services/infrastructureService';
 
 interface TabItem {
   id: string;
@@ -378,8 +378,8 @@ const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     const fetchResources = async () => {
       try {
         setLoading(true);
-        const data = await infrastructureService.getInfrastructure();
-        setResources(data);
+        const response = await infrastructureService.listInfrastructure();
+        setResources(response.data);
       } catch (error) {
         console.error('Failed to fetch infrastructure:', error);
       } finally {
@@ -465,10 +465,11 @@ const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
               }}
             >
               <option value="">All Types</option>
-              <option value="server">Server</option>
+              <option value="compute">Server</option>
               <option value="database">Database</option>
               <option value="storage">Storage</option>
               <option value="network">Network</option>
+              <option value="security">Security</option>
             </select>
           </div>
 
@@ -607,8 +608,8 @@ const CreateResourceForm: React.FC<{
 }> = ({ isDark, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
-    type: 'server',
-    provider: 'aws',
+    type: 'compute' as 'compute' | 'database' | 'storage' | 'network' | 'security',
+    provider: 'aws' as 'aws' | 'gcp' | 'azure',
     region: 'us-east-1',
     specifications: {} as any
   });
@@ -691,7 +692,7 @@ const CreateResourceForm: React.FC<{
             <select
               required
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -702,10 +703,11 @@ const CreateResourceForm: React.FC<{
                 fontSize: '14px'
               }}
             >
-              <option value="server">Server</option>
+              <option value="compute">Server</option>
               <option value="database">Database</option>
               <option value="storage">Storage</option>
               <option value="network">Network</option>
+              <option value="security">Security</option>
             </select>
           </div>
 
@@ -716,7 +718,7 @@ const CreateResourceForm: React.FC<{
             <select
               required
               value={formData.provider}
-              onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, provider: e.target.value as any })}
               style={{
                 width: '100%',
                 padding: '12px',
