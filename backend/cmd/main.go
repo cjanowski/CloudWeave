@@ -63,6 +63,8 @@ func main() {
 	alertService := services.NewAlertService(repoManager)
 	costService := services.NewCostManagementService(repoManager, providers)
 	securityService := services.NewSecurityService(repoManager.SecurityScan, repoManager.Vulnerability, repoManager.AuditLog)
+	complianceService := services.NewComplianceService(repoManager.ComplianceFramework, repoManager.ComplianceControl, repoManager.ComplianceAssessment, repoManager.AuditLog, repoManager.Transaction)
+	rbacService := services.NewRBACService(repoManager.Role, repoManager.UserRole, repoManager.ResourcePermission, repoManager.APIKey, repoManager.Session, repoManager.AuditLog, repoManager.Transaction)
 
 	log.Println("WebSocket service initialized successfully")
 	log.Println("Metrics and alerts services initialized successfully")
@@ -227,6 +229,52 @@ func main() {
 				security.GET("/vulnerabilities/:id", handlers.GetVulnerability)
 				security.PUT("/vulnerabilities/:id", handlers.UpdateVulnerability)
 				security.GET("/metrics", handlers.GetSecurityMetrics)
+			}
+
+			// Compliance routes
+			complianceHandler := handlers.NewComplianceGinHandler(complianceService)
+			compliance := protected.Group("/compliance")
+			{
+				// Framework routes
+				compliance.POST("/frameworks", complianceHandler.CreateFramework)
+				compliance.GET("/frameworks", complianceHandler.ListFrameworks)
+				compliance.GET("/frameworks/:id", complianceHandler.GetFramework)
+				compliance.PUT("/frameworks/:id", complianceHandler.UpdateFramework)
+				compliance.DELETE("/frameworks/:id", complianceHandler.DeleteFramework)
+				compliance.GET("/frameworks/:id/statistics", complianceHandler.GetControlStatistics)
+
+				// Assessment routes
+				compliance.POST("/assessments", complianceHandler.CreateAssessment)
+				compliance.GET("/assessments", complianceHandler.ListAssessments)
+				compliance.POST("/assessments/:id/run", complianceHandler.RunAssessment)
+			}
+
+			// RBAC routes
+			rbacHandler := handlers.NewRBACGinHandler(rbacService)
+			rbac := protected.Group("/rbac")
+			{
+				// Role management routes
+				rbac.POST("/roles", rbacHandler.CreateRole)
+				rbac.GET("/roles", rbacHandler.ListRoles)
+				rbac.GET("/roles/:id", rbacHandler.GetRole)
+				rbac.PUT("/roles/:id", rbacHandler.UpdateRole)
+				rbac.DELETE("/roles/:id", rbacHandler.DeleteRole)
+
+				// User role assignment routes
+				rbac.POST("/users/:userId/roles", rbacHandler.AssignRole)
+				rbac.DELETE("/users/:userId/roles/:roleId", rbacHandler.RemoveRole)
+				rbac.GET("/users/:userId/roles", rbacHandler.GetUserRoles)
+				rbac.GET("/users/:userId/permissions", rbacHandler.GetUserPermissions)
+
+				// Permission checking routes
+				rbac.POST("/check-permission", rbacHandler.CheckPermission)
+
+				// API key management routes
+				rbac.POST("/api-keys", rbacHandler.CreateAPIKey)
+				rbac.GET("/api-keys", rbacHandler.ListAPIKeys)
+
+				// System routes
+				rbac.POST("/system/initialize", rbacHandler.InitializeSystemRoles)
 			}
 		}
 	}

@@ -82,6 +82,10 @@ import {
   HelpCircle,
   Loader,
   
+  // Theme icons
+  Sun,
+  Moon,
+  
   // Deployment icons
   Rocket,
   GitBranch,
@@ -131,6 +135,9 @@ class IconRegistryImpl implements IconRegistry {
     status: [
       'status-check', 'status-check-circle', 'status-x', 'status-warning', 'status-info',
       'status-help', 'status-loading'
+    ],
+    theme: [
+      'theme-sun', 'theme-moon'
     ],
     deployment: [
       'deploy-rocket', 'deploy-pipeline', 'deploy-history', 'deploy-start', 'deploy-stop'
@@ -252,6 +259,10 @@ class IconRegistryImpl implements IconRegistry {
     this.register('status-info', Info);
     this.register('status-help', HelpCircle);
     this.register('status-loading', Loader);
+    
+    // Theme icons
+    this.register('theme-sun', Sun);
+    this.register('theme-moon', Moon);
     
     // Deployment icons
     this.register('deploy-rocket', Rocket);
