@@ -9,6 +9,8 @@
 A modern, enterprise-grade cloud platform management system that simplifies infrastructure operations and enhances team productivity.
 
 <img width="1512" height="823" alt="Screenshot 2025-07-26 at 12 25 42 PM" src="https://github.com/user-attachments/assets/7dfa1694-b001-4180-bc7d-93a57689ffff" />
+<img width="1680" height="1109" alt="Screenshot 2025-07-27 at 8 21 55 AM" src="https://github.com/user-attachments/assets/8447d411-338d-4da5-94ca-6994fdeaa3bc" />
+<img width="1681" height="1077" alt="Screenshot 2025-07-27 at 8 22 47 AM" src="https://github.com/user-attachments/assets/d0e039f1-52c4-4027-91d8-129c22cc7a75" />
 
 ## 🌟 Features
 
