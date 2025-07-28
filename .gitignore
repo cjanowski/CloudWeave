@@ -1,7 +1,9 @@
 .DS_Store
-.kiro/
 .vscode/
-
+backend/.env
+backend/.env.example
+backend/.gitignore
+backend/backend.log
 # Build artifacts
 backend/main
 backend/migrate
