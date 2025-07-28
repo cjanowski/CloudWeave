@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"cloudweave/internal/models"
 )
@@ -87,6 +88,8 @@ type AuditLogRepositoryInterface interface {
 	Query(ctx context.Context, orgID string, query models.AuditLogQuery) ([]*models.AuditLog, error)
 	Delete(ctx context.Context, id string) error
 	DeleteOlderThan(ctx context.Context, cutoffTime string) error
+	GetActionSummary(ctx context.Context, orgID string, startTime, endTime time.Time) (map[string]int, error)
+	GetUserActivity(ctx context.Context, orgID string, startTime, endTime time.Time) ([]map[string]interface{}, error)
 }
 
 // SecurityScanRepositoryInterface defines the contract for security scan data operations

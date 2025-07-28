@@ -116,6 +116,85 @@ func (h *CostManagementHandler) GetBudgetAlerts(c *gin.Context) {
 	c.JSON(http.StatusOK, alerts)
 }
 
+// GetCostByTags retrieves cost breakdown by tags
+func (h *CostManagementHandler) GetCostByTags(c *gin.Context) {
+	orgID := c.GetString("organizationId")
+	if orgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
+		return
+	}
+
+	// Parse tags from request body
+	var tags map[string]string
+	if err := c.ShouldBindJSON(&tags); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tags format"})
+		return
+	}
+
+	// Get cost by tags from service
+	costByTags, err := h.costService.GetCostByTags(c.Request.Context(), orgID, tags)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get cost by tags"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"costByTags": costByTags})
+}
+
+// GetRealTimeCostMonitoring retrieves real-time cost monitoring data
+func (h *CostManagementHandler) GetRealTimeCostMonitoring(c *gin.Context) {
+	orgID := c.GetString("organizationId")
+	if orgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
+		return
+	}
+
+	// Get real-time cost monitoring data
+	realTimeData, err := h.costService.GetRealTimeCostMonitoring(c.Request.Context(), orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get real-time cost monitoring"})
+		return
+	}
+
+	c.JSON(http.StatusOK, realTimeData)
+}
+
+// GetCostAllocationByTags retrieves detailed cost allocation by tags and projects
+func (h *CostManagementHandler) GetCostAllocationByTags(c *gin.Context) {
+	orgID := c.GetString("organizationId")
+	if orgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
+		return
+	}
+
+	// Get cost allocation by tags
+	allocationData, err := h.costService.GetCostAllocationByTags(c.Request.Context(), orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get cost allocation by tags"})
+		return
+	}
+
+	c.JSON(http.StatusOK, allocationData)
+}
+
+// GetCostOptimizationRecommendations retrieves detailed cost optimization recommendations
+func (h *CostManagementHandler) GetCostOptimizationRecommendations(c *gin.Context) {
+	orgID := c.GetString("organizationId")
+	if orgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "organization_id is required"})
+		return
+	}
+
+	// Get cost optimization recommendations
+	recommendations, err := h.costService.GetCostOptimizationRecommendations(c.Request.Context(), orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get cost optimization recommendations"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"recommendations": recommendations})
+}
+
 // CreateBudget creates a new budget
 func (h *CostManagementHandler) CreateBudget(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "Budget creation not implemented yet"})

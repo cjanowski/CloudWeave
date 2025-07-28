@@ -16,13 +16,14 @@ import (
 )
 
 var (
-	jwtService  *services.JWTService
-	authService *services.AuthService
-	ssoService  *services.SSOService
+	jwtService   *services.JWTService
+	authService  *services.AuthService
+	ssoService   *services.SSOService
+	auditService *services.AuditService
 )
 
 // InitializeAuthServices initializes the authentication services
-func InitializeAuthServices(cfg *config.Config, db *database.Database) {
+func InitializeAuthServices(cfg *config.Config, db *database.Database, as *services.AuditService) {
 	blacklistService := services.NewTokenBlacklistService(db.DB)
 	jwtService = services.NewJWTService(cfg, blacklistService)
 	passwordService := services.NewPasswordService()
@@ -31,6 +32,7 @@ func InitializeAuthServices(cfg *config.Config, db *database.Database) {
 
 	authService = services.NewAuthService(userRepo, orgRepo, jwtService, passwordService, blacklistService)
 	ssoService = services.NewSSOService(cfg, userRepo, orgRepo, authService, jwtService)
+	auditService = as
 }
 
 // GetJWTService returns the initialized JWT service
@@ -147,6 +149,12 @@ func Login(c *gin.Context) {
 	}
 
 	log.Printf("Login successful for user: %s", req.Email)
+
+	// Audit log
+	go func() {
+		ctx := c.Copy()
+		auditService.Record(ctx, models.ActionLogin, "user", response.User.ID, nil)
+	}()
 
 	c.JSON(http.StatusOK, models.ApiResponse{
 		Success:   true,
@@ -308,6 +316,13 @@ func Logout(c *gin.Context) {
 	}
 
 	log.Printf("User logged out successfully")
+
+	// Audit log
+	go func() {
+		ctx := c.Copy()
+		userID, _ := c.Get("userID")
+		auditService.Record(ctx, models.ActionLogout, "user", userID.(string), nil)
+	}()
 
 	c.JSON(http.StatusOK, models.ApiResponse{
 		Success: true,
