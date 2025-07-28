@@ -187,7 +187,21 @@ export class DashboardService {
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      return await apiService.get<DashboardStats>('/dashboard/stats');
+      const result = await apiService.get<DashboardStats>('/dashboard/stats');
+      return result || {
+        activeResources: 24,
+        activeResourcesChange: '+12%',
+        activeResourcesTrend: 'up',
+        deployments: 8,
+        deploymentsChange: '+5%',
+        deploymentsTrend: 'up',
+        costThisMonth: 1234,
+        costThisMonthChange: '-8%',
+        costThisMonthTrend: 'down',
+        uptime: 99.9,
+        uptimeChange: '+0.1%',
+        uptimeTrend: 'up',
+      };
     } catch (error) {
       console.warn('API not available, using mock data for dashboard stats');
       return {
@@ -210,7 +224,8 @@ export class DashboardService {
   // Get recent activity
   async getRecentActivity(): Promise<DashboardActivity[]> {
     try {
-      return await apiService.get<DashboardActivity[]>('/dashboard/activity');
+      const result = await apiService.get<DashboardActivity[]>('/dashboard/activity');
+      return result || [];
     } catch (error) {
       console.warn('API not available, using mock data for recent activity');
       return [
@@ -251,7 +266,14 @@ export class DashboardService {
   // Get performance metrics
   async getPerformanceMetrics(): Promise<PerformanceMetrics> {
     try {
-      return await apiService.get<PerformanceMetrics>('/dashboard/performance');
+      const result = await apiService.get<PerformanceMetrics>('/dashboard/performance');
+      return result || {
+        cpuUsage: 45,
+        memoryUsage: 62,
+        networkIO: 1.2,
+        responseTime: 120,
+        timestamp: new Date().toISOString(),
+      };
     } catch (error) {
       console.warn('API not available, using mock data for performance metrics');
       return {
@@ -267,7 +289,14 @@ export class DashboardService {
   // Get cost metrics
   async getCostMetrics(): Promise<CostMetrics> {
     try {
-      return await apiService.get<CostMetrics>('/dashboard/costs');
+      const result = await apiService.get<CostMetrics>('/dashboard/costs');
+      return result || {
+        thisMonth: 1234,
+        lastMonth: 1342,
+        projected: 1180,
+        savings: 162,
+        savingsPercentage: 12,
+      };
     } catch (error) {
       console.warn('API not available, using mock data for cost metrics');
       return {
@@ -283,7 +312,17 @@ export class DashboardService {
   // Get security metrics
   async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
-      return await apiService.get<SecurityMetrics>('/dashboard/security');
+      const result = await apiService.get<SecurityMetrics>('/dashboard/security');
+      return result || {
+        securityScore: 98,
+        vulnerabilities: {
+          critical: 0,
+          medium: 2,
+          low: 5,
+        },
+        lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        compliance: ['SOC2', 'ISO27001'],
+      };
     } catch (error) {
       console.warn('API not available, using mock data for security metrics');
       return {

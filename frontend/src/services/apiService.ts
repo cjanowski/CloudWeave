@@ -16,7 +16,7 @@ export class ApiService {
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002/api/v1',
+      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -92,27 +92,27 @@ export class ApiService {
   // HTTP Methods
   public async get<T = any>(url: string, config?: any): Promise<T> {
     const response = await this.axiosInstance.get(url, config);
-    return response.data.data || response.data;
+    return response?.data?.data || response?.data || null;
   }
 
   public async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.axiosInstance.post(url, data, config);
-    return response.data.data || response.data;
+    return response?.data?.data || response?.data || null;
   }
 
   public async put<T = any>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.axiosInstance.put(url, data, config);
-    return response.data.data || response.data;
+    return response?.data?.data || response?.data || null;
   }
 
   public async patch<T = any>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.axiosInstance.patch(url, data, config);
-    return response.data.data || response.data;
+    return response?.data?.data || response?.data || null;
   }
 
   public async delete<T = any>(url: string, config?: any): Promise<T> {
     const response = await this.axiosInstance.delete(url, config);
-    return response.data.data || response.data;
+    return response?.data?.data || response?.data || null;
   }
 
   // Utility methods

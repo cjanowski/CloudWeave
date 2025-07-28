@@ -65,12 +65,13 @@ func main() {
 	securityService := services.NewSecurityService(repoManager.SecurityScan, repoManager.Vulnerability, repoManager.AuditLog)
 	complianceService := services.NewComplianceService(repoManager.ComplianceFramework, repoManager.ComplianceControl, repoManager.ComplianceAssessment, repoManager.AuditLog, repoManager.Transaction)
 	rbacService := services.NewRBACService(repoManager.Role, repoManager.UserRole, repoManager.ResourcePermission, repoManager.APIKey, repoManager.Session, repoManager.AuditLog, repoManager.Transaction)
+	auditService := services.NewAuditService(repoManager.AuditLog)
 
 	log.Println("WebSocket service initialized successfully")
 	log.Println("Metrics and alerts services initialized successfully")
 
 	// Initialize authentication services
-	handlers.InitializeAuthServices(cfg, db)
+	handlers.InitializeAuthServices(cfg, db, auditService)
 
 	// Initialize security service
 	handlers.InitializeSecurityService(securityService)
@@ -148,6 +149,7 @@ func main() {
 		// Protected routes
 		protected := api.Group("/")
 		protected.Use(middleware.AuthRequired(handlers.GetJWTService()))
+		protected.Use(middleware.AuditLog(auditService))
 		{
 			// Dashboard routes
 			dashboardHandler := handlers.NewDashboardHandler(repoManager, metricsService, alertService)
@@ -227,6 +229,10 @@ func main() {
 				costs.GET("/optimization", costHandler.GetCostOptimization)
 				costs.GET("/billing", costHandler.GetBillingHistory)
 				costs.GET("/alerts", costHandler.GetBudgetAlerts)
+				costs.POST("/by-tags", costHandler.GetCostByTags)
+				costs.GET("/real-time", costHandler.GetRealTimeCostMonitoring)
+				costs.GET("/allocation", costHandler.GetCostAllocationByTags)
+				costs.GET("/recommendations", costHandler.GetCostOptimizationRecommendations)
 				costs.POST("/budgets", costHandler.CreateBudget)
 				costs.GET("/budgets", costHandler.GetBudgets)
 			}
@@ -302,6 +308,16 @@ func main() {
 					aws.POST("/access-key", handlers.SetupAWSAccessKey)
 					aws.POST("/test", handlers.TestAWSConnection)
 				}
+			}
+
+			// Audit routes
+			auditHandler := handlers.NewAuditHandler(auditService)
+			audit := protected.Group("/audit")
+			{
+				audit.GET("/", auditHandler.GetAuditLogs)
+				audit.GET("/compliance-report", auditHandler.GetComplianceReport)
+				audit.GET("/export", auditHandler.ExportAuditLogs)
+				audit.POST("/cleanup", auditHandler.CleanupOldLogs)
 			}
 		}
 	}

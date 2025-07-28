@@ -145,10 +145,12 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
           dashboardService.getRecentActivity()
         ]);
         setStats(statsData);
-        setActivity(activityData);
+        setActivity(activityData || []);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
         setError('Failed to load dashboard data');
+        // Ensure activity is never null
+        setActivity([]);
       } finally {
         setLoading(false);
       }
@@ -166,7 +168,7 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     });
 
     const unsubscribeActivity = dashboardService.subscribe('activity-added', (newActivity: DashboardActivity) => {
-      setActivity(prev => [newActivity, ...prev.slice(0, 4)]); // Keep only latest 5 activities
+      setActivity(prev => [newActivity, ...(prev || []).slice(0, 4)]); // Keep only latest 5 activities
       setLastUpdated(new Date());
     });
 
@@ -380,7 +382,7 @@ const OverviewTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
       )}
 
       {/* Recent Activity */}
-      {activity.length > 0 && (
+      {activity && activity.length > 0 && (
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
           <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Recent Activity</h3>
           <div style={{ display: 'grid', gap: '12px' }}>
