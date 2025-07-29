@@ -764,18 +764,220 @@ const HistoryTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
-const EnvironmentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Environment Management</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Manage deployment environments and configurations</p>
-      <p>• Production environment: Healthy</p>
-      <p>• Staging environment: Healthy</p>
-      <p>• Development environment: Healthy</p>
-      <p>• Testing environment: Maintenance</p>
+const EnvironmentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [environments, setEnvironments] = useState([
+    { id: '1', name: 'Production', status: 'healthy', services: 12, uptime: 99.9, lastDeployment: '2024-01-15T14:30:00Z', url: 'https://app.company.com' },
+    { id: '2', name: 'Staging', status: 'healthy', services: 8, uptime: 98.5, lastDeployment: '2024-01-16T09:15:00Z', url: 'https://staging.company.com' },
+    { id: '3', name: 'Development', status: 'warning', services: 6, uptime: 95.2, lastDeployment: '2024-01-16T11:45:00Z', url: 'https://dev.company.com' },
+    { id: '4', name: 'Testing', status: 'maintenance', services: 4, uptime: 87.3, lastDeployment: '2024-01-14T16:20:00Z', url: 'https://test.company.com' },
+  ]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const getEnvironmentIcon = (name: string) => {
+    switch (name.toLowerCase()) {
+      case 'production': return 'deploy-start';
+      case 'staging': return 'deploy-pipeline';
+      case 'development': return 'action-code';
+      case 'testing': return 'monitor-chart';
+      default: return 'cloud-compute';
+    }
+  };
+
+  const formatLastDeployment = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now.getTime() - time.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else {
+      return `${diffDays}d ago`;
+    }
+  };
+
+  const totalServices = environments.reduce((sum, env) => sum + env.services, 0);
+  const avgUptime = (environments.reduce((sum, env) => sum + env.uptime, 0) / environments.length).toFixed(1);
+  const healthyCount = environments.filter(env => env.status === 'healthy').length;
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Create Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Environment Management</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Manage deployment environments and configurations
+          </p>
+        </div>
+        <GlassButton
+          variant="primary"
+          size="medium"
+          isDark={isDark}
+          onClick={() => setShowCreateForm(true)}
+          style={{ borderRadius: '12px' }}
+        >
+          <Icon name="action-plus" size="sm" />
+          Create Environment
+        </GlassButton>
+      </div>
+
+      {/* Environment Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {[
+          { label: 'Total Environments', value: environments.length, color: '#6B7280' },
+          { label: 'Healthy', value: healthyCount, color: '#10B981' },
+          { label: 'Total Services', value: totalServices, color: '#3B82F6' },
+          { label: 'Avg Uptime', value: `${avgUptime}%`, color: parseFloat(avgUptime) > 99 ? '#10B981' : parseFloat(avgUptime) > 95 ? '#F59E0B' : '#EF4444' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Environments List */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
+        {environments.map((env) => (
+          <GlassCard key={env.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ color: '#3B82F6', fontSize: '24px' }}>
+                  <Icon name={getEnvironmentIcon(env.name)} size="lg" />
+                </div>
+                <div>
+                  <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '18px' }}>
+                    {env.name}
+                  </h3>
+                  <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                    {env.services} services running
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                padding: '6px 12px',
+                borderRadius: '20px',
+                background: `${getEnvironmentStatusColor(env.status)}20`,
+                border: `1px solid ${getEnvironmentStatusColor(env.status)}40`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: getEnvironmentStatusColor(env.status)
+                }} />
+                <span style={{
+                  color: getEnvironmentStatusColor(env.status),
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  textTransform: 'capitalize'
+                }}>
+                  {env.status}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Uptime:</span>
+                <span style={{ 
+                  color: env.uptime > 99 ? '#10B981' : env.uptime > 95 ? '#F59E0B' : '#EF4444', 
+                  fontSize: '14px',
+                  fontWeight: 600
+                }}>
+                  {env.uptime}%
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Last deployment:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>
+                  {formatLastDeployment(env.lastDeployment)}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>URL:</span>
+                <a 
+                  href={env.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#3B82F6', 
+                    fontSize: '14px',
+                    textDecoration: 'none'
+                  }}
+                >
+                  {env.url.replace('https://', '')}
+                </a>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <GlassButton
+                variant="primary"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px', flex: 1 }}
+              >
+                <Icon name="deploy-rocket" size="sm" />
+                Deploy
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px' }}
+              >
+                <Icon name="action-edit" size="sm" />
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px' }}
+              >
+                <Icon name="monitor-chart" size="sm" />
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px' }}
+              >
+                <Icon name="action-view" size="sm" />
+              </GlassButton>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
     </div>
-  </GlassCard>
-);
+  );
+};
 
 // Deployments Tab Component
 const DeploymentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {

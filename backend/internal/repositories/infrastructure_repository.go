@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -21,13 +22,29 @@ func NewInfrastructureRepository(db *sql.DB) *InfrastructureRepository {
 
 // Create creates a new infrastructure resource in the database
 func (r *InfrastructureRepository) Create(ctx context.Context, infra *models.Infrastructure) error {
+	// Convert specifications and cost_info to JSON
+	specificationsJSON, err := json.Marshal(infra.Specifications)
+	if err != nil {
+		return fmt.Errorf("failed to marshal specifications: %w", err)
+	}
+	
+	costInfoJSON, err := json.Marshal(infra.CostInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal cost_info: %w", err)
+	}
+	
+	tagsJSON, err := json.Marshal(infra.Tags)
+	if err != nil {
+		return fmt.Errorf("failed to marshal tags: %w", err)
+	}
+
 	query := `
 		INSERT INTO infrastructure (id, organization_id, name, type, provider, region, status, 
 		                          specifications, cost_info, tags, external_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING created_at, updated_at`
 
-	err := r.db.QueryRowContext(ctx, query,
+	err = r.db.QueryRowContext(ctx, query,
 		infra.ID,
 		infra.OrganizationID,
 		infra.Name,
@@ -35,9 +52,9 @@ func (r *InfrastructureRepository) Create(ctx context.Context, infra *models.Inf
 		infra.Provider,
 		infra.Region,
 		infra.Status,
-		infra.Specifications,
-		infra.CostInfo,
-		pq.Array(infra.Tags),
+		string(specificationsJSON),
+		string(costInfoJSON),
+		string(tagsJSON),
 		infra.ExternalID,
 	).Scan(&infra.CreatedAt, &infra.UpdatedAt)
 
@@ -59,6 +76,8 @@ func (r *InfrastructureRepository) Create(ctx context.Context, infra *models.Inf
 // GetByID retrieves an infrastructure resource by its ID
 func (r *InfrastructureRepository) GetByID(ctx context.Context, id string) (*models.Infrastructure, error) {
 	infra := &models.Infrastructure{}
+	var specificationsJSON, costInfoJSON, tagsJSON string
+	
 	query := `
 		SELECT id, organization_id, name, type, provider, region, status, 
 		       specifications, cost_info, tags, external_id, created_at, updated_at
@@ -73,9 +92,9 @@ func (r *InfrastructureRepository) GetByID(ctx context.Context, id string) (*mod
 		&infra.Provider,
 		&infra.Region,
 		&infra.Status,
-		&infra.Specifications,
-		&infra.CostInfo,
-		pq.Array(&infra.Tags),
+		&specificationsJSON,
+		&costInfoJSON,
+		&tagsJSON,
 		&infra.ExternalID,
 		&infra.CreatedAt,
 		&infra.UpdatedAt,
@@ -88,11 +107,40 @@ func (r *InfrastructureRepository) GetByID(ctx context.Context, id string) (*mod
 		return nil, fmt.Errorf("failed to get infrastructure by id: %w", err)
 	}
 
+	// Unmarshal JSON fields
+	if err := json.Unmarshal([]byte(specificationsJSON), &infra.Specifications); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal specifications: %w", err)
+	}
+	
+	if err := json.Unmarshal([]byte(costInfoJSON), &infra.CostInfo); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal cost_info: %w", err)
+	}
+	
+	if err := json.Unmarshal([]byte(tagsJSON), &infra.Tags); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
+	}
+
 	return infra, nil
 }
 
 // Update updates an existing infrastructure resource
 func (r *InfrastructureRepository) Update(ctx context.Context, infra *models.Infrastructure) error {
+	// Convert specifications and cost_info to JSON
+	specificationsJSON, err := json.Marshal(infra.Specifications)
+	if err != nil {
+		return fmt.Errorf("failed to marshal specifications: %w", err)
+	}
+	
+	costInfoJSON, err := json.Marshal(infra.CostInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal cost_info: %w", err)
+	}
+	
+	tagsJSON, err := json.Marshal(infra.Tags)
+	if err != nil {
+		return fmt.Errorf("failed to marshal tags: %w", err)
+	}
+
 	query := `
 		UPDATE infrastructure 
 		SET name = $2, type = $3, provider = $4, region = $5, status = $6,
@@ -100,16 +148,16 @@ func (r *InfrastructureRepository) Update(ctx context.Context, infra *models.Inf
 		WHERE id = $1
 		RETURNING updated_at`
 
-	err := r.db.QueryRowContext(ctx, query,
+	err = r.db.QueryRowContext(ctx, query,
 		infra.ID,
 		infra.Name,
 		infra.Type,
 		infra.Provider,
 		infra.Region,
 		infra.Status,
-		infra.Specifications,
-		infra.CostInfo,
-		pq.Array(infra.Tags),
+		string(specificationsJSON),
+		string(costInfoJSON),
+		string(tagsJSON),
 		infra.ExternalID,
 	).Scan(&infra.UpdatedAt)
 
@@ -210,6 +258,8 @@ func (r *InfrastructureRepository) List(ctx context.Context, orgID string, param
 	var infrastructures []*models.Infrastructure
 	for rows.Next() {
 		infra := &models.Infrastructure{}
+		var specificationsJSON, costInfoJSON, tagsJSON string
+		
 		err := rows.Scan(
 			&infra.ID,
 			&infra.OrganizationID,
@@ -218,9 +268,9 @@ func (r *InfrastructureRepository) List(ctx context.Context, orgID string, param
 			&infra.Provider,
 			&infra.Region,
 			&infra.Status,
-			&infra.Specifications,
-			&infra.CostInfo,
-			pq.Array(&infra.Tags),
+			&specificationsJSON,
+			&costInfoJSON,
+			&tagsJSON,
 			&infra.ExternalID,
 			&infra.CreatedAt,
 			&infra.UpdatedAt,
@@ -228,6 +278,20 @@ func (r *InfrastructureRepository) List(ctx context.Context, orgID string, param
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan infrastructure row: %w", err)
 		}
+		
+		// Unmarshal JSON fields
+		if err := json.Unmarshal([]byte(specificationsJSON), &infra.Specifications); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal specifications: %w", err)
+		}
+		
+		if err := json.Unmarshal([]byte(costInfoJSON), &infra.CostInfo); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal cost_info: %w", err)
+		}
+		
+		if err := json.Unmarshal([]byte(tagsJSON), &infra.Tags); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
+		}
+		
 		infrastructures = append(infrastructures, infra)
 	}
 

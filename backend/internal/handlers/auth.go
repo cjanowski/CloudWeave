@@ -98,6 +98,17 @@ func HealthCheckWithDB(db *database.Database) gin.HandlerFunc {
 }
 
 // Login handles user authentication
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body models.LoginRequest true "Login credentials"
+// @Success 200 {object} SuccessResponse{data=models.LoginResponse}
+// @Failure 400 {object} ValidationErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/login [post]
 func Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -164,6 +175,17 @@ func Login(c *gin.Context) {
 }
 
 // Register handles user registration
+// @Summary User registration
+// @Description Register a new user account
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body models.RegisterRequest true "Registration details"
+// @Success 201 {object} SuccessResponse{data=models.RegisterResponse}
+// @Failure 400 {object} ValidationErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/register [post]
 func Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -43,9 +43,79 @@ func Logger() gin.HandlerFunc {
 	})
 }
 
-// ErrorHandler middleware handles panics and errors
+// ErrorHandler middleware handles panics and errors with comprehensive logging
 func ErrorHandler() gin.HandlerFunc {
-	return gin.Recovery()
+	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+		requestID := c.GetString("requestID")
+		userID := c.GetString("userID")
+		
+		// Log the panic with context
+		fmt.Printf("[PANIC] RequestID: %s, UserID: %s, Method: %s, Path: %s, Error: %v\n",
+			requestID, userID, c.Request.Method, c.Request.URL.Path, recovered)
+		
+		// Return standardized error response
+		c.JSON(http.StatusInternalServerError, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "INTERNAL_SERVER_ERROR",
+				Message:   "An internal server error occurred",
+				Timestamp: time.Now(),
+			},
+			RequestID: requestID,
+		})
+	})
+}
+
+// ProductionErrorHandler provides comprehensive error handling for production
+func ProductionErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		
+		// Handle any errors that occurred during request processing
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			requestID := c.GetString("requestID")
+			userID := c.GetString("userID")
+			
+			// Log error with context
+			fmt.Printf("[ERROR] RequestID: %s, UserID: %s, Method: %s, Path: %s, Error: %v\n",
+				requestID, userID, c.Request.Method, c.Request.URL.Path, err.Err)
+			
+			// Determine error type and response
+			statusCode := http.StatusInternalServerError
+			errorCode := "INTERNAL_ERROR"
+			errorMessage := "An internal error occurred"
+			
+			// Check for specific error types
+			if strings.Contains(err.Error(), "validation") {
+				statusCode = http.StatusBadRequest
+				errorCode = "VALIDATION_ERROR"
+				errorMessage = "Request validation failed"
+			} else if strings.Contains(err.Error(), "unauthorized") {
+				statusCode = http.StatusUnauthorized
+				errorCode = "UNAUTHORIZED"
+				errorMessage = "Authentication required"
+			} else if strings.Contains(err.Error(), "forbidden") {
+				statusCode = http.StatusForbidden
+				errorCode = "FORBIDDEN"
+				errorMessage = "Access denied"
+			} else if strings.Contains(err.Error(), "not found") {
+				statusCode = http.StatusNotFound
+				errorCode = "NOT_FOUND"
+				errorMessage = "Resource not found"
+			}
+			
+			c.JSON(statusCode, models.ApiResponse{
+				Success: false,
+				Error: &models.ApiError{
+					Code:      errorCode,
+					Message:   errorMessage,
+					Timestamp: time.Now(),
+				},
+				RequestID: requestID,
+			})
+		}
+	}
 }
 
 // AuthRequired middleware validates JWT tokens

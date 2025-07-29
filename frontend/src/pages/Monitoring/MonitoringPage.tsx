@@ -766,18 +766,215 @@ const AlertsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   );
 };
 
-const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Performance Analytics</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Analyze system and application performance</p>
-      <p>• Response time trends</p>
-      <p>• Throughput analysis</p>
-      <p>• Error rate monitoring</p>
-      <p>• Performance bottleneck identification</p>
+const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [performanceData, setPerformanceData] = useState([
+    { id: '1', service: 'API Gateway', responseTime: 245, throughput: 1250, errorRate: 0.8, status: 'healthy' },
+    { id: '2', service: 'Database', responseTime: 89, throughput: 890, errorRate: 0.2, status: 'healthy' },
+    { id: '3', service: 'Cache Layer', responseTime: 12, throughput: 3400, errorRate: 0.1, status: 'healthy' },
+    { id: '4', service: 'Auth Service', responseTime: 156, throughput: 567, errorRate: 2.1, status: 'warning' },
+    { id: '5', service: 'File Storage', responseTime: 423, throughput: 234, errorRate: 5.2, status: 'critical' },
+  ]);
+  const [timeRange, setTimeRange] = useState('1h');
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return '#10B981';
+      case 'warning': return '#F59E0B';
+      case 'critical': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
+  const getPerformanceIcon = (service: string) => {
+    switch (service.toLowerCase()) {
+      case 'api gateway': return 'cloud-network';
+      case 'database': return 'cloud-storage';
+      case 'cache layer': return 'monitor-clock';
+      case 'auth service': return 'security-shield';
+      case 'file storage': return 'cloud-storage';
+      default: return 'monitor-pulse';
+    }
+  };
+
+  const avgResponseTime = Math.round(performanceData.reduce((sum, p) => sum + p.responseTime, 0) / performanceData.length);
+  const totalThroughput = performanceData.reduce((sum, p) => sum + p.throughput, 0);
+  const avgErrorRate = (performanceData.reduce((sum, p) => sum + p.errorRate, 0) / performanceData.length).toFixed(1);
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Performance Overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {[
+          { label: 'Avg Response Time', value: `${avgResponseTime}ms`, color: avgResponseTime < 200 ? '#10B981' : avgResponseTime < 500 ? '#F59E0B' : '#EF4444' },
+          { label: 'Total Throughput', value: `${totalThroughput.toLocaleString()}/min`, color: '#3B82F6' },
+          { label: 'Avg Error Rate', value: `${avgErrorRate}%`, color: parseFloat(avgErrorRate) < 1 ? '#10B981' : parseFloat(avgErrorRate) < 3 ? '#F59E0B' : '#EF4444' },
+          { label: 'Services', value: performanceData.length, color: '#6B7280' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Time Range Selector */}
+      <GlassCard variant="card" elevation="low" isDark={isDark} style={{ borderRadius: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Time Range:</span>
+          {['15m', '1h', '6h', '24h', '7d'].map(range => (
+            <GlassButton
+              key={range}
+              variant={timeRange === range ? 'primary' : 'ghost'}
+              size="small"
+              isDark={isDark}
+              onClick={() => setTimeRange(range)}
+              style={{
+                borderRadius: '12px',
+                border: timeRange === range ? '1px solid #F59E0B' : 'none',
+              }}
+            >
+              {range}
+            </GlassButton>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Performance Metrics */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Service Performance</h3>
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {performanceData.map((service) => (
+            <motion.div
+              key={service.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                borderRadius: '12px',
+                padding: '20px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ color: '#F59E0B', fontSize: '20px' }}>
+                    <Icon name={getPerformanceIcon(service.service)} size="md" />
+                  </div>
+                  <div>
+                    <div style={{ 
+                      color: isDark ? '#ffffff' : '#000000',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      marginBottom: '2px'
+                    }}>
+                      {service.service}
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  background: `${getStatusColor(service.status)}20`,
+                  borderRadius: '20px',
+                  border: `1px solid ${getStatusColor(service.status)}40`
+                }}>
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: getStatusColor(service.status)
+                  }} />
+                  <span style={{
+                    color: getStatusColor(service.status),
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    textTransform: 'capitalize'
+                  }}>
+                    {service.status}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+                <div style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                }}>
+                  <div style={{ fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7, marginBottom: '4px' }}>
+                    Response Time
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000', marginBottom: '4px' }}>
+                    {service.responseTime}ms
+                  </div>
+                  <div style={{ fontSize: '10px', color: service.responseTime < 200 ? '#10B981' : service.responseTime < 500 ? '#F59E0B' : '#EF4444' }}>
+                    {service.responseTime < 200 ? '↗ Excellent' : service.responseTime < 500 ? '→ Good' : '↘ Needs attention'}
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                }}>
+                  <div style={{ fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7, marginBottom: '4px' }}>
+                    Throughput
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000', marginBottom: '4px' }}>
+                    {service.throughput.toLocaleString()}/min
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#3B82F6' }}>
+                    → Requests per minute
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                }}>
+                  <div style={{ fontSize: '12px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7, marginBottom: '4px' }}>
+                    Error Rate
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000', marginBottom: '4px' }}>
+                    {service.errorRate}%
+                  </div>
+                  <div style={{ fontSize: '10px', color: service.errorRate < 1 ? '#10B981' : service.errorRate < 3 ? '#F59E0B' : '#EF4444' }}>
+                    {service.errorRate < 1 ? '↗ Low' : service.errorRate < 3 ? '→ Moderate' : '↘ High'}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </GlassCard>
     </div>
-  </GlassCard>
-);
+  );
+};
 
 // Custom Dashboard Tab
 const CustomDashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {

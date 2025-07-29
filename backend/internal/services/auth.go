@@ -299,6 +299,22 @@ func (s *AuthService) LogoutAllDevices(ctx context.Context, userID string) error
 	return s.blacklistService.BlacklistAllUserTokens(ctx, userID, "logout_all_devices")
 }
 
+// UpdateUserPreferences updates a user's preferences
+func (s *AuthService) UpdateUserPreferences(ctx context.Context, userID string, preferences map[string]interface{}) error {
+	// Get user to verify they exist
+	_, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Update preferences in database
+	if err := s.userRepo.UpdatePreferences(ctx, userID, preferences); err != nil {
+		return fmt.Errorf("failed to update user preferences: %w", err)
+	}
+
+	return nil
+}
+
 // Helper function to generate slug from name
 func generateSlugFromName(name string) string {
 	// Convert to lowercase

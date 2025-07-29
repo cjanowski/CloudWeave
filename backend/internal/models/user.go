@@ -127,3 +127,10 @@ type ApiError struct {
 	Details   interface{} `json:"details,omitempty"`
 	Timestamp time.Time   `json:"timestamp"`
 }
+
+type ValidationError struct {
+	Field   string `json:"field"`
+	Tag     string `json:"tag"`
+	Value   string `json:"value,omitempty"`
+	Message string `json:"message"`
+}

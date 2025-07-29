@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"cloudweave/internal/models"
 	"cloudweave/internal/repositories"
@@ -25,17 +26,45 @@ func NewInfrastructureHandler(repoManager *repositories.RepositoryManager, infra
 }
 
 // CreateInfrastructure creates a new infrastructure resource
+// @Summary Create infrastructure resource
+// @Description Create a new infrastructure resource in the specified cloud provider
+// @Tags Infrastructure
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.CreateInfrastructureRequest true "Infrastructure creation details"
+// @Success 201 {object} SuccessResponse{data=models.Infrastructure}
+// @Failure 400 {object} ValidationErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /infrastructure [post]
 func (h *InfrastructureHandler) CreateInfrastructure(c *gin.Context) {
 	var req models.CreateInfrastructureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "VALIDATION_ERROR",
+				Message:   "Invalid request format: " + err.Error(),
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
 		return
 	}
 
 	// Get organization ID from context (set by auth middleware)
-	orgID, exists := c.Get("organizationID")
+	orgID, exists := c.Get("organizationId")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		c.JSON(http.StatusUnauthorized, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:      "UNAUTHORIZED",
+				Message:   "Organization ID not found in context",
+				Timestamp: time.Now(),
+			},
+			RequestID: c.GetString("requestID"),
+		})
 		return
 	}
 
