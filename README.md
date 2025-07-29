@@ -6,7 +6,7 @@
 
 # CloudWeave - Cloud Platform Management System
 
-A modern, enterprise-grade cloud platform management system that simplifies infrastructure operations and enhances team productivity.
+A modern, enterprise-grade AI powered cloud platform management system that simplifies infrastructure operations and enhances team productivity.
 
 <img width="1630" height="1082" alt="Screenshot 2025-07-27 at 12 36 42 PM" src="https://github.com/user-attachments/assets/c382768c-056c-44b4-a9ae-89688f5f5c95" />
 <img width="1512" height="823" alt="Screenshot 2025-07-29 at 8 03 12 AM" src="https://github.com/user-attachments/assets/8b221d1a-ee3c-4915-85c4-059b967628b2" />
