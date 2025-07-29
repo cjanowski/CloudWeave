@@ -99,6 +99,13 @@ import {
   
   // Social provider icons
   Github,
+  
+  // AI/Robot icons
+  Bot,
+  Brain,
+  Sparkles,
+  Zap as Lightning,
+  CircuitBoard,
 } from 'lucide-react';
 
 class IconRegistryImpl implements IconRegistry {
@@ -151,6 +158,9 @@ class IconRegistryImpl implements IconRegistry {
     ],
     social: [
       'google', 'microsoft', 'github'
+    ],
+    ai: [
+      'action-ai', 'ai-robot', 'ai-brain', 'ai-sparkles', 'ai-lightning', 'ai-circuit'
     ]
   };
 
@@ -295,6 +305,14 @@ class IconRegistryImpl implements IconRegistry {
     
     // Building/Organization icon
     this.register('building', Building);
+    
+    // AI/Robot icons
+    this.register('action-ai', Bot);
+    this.register('ai-robot', Bot);
+    this.register('ai-brain', Brain);
+    this.register('ai-sparkles', Sparkles);
+    this.register('ai-lightning', Lightning);
+    this.register('ai-circuit', CircuitBoard);
   }
 
   public register(name: string, component: LucideIcon): void {

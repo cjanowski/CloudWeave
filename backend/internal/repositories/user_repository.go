@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -202,6 +203,37 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, userID, passwordHas
 	result, err := r.db.ExecContext(ctx, query, userID, passwordHash)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with id %s not found", userID)
+	}
+
+	return nil
+}
+
+// UpdatePreferences updates the user's preferences
+func (r *UserRepository) UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error {
+	// Convert preferences to JSON string
+	preferencesJSON := "{}"
+	if preferences != nil && len(preferences) > 0 {
+		jsonBytes, err := json.Marshal(preferences)
+		if err != nil {
+			return fmt.Errorf("failed to marshal preferences to JSON: %w", err)
+		}
+		preferencesJSON = string(jsonBytes)
+	}
+
+	query := `UPDATE users SET preferences = $2, updated_at = NOW() WHERE id = $1`
+
+	result, err := r.db.ExecContext(ctx, query, userID, preferencesJSON)
+	if err != nil {
+		return fmt.Errorf("failed to update preferences: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()

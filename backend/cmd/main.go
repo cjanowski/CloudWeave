@@ -4,7 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"cloudweave/docs"
 	"cloudweave/internal/config"
 	"cloudweave/internal/database"
 	"cloudweave/internal/handlers"
@@ -15,6 +17,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 )
 
 func main() {
@@ -90,6 +94,9 @@ func main() {
 
 	// Create router
 	router := gin.Default()
+	
+	// Register custom validators
+	middleware.RegisterCustomValidators()
 
 	// CORS middleware
 	corsConfig := cors.DefaultConfig()
@@ -99,16 +106,33 @@ func main() {
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	router.Use(cors.New(corsConfig))
 
-	// Custom middleware
+	// Security middleware
+	router.Use(middleware.SecurityHeaders())
+	router.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB limit
+	router.Use(middleware.RateLimitMiddleware(100, time.Minute)) // 100 requests per minute
+
+	// Core middleware
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Logger())
+	router.Use(middleware.ProductionErrorHandler())
 	router.Use(middleware.ErrorHandler())
+
+	// Swagger documentation
+	docs.SwaggerInfo.Host = "localhost:" + func() string {
+		if port := os.Getenv("PORT"); port != "" {
+			return port
+		}
+		return "3001"
+	}()
+	
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/api/info", handlers.SwaggerInfo)
 
 	// API routes
 	api := router.Group("/api/v1")
 	{
 		// Health check
-		api.GET("/health", handlers.HealthCheckWithDB(db))
+		api.GET("/health", middleware.HealthCheckMiddleware(), handlers.HealthCheckWithDB(db))
 		api.GET("/health/repositories", func(c *gin.Context) {
 			if err := repoManager.Health(); err != nil {
 				c.JSON(http.StatusServiceUnavailable, gin.H{
@@ -171,12 +195,29 @@ func main() {
 			{
 				infrastructure.GET("/providers", infraHandler.GetProviders)
 				infrastructure.POST("/", infraHandler.CreateInfrastructure)
-				infrastructure.GET("/", infraHandler.ListInfrastructure)
-				infrastructure.GET("/:id", infraHandler.GetInfrastructure)
-				infrastructure.PUT("/:id", infraHandler.UpdateInfrastructure)
-				infrastructure.DELETE("/:id", infraHandler.DeleteInfrastructure)
-				infrastructure.GET("/:id/metrics", infraHandler.GetInfrastructureMetrics)
-				infrastructure.POST("/:id/sync", infraHandler.SyncInfrastructure)
+				infrastructure.GET("/", 
+					middleware.ValidateQuery(map[string]string{
+						"page": "numeric",
+						"limit": "numeric",
+						"provider": "alpha",
+						"status": "alpha",
+					}),
+					infraHandler.ListInfrastructure)
+				infrastructure.GET("/:id", 
+					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
+					infraHandler.GetInfrastructure)
+				infrastructure.PUT("/:id", 
+					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
+					infraHandler.UpdateInfrastructure)
+				infrastructure.DELETE("/:id", 
+					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
+					infraHandler.DeleteInfrastructure)
+				infrastructure.GET("/:id/metrics", 
+					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
+					infraHandler.GetInfrastructureMetrics)
+				infrastructure.POST("/:id/sync", 
+					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
+					infraHandler.SyncInfrastructure)
 			}
 
 			// Deployment routes
@@ -325,7 +366,7 @@ func main() {
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3002"
+		port = "3001"
 	}
 
 	log.Printf("Starting CloudWeave server on port %s", port)

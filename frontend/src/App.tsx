@@ -16,10 +16,12 @@ import { MonitoringPage } from './pages/Monitoring/MonitoringPage';
 import { SecurityPage } from './pages/Security/SecurityPage';
 import { CostManagementPage } from './pages/CostManagement/CostManagementPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
+import { OnboardingWizard } from './components/Onboarding/OnboardingWizard';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useSelector((state: any) => state.auth);
   const { theme } = useSelector((state: any) => state.ui);
+  const { onboardingCompleted } = useSelector((state: any) => state.user);
   
   const isDark = theme === 'dark';
   const sidebarWidth = 280;
@@ -37,6 +39,16 @@ const AppContent: React.FC = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Show onboarding if user hasn't completed it
+  if (!onboardingCompleted) {
+    return (
+      <Routes>
+        <Route path="/onboarding" element={<OnboardingWizard />} />
+        <Route path="*" element={<Navigate to="/onboarding" replace />} />
       </Routes>
     );
   }
@@ -127,6 +139,9 @@ const AppContent: React.FC = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            
+            {/* Onboarding route */}
+            <Route path="/onboarding" element={<OnboardingWizard />} />
             
             {/* Catch all - redirect to dashboard */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

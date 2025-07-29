@@ -423,6 +423,15 @@ const CostOverview: React.FC<{ isDark: boolean; costData?: CostBreakdown; loadin
 };
 
 const ReportsTab: React.FC<{ isDark: boolean; costData?: CostBreakdown; loading: boolean }> = ({ isDark, costData, loading }) => {
+  const [reports, setReports] = useState([
+    { id: '1', name: 'Monthly Cost Summary', type: 'summary', status: 'ready', lastGenerated: '2024-01-16', size: '2.3 MB' },
+    { id: '2', name: 'Service Breakdown Report', type: 'breakdown', status: 'generating', lastGenerated: '2024-01-15', size: '1.8 MB' },
+    { id: '3', name: 'Cost Trend Analysis', type: 'trend', status: 'ready', lastGenerated: '2024-01-14', size: '3.1 MB' },
+    { id: '4', name: 'Budget vs Actual', type: 'budget', status: 'ready', lastGenerated: '2024-01-13', size: '1.2 MB' },
+  ]);
+  const [selectedReportType, setSelectedReportType] = useState('summary');
+  const [dateRange, setDateRange] = useState('month');
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
@@ -431,27 +440,229 @@ const ReportsTab: React.FC<{ isDark: boolean; costData?: CostBreakdown; loading:
     );
   }
 
+  const getReportTypeIcon = (type: string) => {
+    switch (type) {
+      case 'summary': return 'cost-report';
+      case 'breakdown': return 'cost-chart';
+      case 'trend': return 'monitor-trending';
+      case 'budget': return 'cost-budget';
+      default: return 'cost-report';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ready': return '#10B981';
+      case 'generating': return '#F59E0B';
+      case 'error': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
   return (
     <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Report Generation */}
       <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Reports & Analytics</h2>
-        <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-          <p>Generate detailed cost reports and analytics</p>
-          <p>• Monthly cost reports</p>
-          <p>• Service-wise cost breakdown</p>
-          <p>• Cost trend analysis</p>
-          <p>• Custom reporting dashboards</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Generate New Report</h2>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Report Type
+            </label>
+            <select
+              value={selectedReportType}
+              onChange={(e) => setSelectedReportType(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="summary">Monthly Summary</option>
+              <option value="breakdown">Service Breakdown</option>
+              <option value="trend">Cost Trends</option>
+              <option value="budget">Budget Analysis</option>
+              <option value="forecast">Cost Forecast</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Date Range
+            </label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+              <option value="quarter">Last Quarter</option>
+              <option value="year">Last Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'end' }}>
+            <GlassButton
+              variant="primary"
+              size="medium"
+              isDark={isDark}
+              style={{ borderRadius: '12px', width: '100%' }}
+            >
+              <Icon name="action-plus" size="sm" />
+              Generate Report
+            </GlassButton>
+          </div>
         </div>
       </GlassCard>
 
+      {/* Existing Reports */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Recent Reports</h3>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {reports.map((report) => (
+            <motion.div
+              key={report.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                <div style={{ color: '#059669', fontSize: '20px' }}>
+                  <Icon name={getReportTypeIcon(report.type)} size="md" />
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    color: isDark ? '#ffffff' : '#000000',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    marginBottom: '4px'
+                  }}>
+                    {report.name}
+                  </div>
+                  <div style={{ 
+                    color: isDark ? '#ffffff' : '#666666',
+                    fontSize: '14px',
+                    opacity: 0.8
+                  }}>
+                    Generated: {report.lastGenerated} • Size: {report.size}
+                  </div>
+                </div>
+
+                <div style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '4px 12px',
+                  background: `${getStatusColor(report.status)}20`,
+                  borderRadius: '20px',
+                  border: `1px solid ${getStatusColor(report.status)}40`
+                }}>
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: getStatusColor(report.status)
+                  }} />
+                  <span style={{
+                    color: getStatusColor(report.status),
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    textTransform: 'capitalize'
+                  }}>
+                    {report.status}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  disabled={report.status !== 'ready'}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="action-view" size="sm" />
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  disabled={report.status !== 'ready'}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="action-download" size="sm" />
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="action-delete" size="sm" />
+                </GlassButton>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Cost Trends Chart */}
       {costData && (
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-          <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Trends</h2>
-          <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Trends (Last 7 Days)</h3>
+          <div style={{ display: 'grid', gap: '8px' }}>
             {costData.trends.slice(-7).map((trend, index) => (
-              <p key={index}>
-                {new Date(trend.date).toLocaleDateString()}: ${trend.cost.toFixed(2)} (Usage: {trend.usage.toFixed(1)}%)
-              </p>
+              <div key={index} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 12px',
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                borderRadius: '8px'
+              }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>
+                  {new Date(trend.date).toLocaleDateString()}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px', fontWeight: 600 }}>
+                    ${trend.cost.toFixed(2)}
+                  </span>
+                  <span style={{ 
+                    color: trend.usage > 80 ? '#EF4444' : trend.usage > 60 ? '#F59E0B' : '#10B981',
+                    fontSize: '12px',
+                    fontWeight: 500
+                  }}>
+                    {trend.usage.toFixed(1)}% usage
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </GlassCard>

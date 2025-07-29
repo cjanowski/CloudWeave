@@ -799,44 +799,732 @@ const getStatusColor = (status: string) => {
   return colors[status as keyof typeof colors] || '#666666';
 };
 
-const TemplatesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Infrastructure Templates</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Create and manage infrastructure templates</p>
-      <p>• CloudFormation templates</p>
-      <p>• Terraform configurations</p>
-      <p>• Kubernetes manifests</p>
-      <p>• Custom deployment templates</p>
-    </div>
-  </GlassCard>
-);
+const TemplatesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [templates, setTemplates] = useState([
+    { id: '1', name: 'Web Application Stack', type: 'terraform', provider: 'aws', status: 'active', lastUsed: '2024-01-15', deployments: 12 },
+    { id: '2', name: 'Database Cluster', type: 'cloudformation', provider: 'aws', status: 'active', lastUsed: '2024-01-14', deployments: 8 },
+    { id: '3', name: 'Kubernetes Microservices', type: 'kubernetes', provider: 'gcp', status: 'draft', lastUsed: '2024-01-10', deployments: 3 },
+    { id: '4', name: 'Load Balancer Setup', type: 'terraform', provider: 'azure', status: 'active', lastUsed: '2024-01-12', deployments: 15 },
+    { id: '5', name: 'Monitoring Stack', type: 'helm', provider: 'aws', status: 'deprecated', lastUsed: '2024-01-05', deployments: 2 },
+  ]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [filter, setFilter] = useState({ type: '', provider: '', status: '' });
 
-const PoliciesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Policy Management</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Define and enforce infrastructure policies</p>
-      <p>• Security policies</p>
-      <p>• Cost optimization policies</p>
-      <p>• Resource tagging policies</p>
-      <p>• Compliance policies</p>
-    </div>
-  </GlassCard>
-);
+  const getTemplateTypeIcon = (type: string) => {
+    switch (type) {
+      case 'terraform': return 'cloud-cdn';
+      case 'cloudformation': return 'cloud-storage';
+      case 'kubernetes': return 'cloud-compute';
+      case 'helm': return 'cloud-network';
+      default: return 'monitor-chart';
+    }
+  };
 
-const ComplianceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => (
-  <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-    <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Compliance Monitoring</h2>
-    <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-      <p>Monitor compliance across your infrastructure</p>
-      <p>• SOC 2 compliance: 98%</p>
-      <p>• ISO 27001 compliance: 95%</p>
-      <p>• GDPR compliance: 100%</p>
-      <p>• Custom compliance rules: 92%</p>
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#10B981';
+      case 'draft': return '#F59E0B';
+      case 'deprecated': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
+  const filteredTemplates = templates.filter(template => {
+    if (filter.type && template.type !== filter.type) return false;
+    if (filter.provider && template.provider !== filter.provider) return false;
+    if (filter.status && template.status !== filter.status) return false;
+    return true;
+  });
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Create Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Infrastructure Templates</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Create and manage reusable infrastructure templates
+          </p>
+        </div>
+        <GlassButton
+          variant="primary"
+          size="medium"
+          isDark={isDark}
+          onClick={() => setShowCreateForm(true)}
+          style={{ borderRadius: '12px' }}
+        >
+          <Icon name="action-plus" size="sm" />
+          Create Template
+        </GlassButton>
+      </div>
+
+      {/* Template Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {[
+          { label: 'Total Templates', value: templates.length, color: '#6B7280' },
+          { label: 'Active', value: templates.filter(t => t.status === 'active').length, color: '#10B981' },
+          { label: 'Total Deployments', value: templates.reduce((sum, t) => sum + t.deployments, 0), color: '#3B82F6' },
+          { label: 'Draft', value: templates.filter(t => t.status === 'draft').length, color: '#F59E0B' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <GlassCard variant="card" elevation="low" isDark={isDark} style={{ borderRadius: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Template Type
+            </label>
+            <select
+              value={filter.type}
+              onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Types</option>
+              <option value="terraform">Terraform</option>
+              <option value="cloudformation">CloudFormation</option>
+              <option value="kubernetes">Kubernetes</option>
+              <option value="helm">Helm</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Provider
+            </label>
+            <select
+              value={filter.provider}
+              onChange={(e) => setFilter({ ...filter, provider: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Providers</option>
+              <option value="aws">AWS</option>
+              <option value="azure">Azure</option>
+              <option value="gcp">GCP</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ color: isDark ? '#ffffff' : '#666666', marginBottom: '8px', display: 'block', fontSize: '14px' }}>
+              Status
+            </label>
+            <select
+              value={filter.status}
+              onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                color: isDark ? '#ffffff' : '#000000',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="deprecated">Deprecated</option>
+            </select>
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Templates Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+        {filteredTemplates.map((template) => (
+          <GlassCard key={template.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ color: '#10B981', fontSize: '20px' }}>
+                  <Icon name={getTemplateTypeIcon(template.type)} size="md" />
+                </div>
+                <div>
+                  <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 4px 0', fontSize: '16px' }}>
+                    {template.name}
+                  </h3>
+                  <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+                    {template.type} • {template.provider}
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                background: getStatusColor(template.status),
+                color: '#ffffff',
+                fontSize: '12px',
+                textTransform: 'uppercase'
+              }}>
+                {template.status}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Deployments:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{template.deployments}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>Last used:</span>
+                <span style={{ color: isDark ? '#ffffff' : '#000000', fontSize: '14px' }}>{template.lastUsed}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <GlassButton
+                variant="primary"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px', flex: 1 }}
+              >
+                <Icon name="deploy-rocket" size="sm" />
+                Deploy
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px' }}
+              >
+                <Icon name="action-edit" size="sm" />
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="small"
+                isDark={isDark}
+                style={{ borderRadius: '8px' }}
+              >
+                <Icon name="action-copy" size="sm" />
+              </GlassButton>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
     </div>
-  </GlassCard>
-);
+  );
+};
+
+const PoliciesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [policies, setPolicies] = useState([
+    { id: '1', name: 'Resource Tagging Policy', type: 'tagging', severity: 'high', status: 'active', violations: 3, resources: 45 },
+    { id: '2', name: 'Cost Optimization Policy', type: 'cost', severity: 'medium', status: 'active', violations: 1, resources: 23 },
+    { id: '3', name: 'Security Group Rules', type: 'security', severity: 'high', status: 'active', violations: 0, resources: 67 },
+    { id: '4', name: 'Instance Size Policy', type: 'performance', severity: 'low', status: 'active', violations: 5, resources: 34 },
+    { id: '5', name: 'Backup Compliance', type: 'compliance', severity: 'high', status: 'warning', violations: 2, resources: 12 },
+  ]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const getPolicyTypeIcon = (type: string) => {
+    switch (type) {
+      case 'tagging': return 'action-tag';
+      case 'cost': return 'cost-dollar';
+      case 'security': return 'security-shield';
+      case 'performance': return 'monitor-pulse';
+      case 'compliance': return 'security-audit';
+      default: return 'monitor-chart';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
+      case 'low': return '#10B981';
+      default: return '#6B7280';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#10B981';
+      case 'warning': return '#F59E0B';
+      case 'error': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
+  const totalViolations = policies.reduce((sum, p) => sum + p.violations, 0);
+  const totalResources = policies.reduce((sum, p) => sum + p.resources, 0);
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Create Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>Infrastructure Policies</h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Define and enforce policies across your infrastructure
+          </p>
+        </div>
+        <GlassButton
+          variant="primary"
+          size="medium"
+          isDark={isDark}
+          onClick={() => setShowCreateForm(true)}
+          style={{ borderRadius: '12px' }}
+        >
+          <Icon name="action-plus" size="sm" />
+          Create Policy
+        </GlassButton>
+      </div>
+
+      {/* Policy Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {[
+          { label: 'Total Policies', value: policies.length, color: '#6B7280' },
+          { label: 'Active', value: policies.filter(p => p.status === 'active').length, color: '#10B981' },
+          { label: 'Violations', value: totalViolations, color: totalViolations > 0 ? '#EF4444' : '#10B981' },
+          { label: 'Resources Covered', value: totalResources, color: '#3B82F6' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Policies List */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <h3 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Policy Management</h3>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {policies.map((policy) => (
+            <motion.div
+              key={policy.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                borderRadius: '12px',
+                padding: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                <div style={{ color: '#10B981', fontSize: '20px' }}>
+                  <Icon name={getPolicyTypeIcon(policy.type)} size="md" />
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    color: isDark ? '#ffffff' : '#000000',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    marginBottom: '4px'
+                  }}>
+                    {policy.name}
+                  </div>
+                  <div style={{ 
+                    color: isDark ? '#ffffff' : '#666666',
+                    fontSize: '14px',
+                    opacity: 0.8
+                  }}>
+                    Type: {policy.type} • {policy.resources} resources covered
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      color: policy.violations === 0 ? '#10B981' : '#EF4444',
+                      fontSize: '18px',
+                      fontWeight: 'bold'
+                    }}>
+                      {policy.violations}
+                    </div>
+                    <div style={{ 
+                      color: isDark ? '#ffffff' : '#666666',
+                      fontSize: '12px',
+                      opacity: 0.7
+                    }}>
+                      Violations
+                    </div>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '4px 12px',
+                    background: `${getSeverityColor(policy.severity)}20`,
+                    borderRadius: '20px',
+                    border: `1px solid ${getSeverityColor(policy.severity)}40`
+                  }}>
+                    <div style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: getSeverityColor(policy.severity)
+                    }} />
+                    <span style={{
+                      color: getSeverityColor(policy.severity),
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      textTransform: 'capitalize'
+                    }}>
+                      {policy.severity}
+                    </span>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '4px 12px',
+                    background: `${getStatusColor(policy.status)}20`,
+                    borderRadius: '20px',
+                    border: `1px solid ${getStatusColor(policy.status)}40`
+                  }}>
+                    <div style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: getStatusColor(policy.status)
+                    }} />
+                    <span style={{
+                      color: getStatusColor(policy.status),
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      textTransform: 'capitalize'
+                    }}>
+                      {policy.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="action-edit" size="sm" />
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="security-audit" size="sm" />
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
+                  isDark={isDark}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <Icon name="action-view" size="sm" />
+                </GlassButton>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
+
+const ComplianceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const [complianceChecks, setComplianceChecks] = useState([
+    { id: '1', name: 'SOC 2 Type II', category: 'security', score: 98, status: 'compliant', issues: 2, lastCheck: '2024-01-15' },
+    { id: '2', name: 'ISO 27001', category: 'security', score: 95, status: 'minor_issues', issues: 3, lastCheck: '2024-01-14' },
+    { id: '3', name: 'GDPR Compliance', category: 'privacy', score: 100, status: 'compliant', issues: 0, lastCheck: '2024-01-16' },
+    { id: '4', name: 'HIPAA', category: 'healthcare', score: 92, status: 'action_required', issues: 5, lastCheck: '2024-01-12' },
+    { id: '5', name: 'PCI DSS', category: 'payment', score: 89, status: 'action_required', issues: 7, lastCheck: '2024-01-10' },
+    { id: '6', name: 'Custom Security Rules', category: 'custom', score: 94, status: 'minor_issues', issues: 4, lastCheck: '2024-01-13' },
+  ]);
+
+  const getComplianceStatusColor = (status: string) => {
+    switch (status) {
+      case 'compliant': return '#10B981';
+      case 'minor_issues': return '#F59E0B';
+      case 'action_required': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'compliant': return 'Compliant';
+      case 'minor_issues': return 'Minor Issues';
+      case 'action_required': return 'Action Required';
+      default: return 'Unknown';
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'security': return 'security-shield';
+      case 'privacy': return 'security-audit';
+      case 'healthcare': return 'monitor-pulse';
+      case 'payment': return 'cost-dollar';
+      case 'custom': return 'monitor-chart';
+      default: return 'monitor-chart';
+    }
+  };
+
+  const averageScore = Math.round(complianceChecks.reduce((sum, c) => sum + c.score, 0) / complianceChecks.length);
+  const totalIssues = complianceChecks.reduce((sum, c) => sum + c.issues, 0);
+  const compliantCount = complianceChecks.filter(c => c.status === 'compliant').length;
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Compliance Overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {[
+          { label: 'Average Score', value: `${averageScore}%`, color: averageScore >= 95 ? '#10B981' : averageScore >= 85 ? '#F59E0B' : '#EF4444' },
+          { label: 'Frameworks', value: complianceChecks.length, color: '#6B7280' },
+          { label: 'Compliant', value: compliantCount, color: '#10B981' },
+          { label: 'Total Issues', value: totalIssues, color: totalIssues === 0 ? '#10B981' : '#EF4444' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassCard
+              variant="card"
+              elevation="low"
+              isDark={isDark}
+              style={{
+                textAlign: 'center',
+                padding: '16px',
+                borderRadius: '16px',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+              }}
+            >
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: stat.color, marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#ffffff' : '#666666', opacity: 0.7 }}>
+                {stat.label}
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Compliance Checks */}
+      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Compliance Monitoring</h3>
+          <GlassButton
+            variant="primary"
+            size="small"
+            isDark={isDark}
+            style={{ borderRadius: '12px' }}
+          >
+            <Icon name="action-refresh" size="sm" />
+            Run All Checks
+          </GlassButton>
+        </div>
+
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {complianceChecks.map((check) => (
+            <motion.div
+              key={check.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                borderRadius: '12px',
+                padding: '20px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ color: '#10B981', fontSize: '20px' }}>
+                    <Icon name={getCategoryIcon(check.category)} size="md" />
+                  </div>
+                  <div>
+                    <div style={{ 
+                      color: isDark ? '#ffffff' : '#000000',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      marginBottom: '4px'
+                    }}>
+                      {check.name}
+                    </div>
+                    <div style={{ 
+                      color: isDark ? '#ffffff' : '#666666',
+                      fontSize: '14px',
+                      opacity: 0.8
+                    }}>
+                      {check.category} • Last check: {check.lastCheck}
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  background: `${getComplianceStatusColor(check.status)}20`,
+                  borderRadius: '20px',
+                  border: `1px solid ${getComplianceStatusColor(check.status)}40`
+                }}>
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: getComplianceStatusColor(check.status)
+                  }} />
+                  <span style={{
+                    color: getComplianceStatusColor(check.status),
+                    fontSize: '12px',
+                    fontWeight: 500,
+                  }}>
+                    {getStatusLabel(check.status)}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: isDark ? '#ffffff' : '#666666', fontSize: '14px' }}>
+                      Compliance Score
+                    </span>
+                    <span style={{ 
+                      color: check.score >= 95 ? '#10B981' : check.score >= 85 ? '#F59E0B' : '#EF4444',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}>
+                      {check.score}%
+                    </span>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${check.score}%`,
+                      height: '100%',
+                      background: check.score >= 95 ? '#10B981' : check.score >= 85 ? '#F59E0B' : '#EF4444',
+                      borderRadius: '4px',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ 
+                    color: check.issues === 0 ? '#10B981' : '#EF4444',
+                    fontSize: '20px',
+                    fontWeight: 'bold'
+                  }}>
+                    {check.issues}
+                  </div>
+                  <div style={{ 
+                    color: isDark ? '#ffffff' : '#666666',
+                    fontSize: '12px',
+                    opacity: 0.7
+                  }}>
+                    Issues
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <GlassButton
+                    variant="ghost"
+                    size="small"
+                    isDark={isDark}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <Icon name="action-view" size="sm" />
+                  </GlassButton>
+                  <GlassButton
+                    variant="ghost"
+                    size="small"
+                    isDark={isDark}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <Icon name="action-refresh" size="sm" />
+                  </GlassButton>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
 
 // Helper functions
 const getChangeTypeColor = (type: string) => {

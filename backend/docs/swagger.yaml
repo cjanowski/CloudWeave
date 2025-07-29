@@ -1,0 +1,383 @@
+definitions:
+  handlers.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/models.ApiError'
+      requestId:
+        example: req_123e4567-e89b-12d3-a456-426614174000
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  handlers.SuccessResponse:
+    properties:
+      data: {}
+      requestId:
+        example: req_123e4567-e89b-12d3-a456-426614174000
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  handlers.ValidationErrorDetails:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/models.ValidationError'
+        type: array
+      message:
+        example: Request validation failed
+        type: string
+      timestamp:
+        example: "2024-01-01T12:00:00Z"
+        type: string
+    type: object
+  handlers.ValidationErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/handlers.ValidationErrorDetails'
+      requestId:
+        example: req_123e4567-e89b-12d3-a456-426614174000
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  models.ApiError:
+    properties:
+      code:
+        type: string
+      details: {}
+      message:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  models.ApiResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/models.ApiError'
+      requestId:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.CreateInfrastructureRequest:
+    properties:
+      name:
+        example: web-server-01
+        maxLength: 255
+        minLength: 1
+        type: string
+      provider:
+        example: aws
+        type: string
+      region:
+        example: us-east-1
+        maxLength: 100
+        minLength: 1
+        type: string
+      specifications:
+        additionalProperties: true
+        type: object
+      tags:
+        example:
+        - '["production"'
+        - '"web"]'
+        items:
+          type: string
+        type: array
+      type:
+        example: server
+        type: string
+    required:
+    - name
+    - provider
+    - region
+    - type
+    type: object
+  models.Infrastructure:
+    properties:
+      costInfo:
+        additionalProperties: true
+        type: object
+      createdAt:
+        type: string
+      externalId:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organizationId:
+        type: string
+      provider:
+        type: string
+      region:
+        type: string
+      specifications:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginResponse:
+    properties:
+      refreshToken:
+        type: string
+      success:
+        type: boolean
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.RegisterRequest:
+    properties:
+      companyName:
+        description: Used to create organization if not provided
+        type: string
+      confirmPassword:
+        minLength: 8
+        type: string
+      email:
+        type: string
+      name:
+        minLength: 2
+        type: string
+      organizationId:
+        description: Optional - will create if not provided
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - confirmPassword
+    - email
+    - name
+    - password
+    type: object
+  models.RegisterResponse:
+    properties:
+      refreshToken:
+        type: string
+      success:
+        type: boolean
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.User:
+    properties:
+      avatarUrl:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      emailVerified:
+        type: boolean
+      id:
+        type: string
+      isActive:
+        type: boolean
+      lastLoginAt:
+        type: string
+      name:
+        type: string
+      organizationId:
+        type: string
+      preferences:
+        additionalProperties: true
+        type: object
+      role:
+        description: Virtual fields for compatibility
+        type: string
+      ssoProvider:
+        description: SSO fields
+        type: string
+      ssoSubject:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+      tag:
+        type: string
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ValidationErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.RegisterResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ValidationErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: User registration
+      tags:
+      - Authentication
+  /info:
+    get:
+      consumes:
+      - application/json
+      description: Returns basic information about the CloudWeave API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.ApiResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Get API information
+      tags:
+      - System
+  /infrastructure:
+    post:
+      consumes:
+      - application/json
+      description: Create a new infrastructure resource in the specified cloud provider
+      parameters:
+      - description: Infrastructure creation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateInfrastructureRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Infrastructure'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ValidationErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create infrastructure resource
+      tags:
+      - Infrastructure
+swagger: "2.0"

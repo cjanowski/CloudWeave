@@ -8,14 +8,14 @@ import (
 
 	"cloudweave/internal/models"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/google/uuid"
 )
 
 type CloudCredentialsRepository struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewCloudCredentialsRepository(db *sqlx.DB) *CloudCredentialsRepository {
+func NewCloudCredentialsRepository(db *sql.DB) *CloudCredentialsRepository {
 	return &CloudCredentialsRepository{db: db}
 }
 
