@@ -240,8 +240,28 @@ class DemoDataService {
     switch (type) {
       case 'infrastructure':
         return this.generateLocalInfrastructure(scenario);
+      case 'infrastructure-stats':
+        return this.generateLocalInfrastructureStats(scenario);
+      case 'infrastructure-distribution':
+        return this.generateLocalInfrastructureDistribution(scenario);
+      case 'infrastructure-changes':
+        return this.generateLocalInfrastructureChanges(scenario);
       case 'deployments':
         return this.generateLocalDeployments(scenario);
+      case 'deployment-stats':
+        return this.generateLocalDeploymentStats(scenario);
+      case 'deployment-environments':
+        return this.generateLocalDeploymentEnvironments(scenario);
+      case 'dashboard-stats':
+        return this.generateLocalDashboardStats(scenario);
+      case 'dashboard-activity':
+        return this.generateLocalDashboardActivity(scenario);
+      case 'dashboard-performance':
+        return this.generateLocalDashboardPerformance(scenario);
+      case 'dashboard-costs':
+        return this.generateLocalDashboardCosts(scenario);
+      case 'dashboard-security':
+        return this.generateLocalDashboardSecurity(scenario);
       case 'metrics':
         return this.generateLocalMetrics(scenario);
       case 'alerts':
@@ -473,6 +493,182 @@ class DemoDataService {
         tags: ['startup', 'cost', 'optimization'],
         description: 'Demo cost data for startup scenario'
       }
+    };
+  }
+
+  // Additional demo data generators for API fallback
+  private generateLocalInfrastructureStats(scenario: string): any {
+    return {
+      totalResources: 156,
+      totalResourcesChange: '+12',
+      totalResourcesTrend: 'up',
+      activeInstances: 24,
+      activeInstancesChange: '+3',
+      activeInstancesTrend: 'up',
+      networks: 8,
+      networksChange: '0',
+      networksTrend: 'stable',
+      complianceScore: 94,
+      complianceScoreChange: '+2%',
+      complianceScoreTrend: 'up',
+    };
+  }
+
+  private generateLocalInfrastructureDistribution(scenario: string): any {
+    return {
+      ec2Instances: 24,
+      s3Buckets: 45,
+      rdsDatabases: 8,
+      lambdaFunctions: 79,
+      totalCount: 156,
+    };
+  }
+
+  private generateLocalInfrastructureChanges(scenario: string): any {
+    return [
+      {
+        id: '1',
+        message: 'New EC2 instance launched in us-west-2',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        type: 'created',
+        resourceId: 'i-0123456789abcdef0',
+        resourceName: 'web-server-01'
+      },
+      {
+        id: '2',
+        message: 'S3 bucket policy updated',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        type: 'updated',
+        resourceId: 'my-app-bucket',
+        resourceName: 'my-app-bucket'
+      },
+      {
+        id: '3',
+        message: 'RDS backup completed successfully',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        type: 'deployed',
+        resourceId: 'db-instance-1',
+        resourceName: 'production-db'
+      }
+    ];
+  }
+
+  private generateLocalDeploymentStats(scenario: string): any {
+    return {
+      activeDeployments: 12,
+      activeDeploymentsChange: '+2',
+      activeDeploymentsTrend: 'up',
+      successRate: 98.5,
+      successRateChange: '+1.2%',
+      successRateTrend: 'up',
+      failedDeployments: 1,
+      failedDeploymentsChange: '-3',
+      failedDeploymentsTrend: 'down',
+      avgDeployTime: 4.2,
+      avgDeployTimeChange: '-0.8min',
+      avgDeployTimeTrend: 'up',
+    };
+  }
+
+  private generateLocalDeploymentEnvironments(scenario: string): any {
+    return [
+      {
+        id: 'production',
+        name: 'Production',
+        status: 'healthy',
+        servicesCount: 8,
+        lastDeployment: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        uptime: 99.9
+      },
+      {
+        id: 'staging',
+        name: 'Staging',
+        status: 'healthy',
+        servicesCount: 6,
+        lastDeployment: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+        uptime: 99.5
+      },
+      {
+        id: 'development',
+        name: 'Development',
+        status: 'healthy',
+        servicesCount: 4,
+        lastDeployment: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        uptime: 98.8
+      }
+    ];
+  }
+
+  private generateLocalDashboardStats(scenario: string): any {
+    return {
+      activeResources: 24,
+      activeResourcesChange: '+12%',
+      activeResourcesTrend: 'up',
+      deployments: 8,
+      deploymentsChange: '+5%',
+      deploymentsTrend: 'up',
+      costThisMonth: 1234,
+      costThisMonthChange: '-8%',
+      costThisMonthTrend: 'down',
+      uptime: 99.9,
+      uptimeChange: '+0.1%',
+      uptimeTrend: 'up',
+    };
+  }
+
+  private generateLocalDashboardActivity(scenario: string): any {
+    return [
+      {
+        id: '1',
+        message: 'Deployment "web-app-v2" completed successfully',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        type: 'deployment'
+      },
+      {
+        id: '2', 
+        message: 'New EC2 instance launched in us-east-1',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        type: 'infrastructure'
+      },
+      {
+        id: '3',
+        message: 'Cost alert: Monthly budget 80% reached',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        type: 'cost'
+      }
+    ];
+  }
+
+  private generateLocalDashboardPerformance(scenario: string): any {
+    return {
+      cpuUsage: 45,
+      memoryUsage: 62,
+      networkIO: 1.2,
+      responseTime: 120,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  private generateLocalDashboardCosts(scenario: string): any {
+    return {
+      thisMonth: 1234,
+      lastMonth: 1342,
+      projected: 1180,
+      savings: 162,
+      savingsPercentage: 12,
+    };
+  }
+
+  private generateLocalDashboardSecurity(scenario: string): any {
+    return {
+      securityScore: 98,
+      vulnerabilities: {
+        critical: 0,
+        medium: 2,
+        low: 5,
+      },
+      lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      compliance: ['SOC2', 'ISO27001'],
     };
   }
 }
