@@ -87,96 +87,17 @@ export class InfrastructureService {
 
   // Get infrastructure statistics for overview
   async getInfrastructureStats(): Promise<InfrastructureStats> {
-    try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<InfrastructureStats>('/infrastructure/stats');
-      
-      return {
-        totalResources: 156,
-        totalResourcesChange: '+12',
-        totalResourcesTrend: 'up',
-        activeInstances: 24,
-        activeInstancesChange: '+3',
-        activeInstancesTrend: 'up',
-        networks: 8,
-        networksChange: '0',
-        networksTrend: 'stable',
-        complianceScore: 94,
-        complianceScoreChange: '+2%',
-        complianceScoreTrend: 'up',
-      };
-    } catch (error) {
-      console.error('Failed to fetch infrastructure stats:', error);
-      throw error;
-    }
+    return await apiService.get<InfrastructureStats>('/infrastructure/stats');
   }
 
   // Get resource distribution
   async getResourceDistribution(): Promise<ResourceDistribution> {
-    try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<ResourceDistribution>('/infrastructure/distribution');
-      
-      return {
-        ec2Instances: 24,
-        s3Buckets: 45,
-        rdsDatabases: 8,
-        lambdaFunctions: 79,
-        totalCount: 156,
-      };
-    } catch (error) {
-      console.error('Failed to fetch resource distribution:', error);
-      throw error;
-    }
+    return await apiService.get<ResourceDistribution>('/infrastructure/distribution');
   }
 
   // Get recent changes
   async getRecentChanges(): Promise<RecentChange[]> {
-    try {
-      // For now, return mock data until backend endpoints are enabled
-      // TODO: Replace with real API call once backend is ready
-      // return await apiService.get<RecentChange[]>('/infrastructure/recent-changes');
-      
-      return [
-        {
-          id: '1',
-          message: 'New EC2 instance launched in us-west-2',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          type: 'created',
-          resourceId: 'i-0123456789abcdef0',
-          resourceName: 'web-server-01'
-        },
-        {
-          id: '2',
-          message: 'S3 bucket policy updated',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          type: 'updated',
-          resourceId: 'my-app-bucket',
-          resourceName: 'my-app-bucket'
-        },
-        {
-          id: '3',
-          message: 'RDS backup completed successfully',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          type: 'deployed',
-          resourceId: 'db-instance-1',
-          resourceName: 'production-db'
-        },
-        {
-          id: '4',
-          message: 'Lambda function deployed',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-          type: 'deployed',
-          resourceId: 'lambda-func-1',
-          resourceName: 'data-processor'
-        }
-      ];
-    } catch (error) {
-      console.error('Failed to fetch recent changes:', error);
-      throw error;
-    }
+    return await apiService.get<RecentChange[]>('/infrastructure/recent-changes');
   }
 
   // List infrastructure resources with pagination and filtering
@@ -185,78 +106,32 @@ export class InfrastructureService {
     limit: number = 20,
     filters: InfrastructureFilters = {}
   ): Promise<InfrastructureListResponse> {
-    try {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-        ...filters
-      });
-      return await apiService.get<InfrastructureListResponse>(`/infrastructure?${queryParams}`);
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure list');
-      const mockData = this.generateMockInfrastructure(page, limit, filters);
-      return mockData;
-    }
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...filters
+    });
+    return await apiService.get<InfrastructureListResponse>(`/infrastructure?${queryParams}`);
   }
 
   // Get specific infrastructure resource
   async getInfrastructure(id: string): Promise<Infrastructure> {
-    try {
-      return await apiService.get<Infrastructure>(`/infrastructure/${id}`);
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure');
-      return this.generateMockInfrastructureItem(id);
-    }
+    return await apiService.get<Infrastructure>(`/infrastructure/${id}`);
   }
 
   // Create new infrastructure resource
   async createInfrastructure(data: Partial<Infrastructure>): Promise<Infrastructure> {
-    try {
-      return await apiService.post<Infrastructure>('/infrastructure', data);
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure creation');
-      return {
-        id: `infra-${Date.now()}`,
-        name: data.name || 'New Resource',
-        provider: data.provider || 'aws',
-        type: data.type || 'compute',
-        status: 'pending',
-        region: data.region || 'us-east-1',
-        cost: {
-          daily: 5.50,
-          monthly: 165.00,
-          currency: 'USD'
-        },
-        tags: data.tags || {},
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-    }
+    return await apiService.post<Infrastructure>('/infrastructure', data);
   }
 
   // Update infrastructure resource
   async updateInfrastructure(id: string, data: Partial<Infrastructure>): Promise<Infrastructure> {
-    try {
-      return await apiService.put<Infrastructure>(`/infrastructure/${id}`, data);
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure update');
-      const existing = await this.getInfrastructure(id);
-      return {
-        ...existing,
-        ...data,
-        updatedAt: new Date().toISOString(),
-      };
-    }
+    return await apiService.put<Infrastructure>(`/infrastructure/${id}`, data);
   }
 
   // Delete infrastructure resource
   async deleteInfrastructure(id: string): Promise<void> {
-    try {
-      await apiService.delete(`/infrastructure/${id}`);
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure deletion');
-      console.log(`Infrastructure ${id} deleted (mock)`);
-    }
+    await apiService.delete(`/infrastructure/${id}`);
   }
 
   // Generate mock infrastructure data for development

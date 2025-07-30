@@ -15,5 +15,8 @@ export const store = configureStore({
   },
 });
 
+// Make store available globally for API service
+(window as any).__REDUX_STORE__ = store;
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
