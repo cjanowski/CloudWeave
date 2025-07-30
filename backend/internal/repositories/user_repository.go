@@ -58,7 +58,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	user := &models.User{}
 	query := `
 		SELECT id, email, name, password_hash, organization_id, role,
-		       preferences, email_verified, created_at, updated_at, last_login_at
+		       preferences, email_verified, onboarding_completed, demo_mode, demo_scenario,
+		       is_active, created_at, updated_at, last_login_at, sso_provider, sso_subject
 		FROM users
 		WHERE id = $1`
 
@@ -72,15 +73,26 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 		&user.Role,
 		&preferencesJSON,
 		&user.EmailVerified,
+		&user.OnboardingCompleted,
+		&user.DemoMode,
+		&user.DemoScenario,
+		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.LastLoginAt,
+		&user.SSOProvider,
+		&user.SSOSubject,
 	)
 
 	// Parse preferences JSON and set defaults
 	if err == nil {
 		user.Preferences = make(map[string]interface{})
-		user.IsActive = true // Set default for compatibility
+		if preferencesJSON != "" && preferencesJSON != "{}" {
+			if err := json.Unmarshal([]byte(preferencesJSON), &user.Preferences); err != nil {
+				// Log error but don't fail - use empty preferences
+				fmt.Printf("Warning: failed to parse preferences for user %s: %v\n", user.ID, err)
+			}
+		}
 	}
 
 	if err != nil {
@@ -98,7 +110,8 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 	user := &models.User{}
 	query := `
 		SELECT id, email, name, password_hash, organization_id, role,
-		       preferences, email_verified, created_at, updated_at, last_login_at
+		       preferences, email_verified, onboarding_completed, demo_mode, demo_scenario,
+		       is_active, created_at, updated_at, last_login_at, sso_provider, sso_subject
 		FROM users
 		WHERE email = $1`
 
@@ -124,15 +137,26 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		&user.Role,
 		&preferencesJSON,
 		&user.EmailVerified,
+		&user.OnboardingCompleted,
+		&user.DemoMode,
+		&user.DemoScenario,
+		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.LastLoginAt,
+		&user.SSOProvider,
+		&user.SSOSubject,
 	)
 
 	// Parse preferences JSON and set defaults
 	if err == nil {
 		user.Preferences = make(map[string]interface{})
-		user.IsActive = true // Set default for compatibility
+		if preferencesJSON != "" && preferencesJSON != "{}" {
+			if err := json.Unmarshal([]byte(preferencesJSON), &user.Preferences); err != nil {
+				// Log error but don't fail - use empty preferences
+				fmt.Printf("Warning: failed to parse preferences for user %s: %v\n", user.ID, err)
+			}
+		}
 	}
 
 	if err != nil {
@@ -367,6 +391,116 @@ func (r *UserRepository) List(ctx context.Context, params ListParams) ([]*models
 
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating user rows: %w", err)
+	}
+
+	return users, nil
+}
+// UpdateDemoSettings updates the user's demo mode and scenario
+func (r *UserRepository) UpdateDemoSettings(ctx context.Context, userID string, demoMode bool, demoScenario string) error {
+	query := `
+		UPDATE users 
+		SET demo_mode = $2, demo_scenario = $3, updated_at = NOW() 
+		WHERE id = $1`
+
+	result, err := r.db.ExecContext(ctx, query, userID, demoMode, demoScenario)
+	if err != nil {
+		return fmt.Errorf("failed to update demo settings: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with id %s not found", userID)
+	}
+
+	return nil
+}
+
+// UpdateOnboardingCompleted updates the user's onboarding completion status
+func (r *UserRepository) UpdateOnboardingCompleted(ctx context.Context, userID string, completed bool) error {
+	query := `
+		UPDATE users 
+		SET onboarding_completed = $2, updated_at = NOW() 
+		WHERE id = $1`
+
+	result, err := r.db.ExecContext(ctx, query, userID, completed)
+	if err != nil {
+		return fmt.Errorf("failed to update onboarding status: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with id %s not found", userID)
+	}
+
+	return nil
+}
+
+// GetDemoUsers retrieves all users in demo mode
+func (r *UserRepository) GetDemoUsers(ctx context.Context) ([]*models.User, error) {
+	query := `
+		SELECT id, email, name, password_hash, organization_id, role,
+		       preferences, email_verified, onboarding_completed, demo_mode, demo_scenario,
+		       is_active, created_at, updated_at, last_login_at, sso_provider, sso_subject
+		FROM users
+		WHERE demo_mode = true
+		ORDER BY created_at DESC`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get demo users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		user := &models.User{}
+		var preferencesJSON string
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.Name,
+			&user.PasswordHash,
+			&user.OrganizationID,
+			&user.Role,
+			&preferencesJSON,
+			&user.EmailVerified,
+			&user.OnboardingCompleted,
+			&user.DemoMode,
+			&user.DemoScenario,
+			&user.IsActive,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.LastLoginAt,
+			&user.SSOProvider,
+			&user.SSOSubject,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan demo user row: %w", err)
+		}
+
+		// Parse preferences JSON
+		user.Preferences = make(map[string]interface{})
+		if preferencesJSON != "" && preferencesJSON != "{}" {
+			if err := json.Unmarshal([]byte(preferencesJSON), &user.Preferences); err != nil {
+				// Log error but don't fail - use empty preferences
+				fmt.Printf("Warning: failed to parse preferences for user %s: %v\n", user.ID, err)
+			}
+		}
+
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating demo user rows: %w", err)
 	}
 
 	return users, nil

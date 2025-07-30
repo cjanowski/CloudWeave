@@ -7,8 +7,6 @@ import (
 	"fmt"
 
 	"cloudweave/internal/models"
-
-	"github.com/google/uuid"
 )
 
 type CloudCredentialsRepository struct {
@@ -202,6 +200,34 @@ func (r *CloudCredentialsRepository) Delete(ctx context.Context, id string) erro
 
 	if rowsAffected == 0 {
 		return fmt.Errorf("credentials not found")
+	}
+
+	return nil
+}
+
+// Update updates cloud credentials
+func (r *CloudCredentialsRepository) Update(ctx context.Context, cred *models.CloudCredentials) error {
+	credentialsJSON, err := json.Marshal(cred.Credentials)
+	if err != nil {
+		return fmt.Errorf("failed to marshal credentials: %w", err)
+	}
+
+	query := `
+		UPDATE cloud_credentials
+		SET provider = $2, credential_type = $3, credentials = $4, is_active = $5, updated_at = NOW()
+		WHERE id = $1
+	`
+
+	_, err = r.db.ExecContext(ctx, query,
+		cred.ID,
+		cred.Provider,
+		cred.CredentialType,
+		credentialsJSON,
+		cred.IsActive,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update cloud credentials: %w", err)
 	}
 
 	return nil

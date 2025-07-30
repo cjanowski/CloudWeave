@@ -16,6 +16,10 @@ type UserRepositoryInterface interface {
 	Update(ctx context.Context, user *models.User) error
 	UpdateLastLogin(ctx context.Context, userID string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
+	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
+	UpdateDemoSettings(ctx context.Context, userID string, demoMode bool, demoScenario string) error
+	UpdateOnboardingCompleted(ctx context.Context, userID string, completed bool) error
+	GetDemoUsers(ctx context.Context) ([]*models.User, error)
 	Delete(ctx context.Context, id string) error
 	EmailExists(ctx context.Context, email string) (bool, error)
 	List(ctx context.Context, params ListParams) ([]*models.User, error)

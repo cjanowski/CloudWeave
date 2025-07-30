@@ -208,7 +208,7 @@ func (mc *MetricsCollector) StartCollection(ctx context.Context, infra *models.I
 				ResourceType: "infrastructure",
 				MetricName:   "infrastructure_health",
 				Value:        1.0, // Placeholder
-				Unit:         &[]string{"status"}[0],
+				Unit:         "status",
 				Timestamp:    time.Now(),
 			}
 
