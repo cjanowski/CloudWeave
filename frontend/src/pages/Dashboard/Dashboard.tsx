@@ -4,15 +4,17 @@ import { motion } from 'framer-motion';
 import { DashboardTabs } from './DashboardTabs';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { RealTimeNotification as RealTimeNotificationComponent, RealTimeNotification as NotificationType } from '../../components/common/RealTimeNotification';
+import DemoIndicator from '../../components/common/DemoIndicator';
 import './Dashboard.css';
 
 export const Dashboard: React.FC = () => {
   const { theme } = useSelector((state: any) => state.ui);
   const { user } = useSelector((state: any) => state.auth);
+  const { isDemo } = useSelector((state: any) => state.demo);
   const isDark = theme === 'dark';
   
   // WebSocket hook for real-time updates
-  const { isConnected, onDeploymentStatus, onInfrastructureUpdate, onMetricsUpdate, onAlert } = useWebSocket();
+  const { isConnected, isInSimulationMode, onDeploymentStatus, onInfrastructureUpdate, onMetricsUpdate, onAlert } = useWebSocket();
   
   // Real-time notifications state
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
@@ -116,23 +118,32 @@ export const Dashboard: React.FC = () => {
         }}>
           Welcome back, {user?.name || 'User'}!
         </h1>
-        <p style={{ 
+        <div style={{ 
           fontSize: '16px', 
           opacity: 0.7,
           margin: 0,
           color: isDark ? '#ffffff' : '#666666',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap'
         }}>
-          Here's what's happening with your infrastructure today.
-          {isConnected && (
-            <span style={{ 
-              color: '#10B981', 
-              marginLeft: '8px',
-              fontSize: '14px',
-            }}>
-              ● Real-time updates active
-            </span>
-          )}
-        </p>
+          <span>Here's what's happening with your infrastructure today.</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isConnected && (
+              <span style={{ 
+                color: '#10B981', 
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                ● {isInSimulationMode ? 'Demo updates active' : 'Real-time updates active'}
+              </span>
+            )}
+            {isDemo && <DemoIndicator size="small" inline />}
+          </div>
+        </div>
       </motion.div>
 
       {/* Dashboard Tabs */}

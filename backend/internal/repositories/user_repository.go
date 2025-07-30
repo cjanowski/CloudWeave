@@ -57,9 +57,7 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, email, name, password_hash, organization_id, role,
-		       preferences, email_verified, onboarding_completed, demo_mode, demo_scenario,
-		       is_active, created_at, updated_at, last_login_at, sso_provider, sso_subject
+		SELECT id, email, name, password_hash, organization_id, role, preferences, email_verified, created_at, updated_at
 		FROM users
 		WHERE id = $1`
 
@@ -73,16 +71,18 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 		&user.Role,
 		&preferencesJSON,
 		&user.EmailVerified,
-		&user.OnboardingCompleted,
-		&user.DemoMode,
-		&user.DemoScenario,
-		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.LastLoginAt,
-		&user.SSOProvider,
-		&user.SSOSubject,
 	)
+
+	// Set default values for missing columns
+	user.OnboardingCompleted = false
+	user.DemoMode = true // Default to demo mode for existing users
+	user.DemoScenario = "startup"
+	user.IsActive = true
+	user.LastLoginAt = nil
+	user.SSOProvider = nil
+	user.SSOSubject = nil
 
 	// Parse preferences JSON and set defaults
 	if err == nil {
@@ -109,9 +109,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, email, name, password_hash, organization_id, role,
-		       preferences, email_verified, onboarding_completed, demo_mode, demo_scenario,
-		       is_active, created_at, updated_at, last_login_at, sso_provider, sso_subject
+		SELECT id, email, name, password_hash, organization_id, role, preferences, email_verified, created_at, updated_at
 		FROM users
 		WHERE email = $1`
 
@@ -137,16 +135,18 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		&user.Role,
 		&preferencesJSON,
 		&user.EmailVerified,
-		&user.OnboardingCompleted,
-		&user.DemoMode,
-		&user.DemoScenario,
-		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.LastLoginAt,
-		&user.SSOProvider,
-		&user.SSOSubject,
 	)
+
+	// Set default values for missing columns
+	user.OnboardingCompleted = false
+	user.DemoMode = true // Default to demo mode for existing users
+	user.DemoScenario = "startup"
+	user.IsActive = true
+	user.LastLoginAt = nil
+	user.SSOProvider = nil
+	user.SSOSubject = nil
 
 	// Parse preferences JSON and set defaults
 	if err == nil {

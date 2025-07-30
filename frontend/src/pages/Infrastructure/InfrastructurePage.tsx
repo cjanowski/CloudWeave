@@ -9,6 +9,8 @@ import DemoBanner from '../../components/common/DemoBanner';
 import DemoIndicator from '../../components/common/DemoIndicator';
 import { infrastructureService } from '../../services/infrastructureService';
 import { loadDemoInfrastructure } from '../../store/slices/demoSlice';
+import { useApiWithFallback } from '../../hooks/useApiWithFallback';
+import { LoadingState, ErrorState, EmptyState, CardSkeleton } from '../../components/common/LoadingStates';
 import type { InfrastructureStats, ResourceDistribution, RecentChange, Infrastructure } from '../../services/infrastructureService';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -174,61 +176,58 @@ export const InfrastructurePage: React.FC = () => {
 
 // Tab Content Components
 const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-  const [stats, setStats] = useState<InfrastructureStats | null>(null);
-  const [distribution, setDistribution] = useState<ResourceDistribution | null>(null);
-  const [recentChanges, setRecentChanges] = useState<RecentChange[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use the new API hooks with fallback
+  const { 
+    data: stats, 
+    loading: statsLoading, 
+    error: statsError,
+    isDemo: statsIsDemo 
+  } = useApiWithFallback<InfrastructureStats>('/infrastructure/stats', {
+    pollingInterval: 30000 // Poll every 30 seconds
+  });
 
-  useEffect(() => {
-    const fetchOverviewData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [statsData, distributionData, changesData] = await Promise.all([
-          infrastructureService.getInfrastructureStats(),
-          infrastructureService.getResourceDistribution(),
-          infrastructureService.getRecentChanges()
-        ]);
-        setStats(statsData);
-        setDistribution(distributionData);
-        setRecentChanges(changesData);
-      } catch (err) {
-        console.error('Failed to fetch infrastructure overview:', err);
-        setError('Failed to load infrastructure data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { 
+    data: distribution, 
+    loading: distributionLoading, 
+    error: distributionError 
+  } = useApiWithFallback<ResourceDistribution>('/infrastructure/distribution', {
+    pollingInterval: 60000 // Poll every minute
+  });
 
-    fetchOverviewData();
-  }, []);
+  const { 
+    data: recentChanges, 
+    loading: changesLoading, 
+    error: changesError 
+  } = useApiWithFallback<RecentChange[]>('/infrastructure/recent-changes', {
+    pollingInterval: 15000 // Poll every 15 seconds
+  });
+
+  const loading = statsLoading || distributionLoading || changesLoading;
+  const error = statsError || distributionError || changesError;
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '200px',
-        color: isDark ? '#ffffff' : '#666666'
-      }}>
-        Loading infrastructure data...
-      </div>
+      <LoadingState
+        message="Loading infrastructure data..."
+        isDark={isDark}
+        isDemo={statsIsDemo}
+        size="medium"
+      />
     );
   }
 
   if (error) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '200px',
-        color: '#EF4444'
-      }}>
-        {error}
-      </div>
+      <ErrorState
+        error={error}
+        onRetry={() => {
+          // Trigger refetch for all data
+          window.location.reload();
+        }}
+        isDark={isDark}
+        isDemo={statsIsDemo}
+        size="medium"
+      />
     );
   }
 
@@ -340,33 +339,42 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         </GlassCard>
 
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-          <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Recent Changes</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: 0 }}>Recent Changes</h2>
+            {statsIsDemo && <DemoIndicator size="small" inline />}
+          </div>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            {recentChanges.map((change, index) => (
-              <div key={change.id} style={{ 
-                marginBottom: index < recentChanges.length - 1 ? '12px' : '0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{
-                  color: getChangeTypeColor(change.type),
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  textTransform: 'uppercase'
+            {recentChanges && recentChanges.length > 0 ? (
+              recentChanges.map((change, index) => (
+                <div key={change.id} style={{ 
+                  marginBottom: index < recentChanges.length - 1 ? '12px' : '0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
-                  {change.type}
-                </span>
-                <span>• {change.message}</span>
-                <span style={{ 
-                  opacity: 0.6,
-                  fontSize: '12px',
-                  marginLeft: 'auto'
-                }}>
-                  {formatRelativeTime(change.timestamp)}
-                </span>
+                  <span style={{
+                    color: getChangeTypeColor(change.type),
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    textTransform: 'uppercase'
+                  }}>
+                    {change.type}
+                  </span>
+                  <span>• {change.message}</span>
+                  <span style={{ 
+                    opacity: 0.6,
+                    fontSize: '12px',
+                    marginLeft: 'auto'
+                  }}>
+                    {formatRelativeTime(change.timestamp)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>
+                No recent changes
               </div>
-            ))}
+            )}
           </div>
         </GlassCard>
       </div>
@@ -378,8 +386,6 @@ const InfrastructureOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { isDemo, infrastructure: demoInfrastructure } = useSelector((state: RootState) => state.demo);
-  const [resources, setResources] = useState<Infrastructure[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [filters, setFilters] = useState({
     provider: '',
@@ -388,53 +394,47 @@ const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     search: ''
   });
 
+  // Use the new API hook with fallback
+  const { 
+    data: infrastructureResponse, 
+    loading, 
+    error,
+    isDemo: apiIsDemo,
+    refetch 
+  } = useApiWithFallback<{ data: Infrastructure[] }>('/infrastructure', {
+    pollingInterval: 30000, // Poll every 30 seconds
+    showLoadingOnRefresh: false
+  });
+
+  // Handle demo data loading
   useEffect(() => {
-    if (isDemo) {
-      fetchDemoResources();
-    } else {
-      fetchResources();
+    if (isDemo && !demoInfrastructure.length) {
+      dispatch(loadDemoInfrastructure());
     }
-  }, [isDemo]);
+  }, [isDemo, demoInfrastructure.length, dispatch]);
 
-  const fetchDemoResources = async () => {
-    try {
-      setLoading(true);
-      await dispatch(loadDemoInfrastructure()).unwrap();
-    } catch (error) {
-      console.error('Failed to fetch demo infrastructure:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchResources = async () => {
-    try {
-      setLoading(true);
-      const response = await infrastructureService.listInfrastructure();
-      setResources(response.data);
-    } catch (error) {
-      console.error('Failed to fetch infrastructure:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Use demo data if in demo mode
-  const displayResources = isDemo ? demoInfrastructure.map(demo => ({
-    id: demo.id || '',
-    name: demo.name || '',
-    type: demo.type || '',
-    provider: demo.provider || '',
-    region: demo.region || '',
-    status: demo.status as any || 'running',
-    cost: demo.costInfo ? { daily: demo.costInfo.hourlyRate * 24 } : undefined,
-    specifications: demo.specifications || {},
-    tags: demo.tags || [],
-    createdAt: demo.createdAt || new Date().toISOString(),
-    updatedAt: demo.updatedAt || new Date().toISOString(),
-    organizationId: '',
-    externalId: demo.Infrastructure?.ExternalID
-  })) : resources;
+  // Determine which resources to display
+  const displayResources = isDemo ? 
+    demoInfrastructure.map(demo => ({
+      id: demo.id || '',
+      name: demo.name || '',
+      type: demo.type || '',
+      provider: demo.provider || '',
+      region: demo.region || '',
+      status: demo.status as any || 'running',
+      cost: demo.costInfo ? { 
+        daily: demo.costInfo.hourlyRate * 24,
+        monthly: demo.costInfo.monthlyRate || demo.costInfo.hourlyRate * 24 * 30,
+        currency: 'USD'
+      } : { daily: 0, monthly: 0, currency: 'USD' },
+      specifications: demo.specifications || {},
+      tags: demo.tags || [],
+      createdAt: demo.createdAt || new Date().toISOString(),
+      updatedAt: demo.updatedAt || new Date().toISOString(),
+      organizationId: '',
+      externalId: (demo as any).Infrastructure?.ExternalID
+    })) : 
+    infrastructureResponse?.data || [];
 
   const filteredResources = displayResources.filter(resource => {
     if (filters.provider && resource.provider !== filters.provider) return false;
@@ -569,14 +569,22 @@ const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 
       {/* Resources Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#ffffff' : '#666666' }}>
-          Loading resources...
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+          <CardSkeleton isDark={isDark} count={6} />
         </div>
-      ) : (
+      ) : error ? (
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          isDark={isDark}
+          isDemo={isDemo || apiIsDemo}
+          size="medium"
+        />
+      ) : filteredResources.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
           {filteredResources.map((resource) => (
             <GlassCard key={resource.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
-              {isDemo && (
+              {(isDemo || apiIsDemo) && (
                 <div style={{ marginBottom: '12px' }}>
                   <DemoIndicator size="small" showScenario={false} />
                 </div>
@@ -638,14 +646,38 @@ const ResourcesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             </GlassCard>
           ))}
         </div>
+      ) : (
+        <EmptyState
+          title="No resources found"
+          message={
+            Object.values(filters).some(f => f) 
+              ? "No resources match your current filters. Try adjusting your search criteria."
+              : (isDemo || apiIsDemo)
+                ? "This is demo mode. In a real environment, your infrastructure resources would appear here."
+                : "You haven't created any infrastructure resources yet. Get started by creating your first resource."
+          }
+          action={{
+            label: (isDemo || apiIsDemo) ? 'Create Demo Resource' : 'Create Resource',
+            onClick: () => setShowCreateForm(true),
+            icon: 'action-plus'
+          }}
+          isDark={isDark}
+          isDemo={isDemo || apiIsDemo}
+          size="medium"
+        />
       )}
 
       {/* Create Resource Form Modal */}
       {showCreateForm && (
-        <CreateResourceForm isDark={isDark} onClose={() => setShowCreateForm(false)} onSuccess={(newResource) => {
-          setResources([newResource, ...resources]);
-          setShowCreateForm(false);
-        }} />
+        <CreateResourceForm 
+          isDark={isDark} 
+          onClose={() => setShowCreateForm(false)} 
+          onSuccess={(newResource) => {
+            // Refresh the data after successful creation
+            refetch();
+            setShowCreateForm(false);
+          }} 
+        />
       )}
     </div>
   );
@@ -673,8 +705,9 @@ const CreateResourceForm: React.FC<{
     try {
       const newResource = await infrastructureService.createInfrastructure(formData);
       onSuccess(newResource);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create resource:', error);
+      // You could add error state here to show user feedback
     } finally {
       setLoading(false);
     }
