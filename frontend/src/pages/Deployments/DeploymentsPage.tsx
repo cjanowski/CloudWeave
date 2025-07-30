@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
+import DemoBanner from '../../components/common/DemoBanner';
+import DemoIndicator from '../../components/common/DemoIndicator';
 import { deploymentService } from '../../services/deploymentService';
+import { loadDemoDeployments } from '../../store/slices/demoSlice';
 import type { DeploymentStats, Deployment, Environment, Pipeline, DeploymentFilters } from '../../services/deploymentService';
+import type { RootState, AppDispatch } from '../../store';
 
 interface TabItem {
   id: string;
@@ -15,7 +19,9 @@ interface TabItem {
 }
 
 export const DeploymentsPage: React.FC = () => {
-  const { theme } = useSelector((state: any) => state.ui);
+  const dispatch = useDispatch<AppDispatch>();
+  const { theme } = useSelector((state: RootState) => state.ui);
+  const { isDemo } = useSelector((state: RootState) => state.demo);
   const isDark = theme === 'dark';
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -48,6 +54,9 @@ export const DeploymentsPage: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      {/* Demo Banner */}
+      <DemoBanner />
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -55,18 +64,21 @@ export const DeploymentsPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         style={{ marginBottom: '24px' }}
       >
-        <h1 style={{ 
-          fontSize: '32px', 
-          fontWeight: 'bold', 
-          margin: '0 0 8px 0',
-          color: isDark ? '#ffffff' : '#000000',
-          background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-        }}>
-          Deployment Management
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+          <h1 style={{ 
+            fontSize: '32px', 
+            fontWeight: 'bold', 
+            margin: 0,
+            color: isDark ? '#ffffff' : '#000000',
+            background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            Deployment Management
+          </h1>
+          {isDemo && <DemoIndicator size="small" inline />}
+        </div>
         <p style={{ 
           fontSize: '16px', 
           opacity: 0.7,

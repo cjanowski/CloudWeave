@@ -3,6 +3,7 @@ import authSlice from './slices/authSlice';
 import uiSlice from './slices/uiSlice';
 import userSlice from './slices/userSlice';
 import cloudProviderSlice from './slices/cloudProviderSlice';
+import demoSlice from './slices/demoSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     ui: uiSlice,
     user: userSlice,
     cloudProviders: cloudProviderSlice,
+    demo: demoSlice,
   },
 });
 
