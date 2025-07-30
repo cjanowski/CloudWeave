@@ -186,189 +186,37 @@ export class DashboardService {
 
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
-    try {
-      const result = await apiService.get<DashboardStats>('/dashboard/stats');
-      return result || {
-        activeResources: 24,
-        activeResourcesChange: '+12%',
-        activeResourcesTrend: 'up',
-        deployments: 8,
-        deploymentsChange: '+5%',
-        deploymentsTrend: 'up',
-        costThisMonth: 1234,
-        costThisMonthChange: '-8%',
-        costThisMonthTrend: 'down',
-        uptime: 99.9,
-        uptimeChange: '+0.1%',
-        uptimeTrend: 'up',
-      };
-    } catch (error) {
-      console.warn('API not available, using mock data for dashboard stats');
-      return {
-        activeResources: 24,
-        activeResourcesChange: '+12%',
-        activeResourcesTrend: 'up',
-        deployments: 8,
-        deploymentsChange: '+5%',
-        deploymentsTrend: 'up',
-        costThisMonth: 1234,
-        costThisMonthChange: '-8%',
-        costThisMonthTrend: 'down',
-        uptime: 99.9,
-        uptimeChange: '+0.1%',
-        uptimeTrend: 'up',
-      };
-    }
+    return await apiService.get<DashboardStats>('/dashboard/stats');
   }
 
   // Get recent activity
   async getRecentActivity(): Promise<DashboardActivity[]> {
-    try {
-      const result = await apiService.get<DashboardActivity[]>('/dashboard/activity');
-      return result || [];
-    } catch (error) {
-      console.warn('API not available, using mock data for recent activity');
-      return [
-        {
-          id: '1',
-          message: 'Deployment "web-app-v2" completed successfully',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-          type: 'deployment'
-        },
-        {
-          id: '2', 
-          message: 'New EC2 instance launched in us-east-1',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-          type: 'infrastructure'
-        },
-        {
-          id: '3',
-          message: 'Cost alert: Monthly budget 80% reached',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-          type: 'cost'
-        },
-        {
-          id: '4',
-          message: 'Security scan completed - no issues found',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3 hours ago
-          type: 'security'
-        },
-        {
-          id: '5',
-          message: 'Auto-scaling triggered for production cluster',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
-          type: 'infrastructure'
-        }
-      ];
-    }
+    return await apiService.get<DashboardActivity[]>('/dashboard/activity');
   }
 
   // Get performance metrics
   async getPerformanceMetrics(): Promise<PerformanceMetrics> {
-    try {
-      const result = await apiService.get<PerformanceMetrics>('/dashboard/performance');
-      return result || {
-        cpuUsage: 45,
-        memoryUsage: 62,
-        networkIO: 1.2,
-        responseTime: 120,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.warn('API not available, using mock data for performance metrics');
-      return {
-        cpuUsage: 45,
-        memoryUsage: 62,
-        networkIO: 1.2,
-        responseTime: 120,
-        timestamp: new Date().toISOString(),
-      };
-    }
+    return await apiService.get<PerformanceMetrics>('/dashboard/performance');
   }
 
   // Get cost metrics
   async getCostMetrics(): Promise<CostMetrics> {
-    try {
-      const result = await apiService.get<CostMetrics>('/dashboard/costs');
-      return result || {
-        thisMonth: 1234,
-        lastMonth: 1342,
-        projected: 1180,
-        savings: 162,
-        savingsPercentage: 12,
-      };
-    } catch (error) {
-      console.warn('API not available, using mock data for cost metrics');
-      return {
-        thisMonth: 1234,
-        lastMonth: 1342,
-        projected: 1180,
-        savings: 162,
-        savingsPercentage: 12,
-      };
-    }
+    return await apiService.get<CostMetrics>('/dashboard/costs');
   }
 
   // Get security metrics
   async getSecurityMetrics(): Promise<SecurityMetrics> {
-    try {
-      const result = await apiService.get<SecurityMetrics>('/dashboard/security');
-      return result || {
-        securityScore: 98,
-        vulnerabilities: {
-          critical: 0,
-          medium: 2,
-          low: 5,
-        },
-        lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        compliance: ['SOC2', 'ISO27001'],
-      };
-    } catch (error) {
-      console.warn('API not available, using mock data for security metrics');
-      return {
-        securityScore: 98,
-        vulnerabilities: {
-          critical: 0,
-          medium: 2,
-          low: 5,
-        },
-        lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        compliance: ['SOC2', 'ISO27001'],
-      };
-    }
+    return await apiService.get<SecurityMetrics>('/dashboard/security');
   }
 
   // Get infrastructure metrics
   async getInfrastructureMetrics(): Promise<InfrastructureMetrics> {
-    try {
-      return await apiService.get<InfrastructureMetrics>('/dashboard/infrastructure');
-    } catch (error) {
-      console.warn('API not available, using mock data for infrastructure metrics');
-      return {
-        ec2Instances: 12,
-        loadBalancers: 3,
-        databases: {
-          rds: 2,
-          dynamodb: 1,
-        },
-        storageUsed: 2.4,
-      };
-    }
+    return await apiService.get<InfrastructureMetrics>('/dashboard/infrastructure');
   }
 
   // Get reports metrics
   async getReportsMetrics(): Promise<ReportsMetrics> {
-    try {
-      return await apiService.get<ReportsMetrics>('/dashboard/reports');
-    } catch (error) {
-      console.warn('API not available, using mock data for reports metrics');
-      return {
-        monthlyReportAvailable: true,
-        costOptimizationRecommendations: 15,
-        performanceTrend: 'improving',
-        nextSecurityAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), // 1 week from now
-      };
-    }
+    return await apiService.get<ReportsMetrics>('/dashboard/reports');
   }
 }
 

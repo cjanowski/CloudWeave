@@ -131,6 +131,7 @@ export const useWebSocket = () => {
 
   return {
     ...state,
+    isInSimulationMode: websocketService.isInSimulationMode,
     connect,
     disconnect,
     onDeploymentStatus,
