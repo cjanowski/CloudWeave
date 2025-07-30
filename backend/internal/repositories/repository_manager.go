@@ -27,6 +27,7 @@ type RepositoryManager struct {
 	APIKey               APIKeyRepositoryInterface
 	Session              SessionRepositoryInterface
 	CloudCredentials     *CloudCredentialsRepository
+	DemoData             *DemoDataRepository
 
 	// Transaction manager
 	Transaction TransactionManager
@@ -58,7 +59,8 @@ func NewRepositoryManager(db *sql.DB) *RepositoryManager {
 		ResourcePermission:   nil, // TODO: Implement ResourcePermissionRepository
 		APIKey:               nil, // TODO: Implement APIKeyRepository
 		Session:              nil, // TODO: Implement SessionRepository
-		CloudCredentials:     NewCloudCredentialsRepository(sqlxDB),
+		CloudCredentials:     NewCloudCredentialsRepository(db),
+		DemoData:             NewDemoDataRepository(sqlxDB),
 
 		// Initialize transaction manager
 		Transaction: NewTransactionManager(db),

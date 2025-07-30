@@ -5,15 +5,18 @@ import (
 )
 
 type User struct {
-	ID             string     `json:"id" db:"id"`
-	Email          string     `json:"email" db:"email"`
-	Name           string     `json:"name" db:"name"`
-	PasswordHash   string     `json:"-" db:"password_hash"`
-	OrganizationID string     `json:"organizationId" db:"organization_id"`
-	IsActive       bool       `json:"isActive" db:"is_active"`
-	CreatedAt      time.Time  `json:"createdAt" db:"created_at"`
-	UpdatedAt      time.Time  `json:"updatedAt" db:"updated_at"`
-	LastLoginAt    *time.Time `json:"lastLoginAt" db:"last_login_at"`
+	ID                    string     `json:"id" db:"id"`
+	Email                 string     `json:"email" db:"email"`
+	Name                  string     `json:"name" db:"name"`
+	PasswordHash          string     `json:"-" db:"password_hash"`
+	OrganizationID        string     `json:"organizationId" db:"organization_id"`
+	IsActive              bool       `json:"isActive" db:"is_active"`
+	OnboardingCompleted   bool       `json:"onboardingCompleted" db:"onboarding_completed"`
+	DemoMode              bool       `json:"demoMode" db:"demo_mode"`
+	DemoScenario          string     `json:"demoScenario" db:"demo_scenario"`
+	CreatedAt             time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt             time.Time  `json:"updatedAt" db:"updated_at"`
+	LastLoginAt           *time.Time `json:"lastLoginAt" db:"last_login_at"`
 
 	// SSO fields
 	SSOProvider *string `json:"ssoProvider" db:"sso_provider"`
@@ -126,6 +129,11 @@ type ApiError struct {
 	Message   string      `json:"message"`
 	Details   interface{} `json:"details,omitempty"`
 	Timestamp time.Time   `json:"timestamp"`
+}
+
+// Error implements the error interface
+func (e *ApiError) Error() string {
+	return e.Message
 }
 
 type ValidationError struct {

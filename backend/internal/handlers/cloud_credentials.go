@@ -73,7 +73,7 @@ func GetCloudProviders(c *gin.Context) {
 		return
 	}
 
-	providers, err := cloudCredentialsRepo.GetByOrganizationID(c.Request.Context(), user.OrganizationID)
+	providers, err := cloudCredentialsRepo.ListByOrganization(c.Request.Context(), user.OrganizationID)
 	if err != nil {
 		log.Printf("Failed to get cloud providers for organization %s: %v", user.OrganizationID, err)
 		c.JSON(http.StatusInternalServerError, models.ApiResponse{
@@ -193,7 +193,7 @@ func AddCloudProvider(c *gin.Context) {
 		IsActive:       true,
 	}
 
-	createdCredentials, err := cloudCredentialsRepo.Create(c.Request.Context(), credentials)
+	err = cloudCredentialsRepo.Create(c.Request.Context(), credentials)
 	if err != nil {
 		log.Printf("Failed to create cloud credentials: %v", err)
 		c.JSON(http.StatusInternalServerError, models.ApiResponse{
@@ -213,7 +213,7 @@ func AddCloudProvider(c *gin.Context) {
 	c.JSON(http.StatusCreated, models.ApiResponse{
 		Success: true,
 		Data: map[string]interface{}{
-			"provider": createdCredentials,
+			"provider": credentials,
 		},
 		RequestID: c.GetString("requestID"),
 	})
@@ -431,7 +431,7 @@ func UpdateCloudProvider(c *gin.Context) {
 		IsActive:       true,
 	}
 
-	updatedProvider, err := cloudCredentialsRepo.Update(c.Request.Context(), updateData)
+	err = cloudCredentialsRepo.Update(c.Request.Context(), updateData)
 	if err != nil {
 		log.Printf("Failed to update cloud provider %s: %v", providerID, err)
 		c.JSON(http.StatusInternalServerError, models.ApiResponse{
@@ -451,7 +451,7 @@ func UpdateCloudProvider(c *gin.Context) {
 	c.JSON(http.StatusOK, models.ApiResponse{
 		Success: true,
 		Data: map[string]interface{}{
-			"provider": updatedProvider,
+			"provider": updateData,
 		},
 		RequestID: c.GetString("requestID"),
 	})

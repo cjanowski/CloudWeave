@@ -76,13 +76,23 @@ func main() {
 
 	// Initialize authentication services
 	handlers.InitializeAuthServices(cfg, db, auditService)
+	authService := handlers.GetAuthService()
 
 	// Initialize security service
 	handlers.InitializeSecurityService(securityService)
 
 	// Initialize cloud credentials service
-	cloudCredentialsService := services.NewCloudCredentialsService(repoManager.CloudCredentials, repoManager.Organization)
-	handlers.InitializeCloudCredentialsService(cloudCredentialsService)
+	_ = services.NewCloudCredentialsService(repoManager.CloudCredentials, repoManager.Organization)
+
+	// Initialize demo data service
+	demoDataService := services.NewDemoDataService(
+		repoManager.User,
+		repoManager.Infrastructure,
+		repoManager.Deployment,
+		repoManager.Metric,
+		repoManager.Alert,
+		repoManager.DemoData,
+	)
 
 	// Start WebSocket service in background
 	go wsService.Start()
@@ -339,16 +349,11 @@ func main() {
 			// Cloud credentials routes
 			cloudCredentials := protected.Group("/cloud-credentials")
 			{
-				cloudCredentials.GET("/", handlers.GetCloudCredentials)
-				cloudCredentials.DELETE("/:id", handlers.DeleteCloudCredentials)
-
-				// AWS specific routes
-				aws := cloudCredentials.Group("/aws")
-				{
-					aws.POST("/root", handlers.SetupAWSRootCredentials)
-					aws.POST("/access-key", handlers.SetupAWSAccessKey)
-					aws.POST("/test", handlers.TestAWSConnection)
-				}
+				cloudCredentials.GET("/", handlers.GetCloudProviders)
+				cloudCredentials.POST("/", handlers.AddCloudProvider)
+				cloudCredentials.PUT("/:id", handlers.UpdateCloudProvider)
+				cloudCredentials.DELETE("/:id", handlers.DeleteCloudProvider)
+				cloudCredentials.POST("/test-connection", handlers.TestCloudProviderConnection)
 			}
 
 			// Audit routes
@@ -359,6 +364,27 @@ func main() {
 				audit.GET("/compliance-report", auditHandler.GetComplianceReport)
 				audit.GET("/export", auditHandler.ExportAuditLogs)
 				audit.POST("/cleanup", auditHandler.CleanupOldLogs)
+			}
+
+			// Demo data routes
+			demoDataHandler := handlers.NewDemoDataHandler(demoDataService, authService)
+			demo := protected.Group("/demo")
+			{
+				demo.GET("/infrastructure", demoDataHandler.GetDemoInfrastructure)
+				demo.GET("/deployments", demoDataHandler.GetDemoDeployments)
+				demo.GET("/metrics", demoDataHandler.GetDemoMetrics)
+				demo.GET("/alerts", demoDataHandler.GetDemoAlerts)
+				demo.GET("/cost", demoDataHandler.GetDemoCostData)
+			}
+
+			// User management routes (including demo functionality)
+			user := protected.Group("/user")
+			{
+				user.POST("/initialize-demo", demoDataHandler.InitializeDemoData)
+				user.POST("/complete-onboarding", demoDataHandler.CompleteOnboarding)
+				user.POST("/transition-to-real", demoDataHandler.TransitionToReal)
+				user.PUT("/preferences", handlers.UpdateUserPreferences)
+				user.GET("/preferences", handlers.GetUserPreferences)
 			}
 		}
 	}

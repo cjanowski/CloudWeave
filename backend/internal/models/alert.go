@@ -18,43 +18,33 @@ type Alert struct {
 	UpdatedAt      time.Time  `json:"updatedAt" db:"updated_at"`
 }
 
-type CreateAlertRequest struct {
-	Type         string  `json:"type" binding:"required,min=1,max=50"`
-	Severity     string  `json:"severity" binding:"required,oneof=low medium high critical"`
-	Title        string  `json:"title" binding:"required,min=1,max=255"`
-	Message      string  `json:"message" binding:"required,min=1"`
-	ResourceID   *string `json:"resourceId,omitempty"`
-	ResourceType *string `json:"resourceType,omitempty"`
-}
-
-type UpdateAlertRequest struct {
-	Acknowledged *bool `json:"acknowledged,omitempty"`
-}
-
-type AlertQuery struct {
-	Type         *string `json:"type,omitempty"`
-	Severity     *string `json:"severity,omitempty"`
-	ResourceID   *string `json:"resourceId,omitempty"`
-	ResourceType *string `json:"resourceType,omitempty"`
-	Acknowledged *bool   `json:"acknowledged,omitempty"`
-	Limit        int     `json:"limit,omitempty"`
-	Offset       int     `json:"offset,omitempty"`
-}
-
-// Alert severities
-const (
-	SeverityLow      = "low"
-	SeverityMedium   = "medium"
-	SeverityHigh     = "high"
-	SeverityCritical = "critical"
-)
-
 // Alert types
 const (
-	AlertTypeSystem         = "system"
-	AlertTypePerformance    = "performance"
-	AlertTypeSecurity       = "security"
-	AlertTypeDeployment     = "deployment"
-	AlertTypeInfrastructure = "infrastructure"
-	AlertTypeCost           = "cost"
+	AlertTypePerformance = "performance"
+	AlertTypeSecurity    = "security"
+	AlertTypeCost        = "cost"
+	AlertTypeCompliance  = "compliance"
+	AlertTypeSystem      = "system"
+	AlertTypeCustom      = "custom"
 )
+
+// Alert severity levels
+const (
+	AlertSeverityInfo     = "info"
+	AlertSeverityWarning  = "warning"
+	AlertSeverityError    = "error"
+	AlertSeverityCritical = "critical"
+)
+
+// AlertQuery represents query parameters for alerts
+type AlertQuery struct {
+	Type         *string    `json:"type"`
+	Severity     *string    `json:"severity"`
+	ResourceID   *string    `json:"resourceId"`
+	ResourceType *string    `json:"resourceType"`
+	Acknowledged *bool      `json:"acknowledged"`
+	StartTime    *time.Time `json:"startTime"`
+	EndTime      *time.Time `json:"endTime"`
+	Limit        int        `json:"limit"`
+	Offset       int        `json:"offset"`
+}

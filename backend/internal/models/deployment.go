@@ -19,22 +19,6 @@ type Deployment struct {
 	UpdatedAt      time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
-type CreateDeploymentRequest struct {
-	Name          string                 `json:"name" binding:"required,min=1,max=255"`
-	Application   string                 `json:"application" binding:"required,min=1,max=255"`
-	Version       string                 `json:"version" binding:"required,min=1,max=100"`
-	Environment   string                 `json:"environment" binding:"required,min=1,max=50"`
-	Configuration map[string]interface{} `json:"configuration,omitempty"`
-}
-
-type UpdateDeploymentRequest struct {
-	Status        *string                `json:"status,omitempty"`
-	Progress      *int                   `json:"progress,omitempty" binding:"omitempty,min=0,max=100"`
-	Configuration map[string]interface{} `json:"configuration,omitempty"`
-	StartedAt     *time.Time             `json:"startedAt,omitempty"`
-	CompletedAt   *time.Time             `json:"completedAt,omitempty"`
-}
-
 // Deployment status constants
 const (
 	DeploymentStatusPending     = "pending"
@@ -52,3 +36,22 @@ const (
 	EnvironmentProduction  = "production"
 	EnvironmentTesting     = "testing"
 )
+
+// CreateDeploymentRequest represents a request to create a new deployment
+type CreateDeploymentRequest struct {
+	Name          string                 `json:"name" binding:"required,min=1,max=255"`
+	Application   string                 `json:"application" binding:"required,min=1,max=255"`
+	Version       string                 `json:"version" binding:"required,min=1,max=100"`
+	Environment   string                 `json:"environment" binding:"required,min=1,max=50"`
+	Configuration map[string]interface{} `json:"configuration,omitempty"`
+}
+
+// UpdateDeploymentRequest represents a request to update a deployment
+type UpdateDeploymentRequest struct {
+	Name          *string                `json:"name,omitempty" binding:"omitempty,min=1,max=255"`
+	Status        *string                `json:"status,omitempty" binding:"omitempty,min=1,max=50"`
+	Progress      *int                   `json:"progress,omitempty" binding:"omitempty,min=0,max=100"`
+	Configuration map[string]interface{} `json:"configuration,omitempty"`
+	StartedAt     *time.Time             `json:"startedAt,omitempty"`
+	CompletedAt   *time.Time             `json:"completedAt,omitempty"`
+}

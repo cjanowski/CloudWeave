@@ -40,6 +40,11 @@ func GetJWTService() *services.JWTService {
 	return jwtService
 }
 
+// GetAuthService returns the initialized auth service
+func GetAuthService() *services.AuthService {
+	return authService
+}
+
 // HealthCheck returns the health status of the API
 func HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, models.ApiResponse{

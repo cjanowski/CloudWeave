@@ -143,8 +143,8 @@ func (s *MetricsService) GetResourceMetrics(ctx context.Context, resourceID stri
 	// Use Query method instead of GetByResourceIDAndTimeRange
 	query := models.MetricQuery{
 		ResourceID: &resourceID,
-		StartTime:  startTime,
-		EndTime:    endTime,
+		StartTime:  &startTime,
+		EndTime:    &endTime,
 	}
 	metrics, err := s.repoManager.Metric.Query(ctx, query)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *MetricsService) GetResourceMetrics(ctx context.Context, resourceID stri
 			ResourceType: metric.ResourceType,
 			MetricName:   metric.MetricName,
 			Value:        metric.Value,
-			Unit:         *metric.Unit,
+			Unit:         metric.Unit,
 			Timestamp:    metric.Timestamp,
 			Tags:         s.parseTagsFromMap(metric.Tags),
 			Metadata:     make(map[string]interface{}),
@@ -343,7 +343,7 @@ func (s *MetricsService) storeMetrics(ctx context.Context, resourceID, resourceT
 			ResourceType: resourceType,
 			MetricName:   metricName,
 			Value:        floatValue,
-			Unit:         &unit,
+			Unit:         unit,
 			Timestamp:    timestamp,
 		}
 
