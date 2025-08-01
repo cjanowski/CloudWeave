@@ -5,8 +5,9 @@ import { Icon } from '../../components/common/Icon';
 import { GlassCard } from '../../components/common/GlassCard';
 import { GlassButton } from '../../components/common/GlassButton';
 import { LineChart, BarChart, DoughnutChart, MetricCard, type ChartData } from '../../components/common/ChartComponents';
+
 import { dashboardService } from '../../services/dashboardService';
-import type { DashboardStats, DashboardActivity, PerformanceMetrics, CostMetrics, SecurityMetrics, InfrastructureMetrics, ReportsMetrics } from '../../services/dashboardService';
+import type { DashboardStats, DashboardActivity, PerformanceMetrics, SecurityMetrics, InfrastructureMetrics, ReportsMetrics } from '../../services/dashboardService';
 
 interface TabItem {
   id: string;
@@ -719,41 +720,482 @@ const PerformanceTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 };
 
 const CostsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-  const [metrics, setMetrics] = useState<CostMetrics | null>(null);
+  const { isDemo } = useSelector((state: any) => state.demo);
+  const [costData, setCostData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [timeRange, setTimeRange] = useState('30d');
+
+  const fetchCostData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (isDemo) {
+        // Use demo data service for demo mode
+        const { demoDataService } = await import('../../services/demoDataService');
+        const demoCostData = demoDataService.generateLocalDemoData('cost', 'startup');
+        setCostData(demoCostData);
+      } else {
+        // Use real cost service for live data
+        const { costService } = await import('../../services/costService');
+        const [overview, realTimeData, recommendations] = await Promise.all([
+          costService.getCostOverview(timeRange === '30d' ? 'month' : 'week'),
+          costService.getRealTimeCostMonitoring(),
+          costService.getCostOptimizationRecommendations()
+        ]);
+        
+        setCostData({
+          ...overview,
+          realTime: realTimeData,
+          recommendations
+        });
+      }
+      
+      setLastUpdated(new Date());
+    } catch (err: any) {
+      console.error('Failed to fetch cost data:', err);
+      setError(err.message || 'Failed to load cost data');
+      
+      // Fallback to demo data on error
+      try {
+        const { demoDataService } = await import('../../services/demoDataService');
+        const fallbackData = demoDataService.generateLocalDemoData('cost', 'startup');
+        setCostData(fallbackData);
+        setError('Using demo data due to connection issues');
+      } catch (fallbackErr) {
+        console.error('Failed to load fallback data:', fallbackErr);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const data = await dashboardService.getCostMetrics();
-        setMetrics(data);
-      } catch (error) {
-        console.error('Failed to fetch cost metrics:', error);
-      } finally {
-        setLoading(false);
-      }
+    fetchCostData();
+  }, [isDemo, timeRange]);
+
+  const handleRetry = () => {
+    fetchCostData();
+  };
+
+  const handleExport = () => {
+    if (!costData) return;
+    
+    const exportData = {
+      costData,
+      timeRange,
+      isDemo,
+      lastUpdated: lastUpdated.toISOString(),
+      exportDate: new Date().toISOString()
     };
-    fetchMetrics();
-  }, []);
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cost-analysis-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
-      <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-        <div style={{ color: isDark ? '#ffffff' : '#666666', textAlign: 'center', padding: '40px' }}>Loading...</div>
-      </GlassCard>
+      <div style={{ display: 'grid', gap: '24px' }}>
+        {/* Header Skeleton */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ 
+              width: '200px', 
+              height: '32px', 
+              background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              borderRadius: '8px',
+              marginBottom: '8px'
+            }} />
+            <div style={{ 
+              width: '300px', 
+              height: '16px', 
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px'
+            }} />
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ 
+              width: '120px', 
+              height: '36px', 
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '8px'
+            }} />
+            <div style={{ 
+              width: '100px', 
+              height: '36px', 
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '8px'
+            }} />
+          </div>
+        </div>
+
+        {/* Metrics Cards Skeleton */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <GlassCard key={index} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  borderRadius: '8px'
+                }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    width: '80px', 
+                    height: '12px', 
+                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
+                    marginBottom: '8px'
+                  }} />
+                  <div style={{ 
+                    width: '60px', 
+                    height: '24px', 
+                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
+                    marginBottom: '4px'
+                  }} />
+                  <div style={{ 
+                    width: '40px', 
+                    height: '12px', 
+                    background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                    borderRadius: '4px'
+                  }} />
+                </div>
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+
+        {/* Charts Skeleton */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <GlassCard key={index} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px', padding: '20px' }}>
+              <div style={{ 
+                width: '150px', 
+                height: '20px', 
+                background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }} />
+              <div style={{ 
+                width: '100%', 
+                height: '250px', 
+                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: '8px'
+              }} />
+            </GlassCard>
+          ))}
+        </div>
+
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          padding: '20px',
+          color: isDark ? '#ffffff' : '#666666',
+          fontSize: '14px'
+        }}>
+          <div style={{ marginRight: '12px' }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              style={{
+                width: '16px',
+                height: '16px',
+                border: `2px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+                borderTop: `2px solid ${isDark ? '#ffffff' : '#666666'}`,
+                borderRadius: '50%',
+              }}
+            />
+          </div>
+          Loading cost data{isDemo ? ' (demo mode)' : ''}...
+        </div>
+      </div>
     );
   }
 
-  return (
-    <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
-      <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Cost Analysis</h2>
-      <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-        <p>This Month: ${metrics?.thisMonth?.toLocaleString() || 0}</p>
-        <p>Last Month: ${metrics?.lastMonth?.toLocaleString() || 0}</p>
-        <p>Projected: ${metrics?.projected?.toLocaleString() || 0}</p>
-        <p style={{ color: '#10B981' }}>Savings: ${metrics?.savings?.toLocaleString() || 0} ({metrics?.savingsPercentage || 0}%)</p>
+  if (error && !costData) {
+    return (
+      <div style={{ display: 'grid', gap: '24px' }}>
+        <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px', padding: '40px', textAlign: 'center' }}>
+          <div style={{ color: '#EF4444', marginBottom: '16px' }}>
+            <Icon name="alert-triangle" size="lg" />
+          </div>
+          <div style={{ color: '#EF4444', fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
+            Failed to load cost data
+          </div>
+          <div style={{ color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)', fontSize: '14px', marginBottom: '20px' }}>
+            {error}
+          </div>
+          <GlassButton
+            variant="primary"
+            size="medium"
+            isDark={isDark}
+            onClick={handleRetry}
+            style={{ borderRadius: '8px' }}
+          >
+            <Icon name="refresh-cw" size="sm" />
+            Retry
+          </GlassButton>
+        </GlassCard>
       </div>
-    </GlassCard>
+    );
+  }
+
+  // Prepare chart data
+  const costTrendData: ChartData = {
+    labels: costData?.trends?.map((t: any) => new Date(t.date).toLocaleDateString()) || 
+            costData?.trend?.map((t: any) => new Date(t.date).toLocaleDateString()) || [],
+    datasets: [
+      {
+        label: 'Daily Cost',
+        data: costData?.trends?.map((t: any) => t.cost) || 
+              costData?.trend?.map((t: any) => t.amount) || [],
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const costBreakdownData: ChartData = {
+    labels: Object.keys(costData?.breakdown || costData?.byService || {}),
+    datasets: [
+      {
+        label: 'Cost by Service',
+        data: Object.values(costData?.breakdown || costData?.byService || {}).map((item: any) => 
+          typeof item === 'object' ? item.monthlyCost : item
+        ),
+        backgroundColor: [
+          '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#EC4899'
+        ],
+      },
+    ],
+  };
+
+  const budgetData: ChartData = {
+    labels: ['Used', 'Remaining'],
+    datasets: [
+      {
+        label: 'Budget Usage',
+        data: [
+          costData?.realTime?.budgetUsed || costData?.totalCost || 0,
+          costData?.realTime?.budgetRemaining || (20000 - (costData?.totalCost || 0))
+        ],
+        backgroundColor: ['#EF4444', '#10B981'],
+      },
+    ],
+  };
+
+  return (
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {/* Header with Controls */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 8px 0' }}>
+            Cost Analysis {isDemo && <span style={{ fontSize: '14px', opacity: 0.7 }}>(Demo Mode)</span>}
+          </h2>
+          <p style={{ color: isDark ? '#ffffff' : '#666666', margin: 0, fontSize: '14px' }}>
+            Last updated: {lastUpdated.toLocaleTimeString()}
+            {error && <span style={{ color: '#F59E0B', marginLeft: '8px' }}>• {error}</span>}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              color: isDark ? '#ffffff' : '#000000',
+              fontSize: '14px'
+            }}
+          >
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+          </select>
+          <GlassButton
+            variant="ghost"
+            size="small"
+            isDark={isDark}
+            onClick={handleExport}
+            style={{ borderRadius: '8px' }}
+          >
+            <Icon name="action-download" size="sm" />
+            Export
+          </GlassButton>
+        </div>
+      </div>
+
+      {/* Key Metrics Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        <MetricCard
+          title="Total Cost"
+          value={`$${(costData?.totalCost || 0).toLocaleString()}`}
+          icon="cost-dollar"
+          isDark={isDark}
+        />
+        <MetricCard
+          title="This Month"
+          value={`$${(costData?.realTime?.dailySpend * 30 || costData?.totalCost || 0).toLocaleString()}`}
+          change={{
+            value: 8,
+            isPositive: false
+          }}
+          icon="monitor-line-chart"
+          isDark={isDark}
+        />
+        <MetricCard
+          title="Budget Used"
+          value={`${Math.round(((costData?.realTime?.budgetUsed || costData?.totalCost || 0) / (costData?.realTime?.monthlyBudget || 20000)) * 100)}%`}
+          icon="monitor-check"
+          isDark={isDark}
+        />
+        <MetricCard
+          title="Potential Savings"
+          value={`$${(costData?.recommendations?.reduce((sum: number, rec: any) => sum + rec.savings, 0) || 0).toLocaleString()}`}
+          change={{
+            value: 12,
+            isPositive: true
+          }}
+          icon="cost-savings"
+          isDark={isDark}
+        />
+      </div>
+
+      {/* Charts Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+        <LineChart
+          data={costTrendData}
+          title="Cost Trend"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <DoughnutChart
+          data={costBreakdownData}
+          title="Cost by Service"
+          height={300}
+          isDark={isDark}
+        />
+        
+        <DoughnutChart
+          data={budgetData}
+          title="Budget Usage"
+          height={300}
+          isDark={isDark}
+        />
+      </div>
+
+      {/* Cost Recommendations */}
+      {costData?.recommendations && costData.recommendations.length > 0 && (
+        <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Cost Optimization Recommendations</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {costData.recommendations.map((rec: any, index: number) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+                  border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
+                }}
+              >
+                <div style={{ 
+                  padding: '8px', 
+                  borderRadius: '8px', 
+                  background: rec.priority === 'high' ? '#EF4444' : rec.priority === 'medium' ? '#F59E0B' : '#10B981',
+                  color: '#ffffff',
+                  fontSize: '12px'
+                }}>
+                  <Icon name="cost-savings" size="sm" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000' }}>
+                    {rec.title || rec.description}
+                  </p>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)' }}>
+                    {rec.description || rec.action}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
+                    Potential savings: ${(rec.potentialSavings || rec.savings || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div style={{ 
+                  padding: '4px 8px', 
+                  borderRadius: '4px', 
+                  background: rec.priority === 'high' ? '#EF4444' : rec.priority === 'medium' ? '#F59E0B' : '#10B981',
+                  color: '#ffffff',
+                  fontSize: '10px',
+                  textTransform: 'uppercase',
+                  fontWeight: 600
+                }}>
+                  {rec.priority}
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Real-time Budget Alerts */}
+      {costData?.realTime?.alerts && costData.realTime.alerts.length > 0 && (
+        <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
+          <h3 style={{ color: isDark ? '#ffffff' : '#000000', margin: '0 0 16px 0' }}>Budget Alerts</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {costData.realTime.alerts.map((alert: any, index: number) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  background: alert.severity === 'critical' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                  border: `1px solid ${alert.severity === 'critical' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                }}
+              >
+                <div style={{ 
+                  padding: '8px', 
+                  borderRadius: '8px', 
+                  background: alert.severity === 'critical' ? '#EF4444' : '#F59E0B',
+                  color: '#ffffff'
+                }}>
+                  <Icon name="alert-triangle" size="sm" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600, color: isDark ? '#ffffff' : '#000000' }}>
+                    {alert.message}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '12px', color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)' }}>
+                    Current: ${alert.currentCost?.toLocaleString()} / Budget: ${alert.budget?.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+    </div>
   );
 };
 

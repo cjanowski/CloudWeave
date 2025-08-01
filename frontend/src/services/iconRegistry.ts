@@ -118,7 +118,8 @@ class IconRegistryImpl implements IconRegistry {
     ],
     navigation: [
       'nav-home', 'nav-dashboard', 'nav-menu', 'nav-back', 'nav-forward',
-      'nav-up', 'nav-down', 'nav-external'
+      'nav-up', 'nav-down', 'nav-external', 'arrow-right', 'arrow-left', 
+      'arrow-up', 'arrow-down'
     ],
     cloud: [
       'cloud-server', 'cloud-database', 'cloud-network', 'cloud-storage',
@@ -189,6 +190,12 @@ class IconRegistryImpl implements IconRegistry {
     this.register('nav-up', ArrowUp);
     this.register('nav-down', ArrowDown);
     this.register('nav-external', ExternalLink);
+    
+    // Arrow icons (aliases for common usage)
+    this.register('arrow-right', ArrowRight);
+    this.register('arrow-left', ArrowLeft);
+    this.register('arrow-up', ArrowUp);
+    this.register('arrow-down', ArrowDown);
     
     // Cloud infrastructure icons
     this.register('cloud-server', Server);
