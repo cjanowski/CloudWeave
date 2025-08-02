@@ -254,3 +254,130 @@ func (h *ComplianceGinHandler) RunAssessment(c *gin.Context) {
 		"message": "Assessment started successfully",
 	})
 }
+
+// GetMetrics handles GET /api/compliance/metrics
+func (h *ComplianceGinHandler) GetMetrics(c *gin.Context) {
+	_, exists := c.Get("organizationID")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// For now, return mock compliance metrics
+	// In a real implementation, this would aggregate data from the compliance service
+	metrics := gin.H{
+		"overallScore": 87.5,
+		"frameworkScores": gin.H{
+			"soc2":     92.0,
+			"iso27001": 85.0,
+			"gdpr":     89.0,
+		},
+		"totalControls":  156,
+		"passedControls": 136,
+		"failedControls": 12,
+		"controlsBySeverity": gin.H{
+			"critical": 2,
+			"high":     5,
+			"medium":   8,
+			"low":      3,
+			"info":     0,
+		},
+		"controlsByStatus": gin.H{
+			"compliant":     136,
+			"non_compliant": 12,
+			"pending":       8,
+		},
+		"frameworkCompliance": gin.H{
+			"soc2":     "compliant",
+			"iso27001": "partial",
+			"gdpr":     "compliant",
+		},
+		"recentAssessments":  3,
+		"pendingRemediation": 8,
+		"overdueControls":    2,
+		"complianceTrends": []gin.H{
+			{
+				"date":         "2025-01-20",
+				"overallScore": 85.0,
+				"frameworkScores": gin.H{
+					"soc2":     90.0,
+					"iso27001": 82.0,
+					"gdpr":     87.0,
+				},
+				"controlsPassed": 132,
+				"controlsFailed": 16,
+			},
+			{
+				"date":         "2025-01-27",
+				"overallScore": 87.5,
+				"frameworkScores": gin.H{
+					"soc2":     92.0,
+					"iso27001": 85.0,
+					"gdpr":     89.0,
+				},
+				"controlsPassed": 136,
+				"controlsFailed": 12,
+			},
+		},
+	}
+
+	c.JSON(http.StatusOK, metrics)
+}
+
+// GetViolations handles GET /api/compliance/violations
+func (h *ComplianceGinHandler) GetViolations(c *gin.Context) {
+	_, exists := c.Get("organizationID")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// For now, return mock compliance violations
+	// In a real implementation, this would fetch actual violations from the database
+	violations := []gin.H{
+		{
+			"id":          "1",
+			"title":       "Unencrypted Data Storage",
+			"description": "Database contains unencrypted sensitive data",
+			"severity":    "critical",
+			"framework":   "SOC 2",
+			"controlId":   "CC6.1",
+			"status":      "open",
+			"dueDate":     "2025-02-15",
+			"owner":       "Security Team",
+			"remediation": "Enable encryption at rest for all databases",
+			"createdAt":   "2025-01-25T00:00:00Z",
+		},
+		{
+			"id":          "2",
+			"title":       "Missing Access Reviews",
+			"description": "Quarterly access reviews not completed",
+			"severity":    "high",
+			"framework":   "ISO 27001",
+			"controlId":   "A.9.2.5",
+			"status":      "in_progress",
+			"dueDate":     "2025-02-10",
+			"owner":       "IT Team",
+			"remediation": "Complete quarterly access review process",
+			"createdAt":   "2025-01-20T00:00:00Z",
+		},
+		{
+			"id":          "3",
+			"title":       "Data Retention Policy",
+			"description": "Personal data retention exceeds GDPR limits",
+			"severity":    "medium",
+			"framework":   "GDPR",
+			"controlId":   "Art.5.1.e",
+			"status":      "open",
+			"dueDate":     "2025-02-20",
+			"owner":       "Legal Team",
+			"remediation": "Update data retention policies and implement automated deletion",
+			"createdAt":   "2025-01-22T00:00:00Z",
+		},
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"violations": violations,
+		"total":      len(violations),
+	})
+}

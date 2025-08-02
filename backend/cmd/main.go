@@ -354,6 +354,10 @@ func main() {
 				compliance.POST("/assessments", complianceHandler.CreateAssessment)
 				compliance.GET("/assessments", complianceHandler.ListAssessments)
 				compliance.POST("/assessments/:id/run", complianceHandler.RunAssessment)
+
+				// Metrics routes
+				compliance.GET("/metrics", complianceHandler.GetMetrics)
+				compliance.GET("/violations", complianceHandler.GetViolations)
 			}
 
 			// RBAC routes
