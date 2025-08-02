@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"cloudweave/docs"
 	"cloudweave/internal/config"
 	"cloudweave/internal/database"
 	"cloudweave/internal/handlers"
 	"cloudweave/internal/middleware"
+	"cloudweave/internal/models"
 	"cloudweave/internal/repositories"
 	"cloudweave/internal/services"
 
@@ -55,6 +55,10 @@ func main() {
 	// Initialize repository manager
 	repoManager := repositories.NewRepositoryManager(db.DB)
 	log.Println("Repository layer initialized successfully")
+
+	// Initialize service manager with enhanced error handling and logging
+	serviceManager := services.NewServiceManager()
+	log.Println("Service manager initialized with enhanced error handling and logging")
 
 	// Initialize services
 	wsService := services.NewWebSocketService()
@@ -119,13 +123,23 @@ func main() {
 	// Security middleware
 	router.Use(middleware.SecurityHeaders())
 	router.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB limit
-	router.Use(middleware.RateLimitMiddleware(100, time.Minute)) // 100 requests per minute
+	
+	// Request deduplication to handle React StrictMode double-invocation
+	router.Use(middleware.SmartDeduplicationMiddleware())
+	
+	// Adaptive rate limiting based on endpoint type
+	router.Use(middleware.AdaptiveRateLimitMiddleware())
+	
+	// Caching middleware for frequently accessed endpoints
+	router.Use(middleware.SmartCacheMiddleware())
 
-	// Core middleware
+	// Core middleware with enhanced error handling and logging
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Logger())
-	router.Use(middleware.ProductionErrorHandler())
-	router.Use(middleware.ErrorHandler())
+	router.Use(middleware.StructuredLogger(serviceManager.LoggingService))
+	router.Use(middleware.MetricsMiddleware(serviceManager.LoggingService))
+	router.Use(middleware.ProductionErrorHandler(serviceManager.LoggingService, serviceManager.ErrorReportingService))
+	router.Use(middleware.ErrorHandler(serviceManager.LoggingService, serviceManager.ErrorReportingService))
 
 	// Swagger documentation
 	docs.SwaggerInfo.Host = "localhost:" + func() string {
@@ -141,8 +155,11 @@ func main() {
 	// API routes
 	api := router.Group("/api/v1")
 	{
-		// Health check
-		api.GET("/health", middleware.HealthCheckMiddleware(), handlers.HealthCheckWithDB(db))
+		// Health check with enhanced error handling
+		enhancedHealthHandler := handlers.NewEnhancedHealthHandler(db, serviceManager)
+		api.GET("/health", middleware.HealthCheckMiddleware(), enhancedHealthHandler.HealthCheckWithEnhancedErrorHandling)
+		api.GET("/health/enhanced", enhancedHealthHandler.HealthCheckWithEnhancedErrorHandling)
+		api.GET("/health/demo-errors", enhancedHealthHandler.DemonstrateErrorHandling)
 		api.GET("/health/repositories", func(c *gin.Context) {
 			if err := repoManager.Health(); err != nil {
 				c.JSON(http.StatusServiceUnavailable, gin.H{
@@ -154,6 +171,16 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{
 				"status": "healthy",
 				"stats":  repoManager.Stats(),
+			})
+		})
+		
+		// Service manager stats endpoint
+		api.GET("/health/services", func(c *gin.Context) {
+			stats := serviceManager.GetServiceStats()
+			c.JSON(http.StatusOK, models.ApiResponse{
+				Success:   true,
+				Data:      stats,
+				RequestID: c.GetString("requestID"),
 			})
 		})
 
@@ -199,11 +226,19 @@ func main() {
 				dashboard.GET("/reports", dashboardHandler.GetReportsMetrics)
 			}
 
-			// Infrastructure routes
+			// Infrastructure handler
 			infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
+			
+			// Infrastructure overview routes
+			protected.GET("/infrastructure/stats", infraHandler.GetInfrastructureStats)
+			protected.GET("/infrastructure/distribution", infraHandler.GetResourceDistribution)
+			protected.GET("/infrastructure/recent-changes", infraHandler.GetRecentChanges)
+			protected.GET("/infrastructure/batch", infraHandler.GetInfrastructureBatch)
+			protected.GET("/infrastructure/providers", infraHandler.GetProviders)
+			
+			// Infrastructure CRUD routes
 			infrastructure := protected.Group("/infrastructure")
 			{
-				infrastructure.GET("/providers", infraHandler.GetProviders)
 				infrastructure.POST("/", infraHandler.CreateInfrastructure)
 				infrastructure.GET("/", 
 					middleware.ValidateQuery(map[string]string{
@@ -234,6 +269,9 @@ func main() {
 			deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
 			deployments := protected.Group("/deployments")
 			{
+				deployments.GET("/stats", deploymentHandler.GetDeploymentStats)
+				deployments.GET("/recent", deploymentHandler.GetRecentDeployments)
+				deployments.GET("/pipelines", deploymentHandler.GetPipelines)
 				deployments.GET("/environments", deploymentHandler.GetEnvironments)
 				deployments.POST("/", deploymentHandler.CreateDeployment)
 				deployments.GET("/", deploymentHandler.ListDeployments)
@@ -397,6 +435,16 @@ func main() {
 
 	log.Printf("Starting CloudWeave server on port %s", port)
 	log.Printf("Environment: %s", cfg.Environment)
+	log.Printf("Enhanced error handling and logging enabled")
+
+	// Setup graceful shutdown
+	defer func() {
+		log.Println("Shutting down services...")
+		if err := serviceManager.Close(); err != nil {
+			log.Printf("Error during service shutdown: %v", err)
+		}
+		log.Println("Services shut down successfully")
+	}()
 
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)

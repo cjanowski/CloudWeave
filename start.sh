@@ -93,6 +93,17 @@ echo "✅ Database migrations already applied (compliance system ready)"
 echo "📦 Cleaning Go dependencies..."
 go mod tidy
 
+# Check if Go code compiles before starting
+echo "🔍 Checking Go compilation..."
+if ! go build -o /tmp/cloudweave-test cmd/main.go 2>/dev/null; then
+    echo "❌ Go compilation failed. Checking for errors..."
+    go build cmd/main.go 2>&1 | head -10
+    echo ""
+    echo "💡 Fix compilation errors before starting the server"
+    exit 1
+fi
+rm -f /tmp/cloudweave-test
+
 # Start backend
 echo "🔧 Starting Go backend on port 3001..."
 nohup go run cmd/main.go > backend.log 2>&1 &
@@ -104,6 +115,14 @@ sleep 3
 # Test backend
 echo "🔍 Testing backend health..."
 for i in {1..10}; do
+    # Check if the backend process is still running
+    if ! kill -0 $BACKEND_PID 2>/dev/null; then
+        echo "❌ Backend process died unexpectedly"
+        echo "📝 Check backend.log for errors:"
+        tail -20 backend.log
+        exit 1
+    fi
+    
     if curl -s http://localhost:3001/api/v1/health > /dev/null; then
         echo "✅ Backend is healthy"
         break
@@ -112,6 +131,12 @@ for i in {1..10}; do
             echo "❌ Backend failed to start after 10 attempts"
             echo "📝 Check backend.log for errors:"
             tail -20 backend.log
+            echo ""
+            echo "🔧 Common issues:"
+            echo "   - Database connection problems"
+            echo "   - Port 3001 already in use"
+            echo "   - Go compilation errors"
+            echo "   - Missing environment variables"
             exit 1
         fi
         echo "⏳ Waiting for backend to start (attempt $i/10)..."

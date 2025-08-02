@@ -43,31 +43,102 @@ func Logger() gin.HandlerFunc {
 	})
 }
 
+// StructuredLogger provides structured logging for HTTP requests
+func StructuredLogger(loggingService *services.LoggingService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		
+		// Process request
+		c.Next()
+		
+		// Calculate duration
+		duration := time.Since(start)
+		
+		// Create log context
+		logCtx := services.LogContext{
+			RequestID:      c.GetString("requestID"),
+			UserID:         c.GetString("userID"),
+			UserEmail:      c.GetString("userEmail"),
+			OrganizationID: c.GetString("organizationId"),
+			Method:         c.Request.Method,
+			Path:           c.Request.URL.Path,
+			IPAddress:      c.ClientIP(),
+			UserAgent:      c.Request.UserAgent(),
+			Duration:       duration,
+			StatusCode:     c.Writer.Status(),
+			Metadata: map[string]interface{}{
+				"request_size":  c.Request.ContentLength,
+				"response_size": c.Writer.Size(),
+				"protocol":      c.Request.Proto,
+				"query_params":  c.Request.URL.RawQuery,
+			},
+		}
+		
+		// Log request completion
+		message := fmt.Sprintf("HTTP %s %s completed", c.Request.Method, c.Request.URL.Path)
+		
+		if loggingService != nil {
+			if c.Writer.Status() >= 400 {
+				loggingService.Error(logCtx, message)
+			} else {
+				loggingService.LogRequest(logCtx, message)
+			}
+		}
+	}
+}
+
 // ErrorHandler middleware handles panics and errors with comprehensive logging
-func ErrorHandler() gin.HandlerFunc {
+func ErrorHandler(loggingService *services.LoggingService, errorReportingService *services.ErrorReportingService) gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		requestID := c.GetString("requestID")
 		userID := c.GetString("userID")
+		userEmail := c.GetString("userEmail")
+		organizationID := c.GetString("organizationId")
 		
-		// Log the panic with context
-		fmt.Printf("[PANIC] RequestID: %s, UserID: %s, Method: %s, Path: %s, Error: %v\n",
-			requestID, userID, c.Request.Method, c.Request.URL.Path, recovered)
+		// Create log context
+		logCtx := services.LogContext{
+			RequestID:      requestID,
+			UserID:         userID,
+			UserEmail:      userEmail,
+			OrganizationID: organizationID,
+			Method:         c.Request.Method,
+			Path:           c.Request.URL.Path,
+			IPAddress:      c.ClientIP(),
+			UserAgent:      c.Request.UserAgent(),
+			StatusCode:     http.StatusInternalServerError,
+		}
+		
+		// Log the panic
+		if loggingService != nil {
+			loggingService.LogPanic(logCtx, recovered, "Panic occurred during request processing")
+		}
+		
+		// Report panic to external service if enabled
+		if errorReportingService != nil && errorReportingService.IsEnabled() {
+			reportCtx := services.ErrorReportContext{
+				RequestID:      requestID,
+				UserID:         userID,
+				UserEmail:      userEmail,
+				OrganizationID: organizationID,
+				Method:         c.Request.Method,
+				Path:           c.Request.URL.Path,
+				IPAddress:      c.ClientIP(),
+				UserAgent:      c.Request.UserAgent(),
+			}
+			go errorReportingService.ReportPanic(c.Request.Context(), recovered, reportCtx)
+		}
+		
+		// Create error response
+		appErr := models.NewInternalError(fmt.Sprintf("Panic occurred: %v", recovered))
+		appErr.WithRequestID(requestID).WithUserID(userID)
 		
 		// Return standardized error response
-		c.JSON(http.StatusInternalServerError, models.ApiResponse{
-			Success: false,
-			Error: &models.ApiError{
-				Code:      "INTERNAL_SERVER_ERROR",
-				Message:   "An internal server error occurred",
-				Timestamp: time.Now(),
-			},
-			RequestID: requestID,
-		})
+		c.JSON(http.StatusInternalServerError, models.NewErrorResponse(appErr, requestID))
 	})
 }
 
 // ProductionErrorHandler provides comprehensive error handling for production
-func ProductionErrorHandler() gin.HandlerFunc {
+func ProductionErrorHandler(loggingService *services.LoggingService, errorReportingService *services.ErrorReportingService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		
@@ -76,46 +147,79 @@ func ProductionErrorHandler() gin.HandlerFunc {
 			err := c.Errors.Last()
 			requestID := c.GetString("requestID")
 			userID := c.GetString("userID")
+			userEmail := c.GetString("userEmail")
+			organizationID := c.GetString("organizationId")
 			
-			// Log error with context
-			fmt.Printf("[ERROR] RequestID: %s, UserID: %s, Method: %s, Path: %s, Error: %v\n",
-				requestID, userID, c.Request.Method, c.Request.URL.Path, err.Err)
-			
-			// Determine error type and response
-			statusCode := http.StatusInternalServerError
-			errorCode := "INTERNAL_ERROR"
-			errorMessage := "An internal error occurred"
-			
-			// Check for specific error types
-			if strings.Contains(err.Error(), "validation") {
-				statusCode = http.StatusBadRequest
-				errorCode = "VALIDATION_ERROR"
-				errorMessage = "Request validation failed"
-			} else if strings.Contains(err.Error(), "unauthorized") {
-				statusCode = http.StatusUnauthorized
-				errorCode = "UNAUTHORIZED"
-				errorMessage = "Authentication required"
-			} else if strings.Contains(err.Error(), "forbidden") {
-				statusCode = http.StatusForbidden
-				errorCode = "FORBIDDEN"
-				errorMessage = "Access denied"
-			} else if strings.Contains(err.Error(), "not found") {
-				statusCode = http.StatusNotFound
-				errorCode = "NOT_FOUND"
-				errorMessage = "Resource not found"
+			// Create log context
+			logCtx := services.LogContext{
+				RequestID:      requestID,
+				UserID:         userID,
+				UserEmail:      userEmail,
+				OrganizationID: organizationID,
+				Method:         c.Request.Method,
+				Path:           c.Request.URL.Path,
+				IPAddress:      c.ClientIP(),
+				UserAgent:      c.Request.UserAgent(),
+				StatusCode:     c.Writer.Status(),
 			}
 			
-			c.JSON(statusCode, models.ApiResponse{
-				Success: false,
-				Error: &models.ApiError{
-					Code:      errorCode,
-					Message:   errorMessage,
-					Timestamp: time.Now(),
-				},
-				RequestID: requestID,
-			})
+			var appErr *models.AppError
+			
+			// Check if it's already an AppError
+			if ae, ok := err.Err.(*models.AppError); ok {
+				appErr = ae.WithRequestID(requestID).WithUserID(userID)
+			} else {
+				// Convert generic error to AppError
+				appErr = convertToAppError(err.Err).WithRequestID(requestID).WithUserID(userID)
+			}
+			
+			// Log the error
+			if loggingService != nil {
+				loggingService.LogError(logCtx, appErr, "Request processing error")
+			}
+			
+			// Report to external service if enabled
+			if errorReportingService != nil && errorReportingService.IsEnabled() {
+				reportCtx := services.ErrorReportContext{
+					RequestID:      requestID,
+					UserID:         userID,
+					UserEmail:      userEmail,
+					OrganizationID: organizationID,
+					Method:         c.Request.Method,
+					Path:           c.Request.URL.Path,
+					IPAddress:      c.ClientIP(),
+					UserAgent:      c.Request.UserAgent(),
+				}
+				go errorReportingService.ReportError(c.Request.Context(), appErr, reportCtx)
+			}
+			
+			// Return standardized error response
+			c.JSON(appErr.StatusCode, models.NewErrorResponse(appErr, requestID))
 		}
 	}
+}
+
+// convertToAppError converts a generic error to an AppError
+func convertToAppError(err error) *models.AppError {
+	errStr := err.Error()
+	
+	// Check for specific error patterns
+	if strings.Contains(strings.ToLower(errStr), "validation") {
+		return models.NewValidationError("Request validation failed", nil)
+	} else if strings.Contains(strings.ToLower(errStr), "unauthorized") {
+		return models.NewAuthenticationError("Authentication required")
+	} else if strings.Contains(strings.ToLower(errStr), "forbidden") {
+		return models.NewAuthorizationError("Access denied")
+	} else if strings.Contains(strings.ToLower(errStr), "not found") {
+		return models.NewNotFoundError("Resource")
+	} else if strings.Contains(strings.ToLower(errStr), "database") || strings.Contains(strings.ToLower(errStr), "sql") {
+		return models.NewDatabaseError(errStr)
+	} else if strings.Contains(strings.ToLower(errStr), "timeout") {
+		return models.NewTimeoutError("Request")
+	}
+	
+	// Default to internal error
+	return models.NewInternalError(errStr)
 }
 
 // AuthRequired middleware validates JWT tokens
@@ -259,6 +363,55 @@ func WebSocketAuthRequired(jwtService *services.JWTService) gin.HandlerFunc {
 		c.Set("tokenID", claims.TokenID)
 		c.Set("token", tokenString)
 
+		c.Next()
+	}
+}
+// MetricsMiddleware collects performance metrics
+func MetricsMiddleware(loggingService *services.LoggingService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		
+		// Process request
+		c.Next()
+		
+		// Calculate metrics
+		duration := time.Since(start)
+		statusCode := c.Writer.Status()
+		
+		// Create log context
+		logCtx := services.LogContext{
+			RequestID:      c.GetString("requestID"),
+			UserID:         c.GetString("userID"),
+			Method:         c.Request.Method,
+			Path:           c.Request.URL.Path,
+			StatusCode:     statusCode,
+			Duration:       duration,
+		}
+		
+		// Log performance metrics
+		if loggingService != nil {
+			loggingService.LogPerformanceMetric(logCtx, "http_request_duration", float64(duration.Milliseconds()), "ms")
+			loggingService.LogPerformanceMetric(logCtx, "http_request_size", float64(c.Request.ContentLength), "bytes")
+			loggingService.LogPerformanceMetric(logCtx, "http_response_size", float64(c.Writer.Size()), "bytes")
+		}
+		
+		// Log slow requests
+		if duration > 5*time.Second {
+			if loggingService != nil {
+				loggingService.Warn(logCtx, fmt.Sprintf("Slow request detected: %s %s took %v", c.Request.Method, c.Request.URL.Path, duration))
+			}
+		}
+	}
+}
+
+// HealthCheckMiddleware for health check endpoints
+func HealthCheckMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Add health check headers
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
+		
 		c.Next()
 	}
 }

@@ -171,9 +171,11 @@ const DeploymentsOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
           deploymentService.getRecentDeployments(4),
           deploymentService.getEnvironments()
         ]);
+        console.log('Environments data received:', environmentsData, 'Type:', typeof environmentsData, 'Is array:', Array.isArray(environmentsData));
         setStats(statsData);
         setRecentDeployments(deploymentsData);
-        setEnvironments(environmentsData);
+        // Ensure environments is always an array
+        setEnvironments(Array.isArray(environmentsData) ? environmentsData : []);
       } catch (err) {
         console.error('Failed to fetch deployment overview:', err);
         setError('Failed to load deployment data');
@@ -313,7 +315,7 @@ const DeploymentsOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
           <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Recent Deployments</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            {recentDeployments.map((deployment, index) => (
+            {(recentDeployments || []).map((deployment, index) => (
               <div key={deployment.id} style={{ 
                 marginBottom: index < recentDeployments.length - 1 ? '12px' : '0',
                 display: 'flex',
@@ -344,9 +346,11 @@ const DeploymentsOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         <GlassCard variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}>
           <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Environment Status</h2>
           <div style={{ color: isDark ? '#ffffff' : '#666666' }}>
-            {environments.map((env, index) => (
-              <div key={env.id} style={{ 
-                marginBottom: index < environments.length - 1 ? '12px' : '0',
+            {(() => {
+              const envArray = Array.isArray(environments) ? environments : [];
+              return envArray.map((env, index) => (
+                <div key={env.id} style={{ 
+                  marginBottom: index < envArray.length - 1 ? '12px' : '0',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -367,7 +371,8 @@ const DeploymentsOverview: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                   {env.uptime.toFixed(1)}% uptime
                 </span>
               </div>
-            ))}
+              ));
+            })()}
           </div>
         </GlassCard>
       </div>
@@ -433,7 +438,7 @@ const PipelinesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
       </div>
 
       <div style={{ display: 'grid', gap: '16px' }}>
-        {pipelines.map((pipeline) => (
+        {(pipelines || []).map((pipeline) => (
           <motion.div
             key={pipeline.id}
             initial={{ opacity: 0, y: 10 }}
@@ -491,7 +496,7 @@ const PipelinesTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              {pipeline.stages.map((stage) => (
+              {(pipeline.stages || []).map((stage) => (
                 <div
                   key={stage.id}
                   style={{
@@ -643,7 +648,7 @@ const HistoryTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         <h2 style={{ color: isDark ? '#ffffff' : '#000000', marginBottom: '20px' }}>Deployment History</h2>
 
         <div style={{ display: 'grid', gap: '12px' }}>
-          {deployments.map((deployment) => (
+          {(deployments || []).map((deployment) => (
             <motion.div
               key={deployment.id}
               initial={{ opacity: 0, y: 10 }}
@@ -873,7 +878,7 @@ const EnvironmentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 
       {/* Environments List */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
-        {environments.map((env) => (
+        {(environments || []).map((env) => (
           <GlassCard key={env.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1153,7 +1158,7 @@ const DeploymentsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         </div>
       ) : (
         <div style={{ display: 'grid', gap: '16px' }}>
-          {filteredDeployments.map((deployment) => (
+          {(filteredDeployments || []).map((deployment) => (
             <GlassCard key={deployment.id} variant="card" elevation="medium" isDark={isDark} style={{ borderRadius: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>

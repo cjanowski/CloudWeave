@@ -97,7 +97,20 @@ export class InfrastructureService {
 
   // Get recent changes
   async getRecentChanges(): Promise<RecentChange[]> {
-    return await apiService.get<RecentChange[]>('/infrastructure/recent-changes');
+    const response = await apiService.get<{changes: RecentChange[]}>('/infrastructure/recent-changes');
+    return response.changes || response as any;
+  }
+
+  // Get multiple infrastructure data types in a single request
+  async getInfrastructureBatch(types: string[] = ['stats', 'distribution', 'recent-changes']): Promise<{
+    stats?: InfrastructureStats;
+    distribution?: ResourceDistribution;
+    recentChanges?: RecentChange[];
+    timestamp: number;
+  }> {
+    const params = new URLSearchParams();
+    types.forEach(type => params.append('types', type));
+    return await apiService.get(`/infrastructure/batch?${params.toString()}`);
   }
 
   // List infrastructure resources with pagination and filtering

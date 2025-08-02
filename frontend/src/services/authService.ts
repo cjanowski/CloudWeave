@@ -39,11 +39,13 @@ export class TokenManager {
   }
 
   static getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    return (token && token !== 'null' && token !== 'undefined') ? token : null;
   }
 
   static getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') ? refreshToken : null;
   }
 
   static setUser(user: User): void {
@@ -52,7 +54,17 @@ export class TokenManager {
 
   static getUser(): User | null {
     const userData = localStorage.getItem(this.USER_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData || userData === 'null' || userData === 'undefined') {
+      return null;
+    }
+    try {
+      return JSON.parse(userData);
+    } catch (error) {
+      console.warn('Failed to parse user data from localStorage:', error);
+      // Clear invalid data
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
   }
 
   static clearTokens(): void {
@@ -61,9 +73,33 @@ export class TokenManager {
     localStorage.removeItem(this.USER_KEY);
   }
 
+  static cleanupCorruptedData(): void {
+    // Clean up any corrupted localStorage data
+    const keys = [this.TOKEN_KEY, this.REFRESH_TOKEN_KEY, this.USER_KEY];
+    keys.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value === 'undefined' || value === 'null') {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
   static isTokenExpired(token: string): boolean {
+    if (!token || token === 'null' || token === 'undefined') {
+      return true;
+    }
+    
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return true;
+      }
+      
+      const payload = JSON.parse(atob(parts[1]));
+      if (!payload.exp) {
+        return true;
+      }
+      
       const currentTime = Date.now() / 1000;
       return payload.exp < currentTime;
     } catch {

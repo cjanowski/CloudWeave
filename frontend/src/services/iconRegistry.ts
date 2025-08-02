@@ -275,6 +275,7 @@ class IconRegistryImpl implements IconRegistry {
     this.register('action-upload', Upload);
     this.register('action-refresh', RefreshCw);
     this.register('refresh', RefreshCw);
+    this.register('refresh-cw', RefreshCw);
     this.register('action-settings', Settings);
     this.register('action-more', MoreHorizontal);
     this.register('action-search', SearchIcon);

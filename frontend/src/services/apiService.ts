@@ -168,6 +168,10 @@ export class ApiService {
       const response = await this.axiosInstance.get(url, config);
       const data = response?.data?.data || response?.data || null;
       
+      if (url.includes('/environments')) {
+        console.log('API response for environments:', response?.data, 'Processed data:', data);
+      }
+      
       this.setLoadingState(loadingKey, { 
         isLoading: false, 
         error: null, 
@@ -181,7 +185,11 @@ export class ApiService {
       // Try demo data fallback if in demo mode or API is unavailable
       if (this.isDemoMode() || this.isNetworkError(error)) {
         try {
+          console.log('Using demo data fallback for:', url);
           const demoData = await this.getDemoDataFallback<T>(url);
+          if (url.includes('/environments')) {
+            console.log('Demo data for environments:', demoData, 'Type:', typeof demoData, 'Is array:', Array.isArray(demoData));
+          }
           this.setLoadingState(loadingKey, { 
             isLoading: false, 
             error: null, 

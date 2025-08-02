@@ -13,6 +13,9 @@ interface AuthState {
   error: string | null;
 }
 
+// Clean up any corrupted localStorage data first
+TokenManager.cleanupCorruptedData();
+
 // Initialize state from stored tokens
 const token = TokenManager.getToken();
 const user = TokenManager.getUser();

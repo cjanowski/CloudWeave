@@ -118,7 +118,15 @@ export class DeploymentService {
 
   // Get environments
   async getEnvironments(): Promise<Environment[]> {
-    return await apiService.get<Environment[]>('/deployments/environments');
+    try {
+      console.log('Calling API for environments...');
+      const result = await apiService.get<Environment[]>('/deployments/environments');
+      console.log('API result for environments:', result, 'Type:', typeof result, 'Is array:', Array.isArray(result));
+      return result;
+    } catch (error) {
+      console.error('Error getting environments:', error);
+      throw error;
+    }
   }
 
   // List deployments with pagination and filtering

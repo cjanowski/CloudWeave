@@ -53,12 +53,8 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-<<<<<<< HEAD
 		SELECT id, email, password_hash, name, organization_id, 
 		       created_at, updated_at
-=======
-		SELECT id, email, name, password_hash, organization_id, role, preferences, email_verified, created_at, updated_at
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 		FROM users
 		WHERE id = $1`
 
@@ -68,34 +64,22 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 		&user.PasswordHash,
 		&user.Name,
 		&user.OrganizationID,
-<<<<<<< HEAD
-=======
-		&user.Role,
-		&preferencesJSON,
-		&user.EmailVerified,
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 
-<<<<<<< HEAD
 	// Set default values for compatibility
-=======
-	// Set default values for missing columns
-	user.OnboardingCompleted = false
-	user.DemoMode = true // Default to demo mode for existing users
-	user.DemoScenario = "startup"
-	user.IsActive = true
-	user.LastLoginAt = nil
-	user.SSOProvider = nil
-	user.SSOSubject = nil
-
-	// Parse preferences JSON and set defaults
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 	if err == nil {
 		user.Preferences = make(map[string]interface{})
 		user.Role = "user" // Default role
 		user.EmailVerified = false // Default value
+		user.OnboardingCompleted = false
+		user.DemoMode = true // Default to demo mode for existing users
+		user.DemoScenario = "startup"
+		user.IsActive = true
+		user.LastLoginAt = nil
+		user.SSOProvider = nil
+		user.SSOSubject = nil
 	}
 
 	if err != nil {
@@ -112,12 +96,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-<<<<<<< HEAD
 		SELECT id, email, password_hash, name, organization_id, 
 		       created_at, updated_at
-=======
-		SELECT id, email, name, password_hash, organization_id, role, preferences, email_verified, created_at, updated_at
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 		FROM users
 		WHERE email = $1`
 
@@ -127,34 +107,22 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		&user.PasswordHash,
 		&user.Name,
 		&user.OrganizationID,
-<<<<<<< HEAD
-=======
-		&user.Role,
-		&preferencesJSON,
-		&user.EmailVerified,
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 
-<<<<<<< HEAD
 	// Set default values for compatibility
-=======
-	// Set default values for missing columns
-	user.OnboardingCompleted = false
-	user.DemoMode = true // Default to demo mode for existing users
-	user.DemoScenario = "startup"
-	user.IsActive = true
-	user.LastLoginAt = nil
-	user.SSOProvider = nil
-	user.SSOSubject = nil
-
-	// Parse preferences JSON and set defaults
->>>>>>> 0b72187d4de54bf3aef32e5e364b55768038512b
 	if err == nil {
 		user.Preferences = make(map[string]interface{})
 		user.Role = "user" // Default role
 		user.EmailVerified = false // Default value
+		user.OnboardingCompleted = false
+		user.DemoMode = true // Default to demo mode for existing users
+		user.DemoScenario = "startup"
+		user.IsActive = true
+		user.LastLoginAt = nil
+		user.SSOProvider = nil
+		user.SSOSubject = nil
 	}
 
 	if err != nil {
