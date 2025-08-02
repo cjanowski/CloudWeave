@@ -175,7 +175,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           onClick={onRetry}
           style={{ borderRadius: '8px' }}
         >
-          <Icon name="refresh-cw" size="sm" />
+          <Icon name="action-refresh" size="sm" />
           Retry
         </GlassButton>
       )}

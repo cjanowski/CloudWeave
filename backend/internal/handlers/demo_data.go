@@ -341,6 +341,32 @@ func (h *DemoDataHandler) CompleteOnboarding(c *gin.Context) {
 		return
 	}
 
+	// Mark onboarding as completed
+	if err := h.authService.UpdateOnboardingCompleted(c.Request.Context(), userID, true); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:    "ONBOARDING_UPDATE_FAILED",
+				Message: "Failed to update onboarding status",
+				Details: err.Error(),
+			},
+		})
+		return
+	}
+
+	// Update demo mode settings
+	if err := h.authService.UpdateDemoSettings(c.Request.Context(), userID, req.DemoMode, "startup"); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ApiResponse{
+			Success: false,
+			Error: &models.ApiError{
+				Code:    "DEMO_SETTINGS_UPDATE_FAILED",
+				Message: "Failed to update demo settings",
+				Details: err.Error(),
+			},
+		})
+		return
+	}
+
 	// Update user preferences if provided
 	if req.Preferences != nil {
 		if err := h.authService.UpdateUserPreferences(c.Request.Context(), userID, req.Preferences); err != nil {

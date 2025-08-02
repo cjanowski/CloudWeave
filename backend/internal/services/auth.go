@@ -315,6 +315,38 @@ func (s *AuthService) UpdateUserPreferences(ctx context.Context, userID string, 
 	return nil
 }
 
+// UpdateOnboardingCompleted updates a user's onboarding completion status
+func (s *AuthService) UpdateOnboardingCompleted(ctx context.Context, userID string, completed bool) error {
+	// Get user to verify they exist
+	_, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Update onboarding status in database
+	if err := s.userRepo.UpdateOnboardingCompleted(ctx, userID, completed); err != nil {
+		return fmt.Errorf("failed to update onboarding status: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateDemoSettings updates a user's demo mode and scenario
+func (s *AuthService) UpdateDemoSettings(ctx context.Context, userID string, demoMode bool, demoScenario string) error {
+	// Get user to verify they exist
+	_, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Update demo settings in database
+	if err := s.userRepo.UpdateDemoSettings(ctx, userID, demoMode, demoScenario); err != nil {
+		return fmt.Errorf("failed to update demo settings: %w", err)
+	}
+
+	return nil
+}
+
 // Helper function to generate slug from name
 func generateSlugFromName(name string) string {
 	// Convert to lowercase

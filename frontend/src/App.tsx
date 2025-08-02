@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useSelector } from 'react-redux';
-import { store } from './store';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './store';
 import { Sidebar } from './components/Navigation/Sidebar';
 import { Header } from './components/Navigation/Header';
 import { PageTransition } from './components/Navigation/PageTransition';
@@ -17,11 +18,15 @@ import { SecurityPage } from './pages/Security/SecurityPage';
 import { CostManagementPage } from './pages/CostManagement/CostManagementPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { OnboardingWizard } from './components/Onboarding/OnboardingWizard';
+import { useAppInitialization } from './hooks/useAppInitialization';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useSelector((state: any) => state.auth);
   const { theme } = useSelector((state: any) => state.ui);
   const { onboardingCompleted } = useSelector((state: any) => state.user);
+  
+  // Initialize app data
+  useAppInitialization();
   
   const isDark = theme === 'dark';
   const sidebarWidth = 280;
@@ -155,9 +160,11 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <Provider store={store}>
-      <Router>
-        <AppContent />
-      </Router>
+      <PersistGate loading={null} persistor={persistor}>
+        <Router>
+          <AppContent />
+        </Router>
+      </PersistGate>
     </Provider>
   );
 }

@@ -52,7 +52,16 @@ export class TokenManager {
 
   static getUser(): User | null {
     const userData = localStorage.getItem(this.USER_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData || userData === 'undefined' || userData === 'null') {
+      return null;
+    }
+    try {
+      return JSON.parse(userData);
+    } catch (error) {
+      console.warn('Failed to parse user data from localStorage:', error);
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
   }
 
   static clearTokens(): void {
@@ -174,6 +183,25 @@ export class AuthService {
     } catch (error) {
       ErrorHandler.logError(error as any, 'AuthService.getCurrentUser');
       TokenManager.clearTokens();
+      return null;
+    }
+  }
+
+  static async getUserProfile(): Promise<User | null> {
+    try {
+      const token = TokenManager.getToken();
+      if (!token || TokenManager.isTokenExpired(token)) {
+        return null;
+      }
+
+      const response = await apiService.get<{ user: User }>('/user/profile');
+      
+      const user = response.user;
+      TokenManager.setUser(user);
+      
+      return user;
+    } catch (error) {
+      ErrorHandler.logError(error as any, 'AuthService.getUserProfile');
       return null;
     }
   }

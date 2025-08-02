@@ -1,4 +1,4 @@
-import { apiService } from './apiService';
+// Removed circular import - apiService imports demoDataService
 
 export interface DemoScenario {
   id: 'startup' | 'enterprise' | 'devops' | 'multicloud';
@@ -262,6 +262,14 @@ class DemoDataService {
         return this.generateLocalDashboardCosts(scenario);
       case 'dashboard-security':
         return this.generateLocalDashboardSecurity(scenario);
+      case 'dashboard-infrastructure':
+        return this.generateLocalDashboardInfrastructure(scenario);
+      case 'security-scans':
+        return this.generateLocalSecurityScans(scenario);
+      case 'security-vulnerabilities':
+        return this.generateLocalSecurityVulnerabilities(scenario);
+      case 'security-alerts':
+        return this.generateLocalSecurityAlerts(scenario);
       case 'metrics':
         return this.generateLocalMetrics(scenario);
       case 'alerts':
@@ -660,16 +668,365 @@ class DemoDataService {
   }
 
   private generateLocalDashboardSecurity(scenario: string): any {
-    return {
-      securityScore: 98,
-      vulnerabilities: {
+    const baseData = {
+      totalVulnerabilities: 7,
+      openVulnerabilities: 5,
+      vulnerabilitiesBySeverity: {
         critical: 0,
+        high: 1,
         medium: 2,
-        low: 5,
+        low: 4,
+        info: 0
       },
-      lastScan: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      compliance: ['SOC2', 'ISO27001'],
+      vulnerabilitiesByStatus: {
+        open: 5,
+        in_progress: 1,
+        resolved: 1,
+        ignored: 0
+      },
+      recentScans: 3,
+      complianceScore: 98.5,
+      securityTrends: [
+        {
+          date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+          vulnerabilityCount: 12,
+          criticalCount: 2,
+          highCount: 3,
+          complianceScore: 94.2
+        },
+        {
+          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          vulnerabilityCount: 10,
+          criticalCount: 1,
+          highCount: 2,
+          complianceScore: 96.1
+        },
+        {
+          date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          vulnerabilityCount: 8,
+          criticalCount: 1,
+          highCount: 2,
+          complianceScore: 97.3
+        },
+        {
+          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          vulnerabilityCount: 7,
+          criticalCount: 0,
+          highCount: 1,
+          complianceScore: 98.1
+        },
+        {
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          vulnerabilityCount: 7,
+          criticalCount: 0,
+          highCount: 1,
+          complianceScore: 98.5
+        },
+        {
+          date: new Date().toISOString(),
+          vulnerabilityCount: 7,
+          criticalCount: 0,
+          highCount: 1,
+          complianceScore: 98.5
+        }
+      ]
     };
+
+    // Adjust data based on scenario
+    switch (scenario) {
+      case 'startup':
+        return {
+          ...baseData,
+          totalVulnerabilities: 3,
+          openVulnerabilities: 2,
+          vulnerabilitiesBySeverity: {
+            critical: 0,
+            high: 0,
+            medium: 1,
+            low: 2,
+            info: 0
+          },
+          vulnerabilitiesByStatus: {
+            open: 2,
+            in_progress: 0,
+            resolved: 1,
+            ignored: 0
+          },
+          recentScans: 1,
+          complianceScore: 95.8
+        };
+      case 'enterprise':
+        return {
+          ...baseData,
+          totalVulnerabilities: 15,
+          openVulnerabilities: 8,
+          vulnerabilitiesBySeverity: {
+            critical: 1,
+            high: 2,
+            medium: 5,
+            low: 6,
+            info: 1
+          },
+          vulnerabilitiesByStatus: {
+            open: 8,
+            in_progress: 3,
+            resolved: 3,
+            ignored: 1
+          },
+          recentScans: 8,
+          complianceScore: 96.2
+        };
+      default:
+        return baseData;
+    }
+  }
+
+  private generateLocalSecurityScans(scenario: string): any {
+    const baseScans = [
+      {
+        id: 'scan-001',
+        name: 'Infrastructure Security Scan',
+        type: 'infrastructure',
+        status: 'completed',
+        targetType: 'aws-account',
+        targetName: 'Production Account',
+        progress: 100,
+        startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        completedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+        duration: 1800,
+        summary: {
+          totalVulnerabilities: 7,
+          vulnerabilitiesBySeverity: {
+            critical: 0,
+            high: 1,
+            medium: 2,
+            low: 4,
+            info: 0
+          },
+          resourcesScanned: 45,
+          highestSeverity: 'high'
+        },
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'scan-002',
+        name: 'Application Security Scan',
+        type: 'application',
+        status: 'running',
+        targetType: 'application',
+        targetName: 'CloudWeave Dashboard',
+        progress: 65,
+        startedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'scan-003',
+        name: 'Container Security Scan',
+        type: 'container',
+        status: 'completed',
+        targetType: 'container-registry',
+        targetName: 'ECR Registry',
+        progress: 100,
+        startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        completedAt: new Date(Date.now() - 23.5 * 60 * 60 * 1000).toISOString(),
+        duration: 1200,
+        summary: {
+          totalVulnerabilities: 3,
+          vulnerabilitiesBySeverity: {
+            critical: 0,
+            high: 0,
+            medium: 1,
+            low: 2,
+            info: 0
+          },
+          resourcesScanned: 12,
+          highestSeverity: 'medium'
+        },
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 23.5 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    return {
+      scans: baseScans,
+      total: baseScans.length
+    };
+  }
+
+  private generateLocalSecurityVulnerabilities(scenario: string): any {
+    const baseVulnerabilities = [
+      {
+        id: 'vuln-001',
+        scanId: 'scan-001',
+        title: 'Unencrypted S3 Bucket',
+        description: 'S3 bucket does not have server-side encryption enabled',
+        severity: 'high',
+        status: 'open',
+        cveId: null,
+        cvssScore: 7.5,
+        resourceType: 's3-bucket',
+        resourceId: 'bucket-prod-data',
+        resourceName: 'prod-data-bucket',
+        recommendation: 'Enable server-side encryption using AES-256 or KMS',
+        references: [
+          'https://docs.aws.amazon.com/s3/latest/userguide/serv-side-encryption.html'
+        ],
+        tags: ['encryption', 'data-protection'],
+        firstDetected: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        lastSeen: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'vuln-002',
+        scanId: 'scan-001',
+        title: 'Security Group with Overly Permissive Rules',
+        description: 'Security group allows inbound traffic from 0.0.0.0/0 on port 22',
+        severity: 'medium',
+        status: 'in_progress',
+        cveId: null,
+        cvssScore: 5.3,
+        resourceType: 'security-group',
+        resourceId: 'sg-0123456789abcdef0',
+        resourceName: 'web-server-sg',
+        recommendation: 'Restrict SSH access to specific IP ranges or use AWS Systems Manager Session Manager',
+        references: [
+          'https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html'
+        ],
+        tags: ['network-security', 'ssh'],
+        firstDetected: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        lastSeen: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'vuln-003',
+        scanId: 'scan-001',
+        title: 'IAM User with Unused Access Keys',
+        description: 'IAM user has access keys that have not been used in the last 90 days',
+        severity: 'low',
+        status: 'open',
+        cveId: null,
+        cvssScore: 2.1,
+        resourceType: 'iam-user',
+        resourceId: 'user-legacy-service',
+        resourceName: 'legacy-service-user',
+        recommendation: 'Remove unused access keys or rotate them if still needed',
+        references: [
+          'https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html'
+        ],
+        tags: ['iam', 'access-keys', 'cleanup'],
+        firstDetected: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        lastSeen: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'vuln-004',
+        scanId: 'scan-003',
+        title: 'Container Image with Outdated Base OS',
+        description: 'Container image uses Ubuntu 18.04 which is approaching end of life',
+        severity: 'medium',
+        status: 'open',
+        cveId: null,
+        cvssScore: 4.2,
+        resourceType: 'container-image',
+        resourceId: 'cloudweave/api:v1.2.3',
+        resourceName: 'API Container',
+        recommendation: 'Update base image to Ubuntu 22.04 LTS or newer',
+        references: [
+          'https://ubuntu.com/about/release-cycle'
+        ],
+        tags: ['container', 'base-image', 'lifecycle'],
+        firstDetected: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        lastSeen: new Date(Date.now() - 23.5 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 23.5 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    return {
+      vulnerabilities: baseVulnerabilities,
+      total: baseVulnerabilities.length
+    };
+  }
+
+  private generateLocalSecurityAlerts(scenario: string): any {
+    return [
+      {
+        id: 'alert-001',
+        title: 'Unencrypted S3 Bucket Detected',
+        severity: 'high',
+        description: 'Critical data bucket lacks encryption',
+        resourceType: 's3-bucket',
+        resourceName: 'prod-data-bucket',
+        timestamp: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+        status: 'active'
+      },
+      {
+        id: 'alert-002',
+        title: 'Suspicious Login Activity',
+        severity: 'medium',
+        description: 'Multiple failed login attempts detected',
+        resourceType: 'iam-user',
+        resourceName: 'admin-user',
+        timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+        status: 'acknowledged'
+      }
+    ];
+  }
+
+  private generateLocalDashboardInfrastructure(scenario: string): any {
+    const baseData = {
+      ec2Instances: 12,
+      loadBalancers: 3,
+      databases: {
+        rds: 4,
+        dynamodb: 2
+      },
+      storageUsed: 2.3 // in TB
+    };
+
+    // Adjust data based on scenario
+    switch (scenario) {
+      case 'startup':
+        return {
+          ...baseData,
+          ec2Instances: 3,
+          loadBalancers: 1,
+          databases: {
+            rds: 1,
+            dynamodb: 1
+          },
+          storageUsed: 0.5
+        };
+      case 'growth':
+        return {
+          ...baseData,
+          ec2Instances: 8,
+          loadBalancers: 2,
+          databases: {
+            rds: 2,
+            dynamodb: 2
+          },
+          storageUsed: 1.2
+        };
+      case 'enterprise':
+        return {
+          ...baseData,
+          ec2Instances: 25,
+          loadBalancers: 5,
+          databases: {
+            rds: 8,
+            dynamodb: 4
+          },
+          storageUsed: 5.7
+        };
+      default:
+        return baseData;
+    }
   }
 }
 

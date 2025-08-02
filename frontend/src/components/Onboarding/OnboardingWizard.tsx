@@ -7,7 +7,7 @@ import { GlassCard } from '../common/GlassCard';
 import { GlassButton } from '../common/GlassButton';
 import { GlassInput } from '../common/GlassInput';
 import type { RootState, AppDispatch } from '../../store';
-import { setOnboardingCompleted, setDemoMode, setUserPreferences } from '../../store/slices/userSlice';
+import { setOnboardingCompleted, setDemoMode, setUserPreferences, syncUserData } from '../../store/slices/userSlice';
 import { addCloudProvider } from '../../store/slices/cloudProviderSlice';
 import { CloudProviderSetup } from './CloudProviderSetup';
 import { PreferencesSetup } from './PreferencesSetup';

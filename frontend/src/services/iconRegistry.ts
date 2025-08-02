@@ -248,7 +248,13 @@ class IconRegistryImpl implements IconRegistry {
     this.register('mail', Mail);
     this.register('bell', Bell);
     this.register('settings', Settings);
-    
+
+    // Additional aliases for backward compatibility
+    this.register('storage-drive', HardDrive);  // Alias for cloud-storage
+    this.register('monitor-cpu', Cpu);          // Alias for cloud-compute
+    this.register('edit', Edit);                // Alias for action-edit
+    this.register('database', Database);        // Alias for cloud-database
+
     // Security icons
     this.register('security-shield', Shield);
     this.register('security-shield-check', ShieldCheck);

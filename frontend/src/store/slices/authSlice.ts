@@ -106,6 +106,23 @@ export const getCurrentUserAsync = createAsyncThunk<
   }
 );
 
+export const getUserProfileAsync = createAsyncThunk<
+  User | null,
+  void,
+  { rejectValue: string }
+>(
+  'auth/getUserProfile',
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await AuthService.getUserProfile();
+      return user;
+    } catch (error: any) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -244,6 +261,22 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
       });
+
+    // Get User Profile
+    builder
+      .addCase(getUserProfileAsync.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getUserProfileAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.user = action.payload;
+          state.isAuthenticated = true;
+        }
+      })
+      .addCase(getUserProfileAsync.rejected, (state) => {
+        state.loading = false;
+      });
   },
 });
 
@@ -268,6 +301,7 @@ export const useAuth = () => {
     forgotPassword: (request: ForgotPasswordRequest) => dispatch(forgotPasswordAsync(request)),
     logout: () => dispatch(logoutAsync()),
     getCurrentUser: () => dispatch(getCurrentUserAsync()),
+    getUserProfile: () => dispatch(getUserProfileAsync()),
     clearError: () => dispatch(clearError()),
   };
 };

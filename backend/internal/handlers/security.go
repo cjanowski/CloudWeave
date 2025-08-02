@@ -22,7 +22,7 @@ func InitializeSecurityService(service *services.SecurityService) {
 // CreateSecurityScan creates a new security scan
 func CreateSecurityScan(c *gin.Context) {
 	userID := c.GetString("userID")
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 
 	var req models.CreateScanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -67,7 +67,7 @@ func CreateSecurityScan(c *gin.Context) {
 
 // GetSecurityScan retrieves a security scan by ID
 func GetSecurityScan(c *gin.Context) {
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 	scanID := c.Param("id")
 
 	log.Printf("Getting security scan: %s for organization: %s", scanID, organizationID)
@@ -96,7 +96,7 @@ func GetSecurityScan(c *gin.Context) {
 
 // ListSecurityScans retrieves security scans for an organization
 func ListSecurityScans(c *gin.Context) {
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 
 	// Parse pagination parameters
 	limit := 50
@@ -145,7 +145,7 @@ func ListSecurityScans(c *gin.Context) {
 
 // GetVulnerabilities retrieves vulnerabilities based on query parameters
 func GetVulnerabilities(c *gin.Context) {
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 
 	// Parse query parameters
 	query := models.VulnerabilityQuery{
@@ -234,7 +234,7 @@ func GetVulnerabilities(c *gin.Context) {
 
 // GetVulnerability retrieves a specific vulnerability
 func GetVulnerability(c *gin.Context) {
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 	vulnerabilityID := c.Param("id")
 
 	log.Printf("Getting vulnerability: %s for organization: %s", vulnerabilityID, organizationID)
@@ -264,7 +264,7 @@ func GetVulnerability(c *gin.Context) {
 // UpdateVulnerability updates a vulnerability
 func UpdateVulnerability(c *gin.Context) {
 	userID := c.GetString("userID")
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 	vulnerabilityID := c.Param("id")
 
 	var req models.UpdateVulnerabilityRequest
@@ -310,7 +310,7 @@ func UpdateVulnerability(c *gin.Context) {
 
 // GetSecurityMetrics retrieves security metrics for an organization
 func GetSecurityMetrics(c *gin.Context) {
-	organizationID := c.GetString("organizationID")
+	organizationID := c.GetString("organizationId")
 
 	log.Printf("Getting security metrics for organization: %s", organizationID)
 

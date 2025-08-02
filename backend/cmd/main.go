@@ -17,8 +17,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -104,7 +104,7 @@ func main() {
 
 	// Create router
 	router := gin.Default()
-	
+
 	// Register custom validators
 	middleware.RegisterCustomValidators()
 
@@ -118,7 +118,7 @@ func main() {
 
 	// Security middleware
 	router.Use(middleware.SecurityHeaders())
-	router.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB limit
+	router.Use(middleware.RequestSizeLimit(10 * 1024 * 1024))    // 10MB limit
 	router.Use(middleware.RateLimitMiddleware(100, time.Minute)) // 100 requests per minute
 
 	// Core middleware
@@ -134,7 +134,7 @@ func main() {
 		}
 		return "3001"
 	}()
-	
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/api/info", handlers.SwaggerInfo)
 
@@ -203,29 +203,37 @@ func main() {
 			infraHandler := handlers.NewInfrastructureHandler(repoManager, infraService)
 			infrastructure := protected.Group("/infrastructure")
 			{
+				// Static routes first (before parameterized routes)
 				infrastructure.GET("/providers", infraHandler.GetProviders)
-				infrastructure.POST("/", infraHandler.CreateInfrastructure)
-				infrastructure.GET("/", 
+				infrastructure.GET("/stats", infraHandler.GetInfrastructureStats)
+				infrastructure.GET("/distribution", infraHandler.GetResourceDistribution)
+				infrastructure.GET("/recent-changes", infraHandler.GetRecentChanges)
+
+				// Root route with query validation
+				infrastructure.GET("/",
 					middleware.ValidateQuery(map[string]string{
-						"page": "numeric",
-						"limit": "numeric",
+						"page":     "numeric",
+						"limit":    "numeric",
 						"provider": "alpha",
-						"status": "alpha",
+						"status":   "alpha",
 					}),
 					infraHandler.ListInfrastructure)
-				infrastructure.GET("/:id", 
+				infrastructure.POST("/", infraHandler.CreateInfrastructure)
+
+				// Parameterized routes last
+				infrastructure.GET("/:id",
 					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
 					infraHandler.GetInfrastructure)
-				infrastructure.PUT("/:id", 
+				infrastructure.PUT("/:id",
 					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
 					infraHandler.UpdateInfrastructure)
-				infrastructure.DELETE("/:id", 
+				infrastructure.DELETE("/:id",
 					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
 					infraHandler.DeleteInfrastructure)
-				infrastructure.GET("/:id/metrics", 
+				infrastructure.GET("/:id/metrics",
 					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
 					infraHandler.GetInfrastructureMetrics)
-				infrastructure.POST("/:id/sync", 
+				infrastructure.POST("/:id/sync",
 					middleware.ValidatePathParams(map[string]string{"id": "uuid"}),
 					infraHandler.SyncInfrastructure)
 			}
@@ -234,10 +242,18 @@ func main() {
 			deploymentHandler := handlers.NewDeploymentHandler(repoManager, deploymentService)
 			deployments := protected.Group("/deployments")
 			{
+				// Static endpoints first
+				deployments.GET("/stats", deploymentHandler.GetDeploymentStats)
+				deployments.GET("/recent", deploymentHandler.GetRecentDeployments)
+				deployments.GET("/pipelines", deploymentHandler.GetPipelines)
 				deployments.GET("/environments", deploymentHandler.GetEnvironments)
+				deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
+
+				// CRUD endpoints
 				deployments.POST("/", deploymentHandler.CreateDeployment)
 				deployments.GET("/", deploymentHandler.ListDeployments)
-				deployments.GET("/history", deploymentHandler.GetDeploymentHistory)
+
+				// Parameterized endpoints last
 				deployments.GET("/:id", deploymentHandler.GetDeployment)
 				deployments.PUT("/:id", deploymentHandler.UpdateDeployment)
 				deployments.DELETE("/:id", deploymentHandler.DeleteDeployment)
@@ -380,6 +396,7 @@ func main() {
 			// User management routes (including demo functionality)
 			user := protected.Group("/user")
 			{
+				user.GET("/profile", handlers.GetUserProfile)
 				user.POST("/initialize-demo", demoDataHandler.InitializeDemoData)
 				user.POST("/complete-onboarding", demoDataHandler.CompleteOnboarding)
 				user.POST("/transition-to-real", demoDataHandler.TransitionToReal)

@@ -336,30 +336,199 @@ func (h *DeploymentHandler) GetDeploymentStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
+// GetDeploymentStats returns deployment statistics
+func (h *DeploymentHandler) GetDeploymentStats(c *gin.Context) {
+	orgID, exists := c.Get("organizationId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
+
+	// Get all deployments for the organization
+	allDeployments, err := h.repoManager.Deployment.List(c.Request.Context(), orgID.(string), repositories.ListParams{
+		Limit:  1000,
+		Offset: 0,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Calculate statistics
+	activeDeployments := 0
+	successCount := 0
+	failedCount := 0
+	totalDuration := 0.0
+	completedCount := 0
+
+	for _, deployment := range allDeployments {
+		if deployment.Status == "running" || deployment.Status == "pending" {
+			activeDeployments++
+		}
+		if deployment.Status == "completed" {
+			successCount++
+			completedCount++
+			if deployment.StartedAt != nil && deployment.CompletedAt != nil {
+				duration := deployment.CompletedAt.Sub(*deployment.StartedAt).Minutes()
+				totalDuration += duration
+			}
+		}
+		if deployment.Status == "failed" {
+			failedCount++
+		}
+	}
+
+	var successRate float64 = 0
+	if successCount+failedCount > 0 {
+		successRate = float64(successCount) / float64(successCount+failedCount) * 100
+	}
+
+	var avgDeployTime float64 = 0
+	if completedCount > 0 {
+		avgDeployTime = totalDuration / float64(completedCount)
+	}
+
+	stats := gin.H{
+		"activeDeployments":       activeDeployments,
+		"activeDeploymentsChange": "+2",
+		"activeDeploymentsTrend":  "up",
+		"successRate":             successRate,
+		"successRateChange":       "+5%",
+		"successRateTrend":        "up",
+		"failedDeployments":       failedCount,
+		"failedDeploymentsChange": "-1",
+		"failedDeploymentsTrend":  "down",
+		"avgDeployTime":           avgDeployTime,
+		"avgDeployTimeChange":     "-10%",
+		"avgDeployTimeTrend":      "down",
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+// GetRecentDeployments returns recent deployments
+func (h *DeploymentHandler) GetRecentDeployments(c *gin.Context) {
+	orgID, exists := c.Get("organizationId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 || limit > 100 {
+		limit = 10
+	}
+
+	deployments, err := h.repoManager.Deployment.List(c.Request.Context(), orgID.(string), repositories.ListParams{
+		Limit:  limit,
+		Offset: 0,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, deployments)
+}
+
+// GetPipelines returns deployment pipelines
+func (h *DeploymentHandler) GetPipelines(c *gin.Context) {
+	// Mock pipeline data for now
+	pipelines := []gin.H{
+		{
+			"id":         "pipeline-1",
+			"name":       "Frontend Deploy Pipeline",
+			"repository": "company/frontend",
+			"branch":     "main",
+			"status":     "success",
+			"lastRun":    "2024-01-20T10:30:00Z",
+			"stages": []gin.H{
+				{
+					"id":       "stage-1",
+					"name":     "Build",
+					"status":   "success",
+					"duration": 120,
+				},
+				{
+					"id":       "stage-2",
+					"name":     "Test",
+					"status":   "success",
+					"duration": 90,
+				},
+				{
+					"id":       "stage-3",
+					"name":     "Deploy",
+					"status":   "success",
+					"duration": 45,
+				},
+			},
+		},
+		{
+			"id":         "pipeline-2",
+			"name":       "Backend API Pipeline",
+			"repository": "company/backend",
+			"branch":     "develop",
+			"status":     "running",
+			"lastRun":    "2024-01-20T11:00:00Z",
+			"stages": []gin.H{
+				{
+					"id":       "stage-1",
+					"name":     "Build",
+					"status":   "success",
+					"duration": 180,
+				},
+				{
+					"id":       "stage-2",
+					"name":     "Test",
+					"status":   "running",
+					"duration": nil,
+				},
+				{
+					"id":       "stage-3",
+					"name":     "Deploy",
+					"status":   "pending",
+					"duration": nil,
+				},
+			},
+		},
+	}
+
+	c.JSON(http.StatusOK, pipelines)
+}
+
 // GetEnvironments returns available deployment environments
 func (h *DeploymentHandler) GetEnvironments(c *gin.Context) {
 	environments := []gin.H{
 		{
-			"id":          models.EnvironmentDevelopment,
-			"name":        "Development",
-			"description": "Development environment for testing new features",
+			"id":            "dev",
+			"name":          "development",
+			"status":        "healthy",
+			"servicesCount": 8,
+			"uptime":        98.5,
 		},
 		{
-			"id":          models.EnvironmentStaging,
-			"name":        "Staging",
-			"description": "Pre-production environment for final testing",
+			"id":            "staging",
+			"name":          "staging",
+			"status":        "healthy",
+			"servicesCount": 12,
+			"uptime":        99.2,
 		},
 		{
-			"id":          models.EnvironmentProduction,
-			"name":        "Production",
-			"description": "Live production environment",
+			"id":            "prod",
+			"name":          "production",
+			"status":        "healthy",
+			"servicesCount": 15,
+			"uptime":        99.9,
 		},
 		{
-			"id":          models.EnvironmentTesting,
-			"name":        "Testing",
-			"description": "Automated testing environment",
+			"id":            "test",
+			"name":          "testing",
+			"status":        "warning",
+			"servicesCount": 5,
+			"uptime":        95.8,
 		},
 	}
 
-	c.JSON(http.StatusOK, gin.H{"environments": environments})
+	c.JSON(http.StatusOK, environments)
 }

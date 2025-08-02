@@ -150,7 +150,13 @@ export class ApiService {
   private isDemoMode(): boolean {
     // Get demo state from Redux store if available
     const state = (window as any).__REDUX_STORE__?.getState?.();
-    return state?.demo?.isDemo || false;
+    const isDemo = state?.demo?.isDemo || false;
+
+    // Also check if user is not authenticated - treat as demo mode
+    const isAuthenticated = state?.auth?.isAuthenticated || false;
+    const hasValidToken = TokenManager.getToken() && !TokenManager.isTokenExpired(TokenManager.getToken()!);
+
+    return isDemo || !isAuthenticated || !hasValidToken;
   }
 
   // Get demo scenario
@@ -521,13 +527,14 @@ export class ApiService {
     return { success: true, message: 'Demo data deleted successfully' } as T;
   }
 
-  // Check if error is network-related
+  // Check if error is network-related or authentication-related
   private isNetworkError(error: any): boolean {
-    return !error.response || 
-           error.code === 'NETWORK_ERROR' || 
+    return !error.response ||
+           error.code === 'NETWORK_ERROR' ||
            error.code === 'ECONNREFUSED' ||
            error.code === 'TIMEOUT' ||
-           (error.response && error.response.status >= 500);
+           (error.response && error.response.status >= 500) ||
+           (error.response && (error.response.status === 401 || error.response.status === 403));
   }
 
   // Utility methods

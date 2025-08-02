@@ -7,7 +7,7 @@ set -e
 
 # Default values
 DB_NAME="cloud_platform_db"
-DB_USER="postgres"
+DB_USER="coryjanowski"
 DB_PASSWORD=""
 DB_HOST="localhost"
 DB_PORT="5432"

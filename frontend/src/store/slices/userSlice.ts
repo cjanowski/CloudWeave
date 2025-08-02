@@ -138,6 +138,17 @@ const userSlice = createSlice({
     setOnboardingCompleted: (state, action: PayloadAction<boolean>) => {
       state.onboardingCompleted = action.payload;
     },
+    syncUserData: (state, action: PayloadAction<any>) => {
+      const user = action.payload;
+      if (user) {
+        state.onboardingCompleted = user.onboardingCompleted || false;
+        state.demoMode = user.demoMode || false;
+        state.demoScenario = user.demoScenario || 'startup';
+        if (user.preferences) {
+          state.preferences = { ...state.preferences, ...user.preferences };
+        }
+      }
+    },
     setDemoMode: (state, action: PayloadAction<boolean>) => {
       state.demoMode = action.payload;
     },
@@ -245,6 +256,7 @@ export const {
   updateDashboardPreferences,
   clearError,
   resetUserState,
+  syncUserData,
 } = userSlice.actions;
 
 export default userSlice.reducer;

@@ -462,3 +462,111 @@ func (h *InfrastructureHandler) CollectMetrics(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Metrics collection completed"})
 }
+
+// GetInfrastructureStats retrieves infrastructure statistics for the organization
+func (h *InfrastructureHandler) GetInfrastructureStats(c *gin.Context) {
+	orgID, exists := c.Get("organizationId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
+
+	// Mock infrastructure stats - in real implementation, these would come from actual infrastructure data
+	// TODO: Use orgID to filter data by organization
+	_ = orgID // Mark as used for now
+	stats := map[string]interface{}{
+		"totalResources":        42,
+		"totalResourcesChange":  "+5",
+		"totalResourcesTrend":   "up",
+		"activeInstances":       28,
+		"activeInstancesChange": "+3",
+		"activeInstancesTrend":  "up",
+		"networks":              8,
+		"networksChange":        "+1",
+		"networksTrend":         "up",
+		"complianceScore":       95,
+		"complianceScoreChange": "+2",
+		"complianceScoreTrend":  "up",
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+// GetResourceDistribution retrieves resource distribution for the organization
+func (h *InfrastructureHandler) GetResourceDistribution(c *gin.Context) {
+	orgID, exists := c.Get("organizationId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
+
+	// Mock resource distribution - in real implementation, these would come from actual infrastructure data
+	// TODO: Use orgID to filter data by organization
+	_ = orgID // Mark as used for now
+	distribution := map[string]interface{}{
+		"ec2Instances":    15,
+		"s3Buckets":       8,
+		"rdsDatabases":    5,
+		"lambdaFunctions": 12,
+		"totalCount":      40,
+	}
+
+	c.JSON(http.StatusOK, distribution)
+}
+
+// GetRecentChanges retrieves recent infrastructure changes for the organization
+func (h *InfrastructureHandler) GetRecentChanges(c *gin.Context) {
+	orgID, exists := c.Get("organizationId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
+
+	// Mock recent changes - in real implementation, these would come from actual infrastructure change logs
+	// TODO: Use orgID to filter data by organization
+	_ = orgID // Mark as used for now
+	changes := []map[string]interface{}{
+		{
+			"id":           "change-1",
+			"message":      "EC2 instance i-1234567890abcdef0 created",
+			"timestamp":    time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			"type":         "created",
+			"resourceId":   "i-1234567890abcdef0",
+			"resourceName": "web-server-01",
+		},
+		{
+			"id":           "change-2",
+			"message":      "RDS database prod-db-01 updated",
+			"timestamp":    time.Now().Add(-4 * time.Hour).Format(time.RFC3339),
+			"type":         "updated",
+			"resourceId":   "db-1234567890abcdef0",
+			"resourceName": "prod-db-01",
+		},
+		{
+			"id":           "change-3",
+			"message":      "S3 bucket backup-storage deleted",
+			"timestamp":    time.Now().Add(-6 * time.Hour).Format(time.RFC3339),
+			"type":         "deleted",
+			"resourceId":   "bucket-1234567890abcdef0",
+			"resourceName": "backup-storage",
+		},
+		{
+			"id":           "change-4",
+			"message":      "Lambda function data-processor deployed",
+			"timestamp":    time.Now().Add(-8 * time.Hour).Format(time.RFC3339),
+			"type":         "deployed",
+			"resourceId":   "lambda-1234567890abcdef0",
+			"resourceName": "data-processor",
+		},
+		{
+			"id":           "change-5",
+			"message":      "Load balancer app-lb-01 created",
+			"timestamp":    time.Now().Add(-12 * time.Hour).Format(time.RFC3339),
+			"type":         "created",
+			"resourceId":   "lb-1234567890abcdef0",
+			"resourceName": "app-lb-01",
+		},
+	}
+
+	c.JSON(http.StatusOK, changes)
+}
