@@ -5,7 +5,10 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+
+# Clean install with platform-specific dependencies
+RUN rm -rf node_modules package-lock.json
+RUN npm install
 
 # Copy source code
 COPY . .

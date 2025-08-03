@@ -53,7 +53,7 @@ export const loadDemoInfrastructure = createAsyncThunk<
   { rejectValue: string }
 >(
   'demo/loadInfrastructure',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState }) => {
     try {
       const state = getState() as { demo: DemoState };
       if (!state.demo.isDemo) {
@@ -74,7 +74,7 @@ export const loadDemoDeployments = createAsyncThunk<
   { rejectValue: string }
 >(
   'demo/loadDeployments',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState }) => {
     try {
       const state = getState() as { demo: DemoState };
       if (!state.demo.isDemo) {
@@ -95,7 +95,7 @@ export const loadDemoMetrics = createAsyncThunk<
   { rejectValue: string }
 >(
   'demo/loadMetrics',
-  async ({ start, end }, { rejectWithValue, getState }) => {
+  async ({ start, end }, { getState }) => {
     try {
       const state = getState() as { demo: DemoState };
       if (!state.demo.isDemo) {
@@ -116,7 +116,7 @@ export const loadDemoAlerts = createAsyncThunk<
   { rejectValue: string }
 >(
   'demo/loadAlerts',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState }) => {
     try {
       const state = getState() as { demo: DemoState };
       if (!state.demo.isDemo) {
@@ -141,7 +141,7 @@ export const loadDemoCostData = createAsyncThunk<
     try {
       const state = getState() as { demo: DemoState };
       if (!state.demo.isDemo) {
-        throw new Error('Not in demo mode');
+        return rejectWithValue('Not in demo mode');
       }
       return await demoDataService.getDemoCostData();
     } catch (error: any) {

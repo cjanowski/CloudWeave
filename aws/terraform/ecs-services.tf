@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "DB_HOST"
-          value = aws_db_instance.main.endpoint
+          value = split(":", aws_db_instance.main.endpoint)[0]
         },
         {
           name  = "DB_PORT"
