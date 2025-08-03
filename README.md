@@ -4,7 +4,7 @@
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/cjanowski/CloudWeave)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat)
 
-# CloudWeave - Cloud Platform Management System
+# Cloud Platform Management System: [CloudWeave](http://cloudweave-alb-319481151.us-east-1.elb.amazonaws.com/)
 
 A modern, enterprise-grade AI powered cloud platform management system that simplifies infrastructure operations and enhances team productivity.
 
@@ -13,7 +13,7 @@ A modern, enterprise-grade AI powered cloud platform management system that simp
 <img width="1626" height="1083" alt="Screenshot 2025-07-27 at 12 38 08 PM" src="https://github.com/user-attachments/assets/05af0ae2-0cd2-4dbb-8224-37228f0272e2" />
 <img width="1642" height="1081" alt="Screenshot 2025-07-27 at 12 36 58 PM" src="https://github.com/user-attachments/assets/2b06204c-bdc6-4d94-83dc-36323643c009" />
 
-
+Visit App - [CloudWeave](http://cloudweave-alb-319481151.us-east-1.elb.amazonaws.com/)
 
 ## 🌟 Features
 
