@@ -7,8 +7,11 @@ backend/backend.log
 # Build artifacts
 backend/main
 backend/migrate
+backend/cloudweave
+backend/tmp_*
 backend/bin/
 **/bin/
+tmp_rovodev_*
 
 # Database files
 *.db
