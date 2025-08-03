@@ -34,5 +34,16 @@ DATABASE.md
 tasks.md
 plans/
 
+# Terraform files
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+
+# AWS files
+aws/
+
 # Node modules and dependencies
 node_modules/
